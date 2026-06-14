@@ -11,6 +11,7 @@ import WorkroomNew from "@/pages/workroom-new";
 import WorkroomDetail from "@/pages/workroom-detail";
 import TemplatesList from "@/pages/templates-list";
 import AgentsList from "@/pages/agents-list";
+import Insights from "@/pages/insights";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ function Router() {
     <Layout>
       <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/insights" component={Insights} />
         <Route path="/templates" component={TemplatesList} />
         <Route path="/workrooms/new" component={WorkroomNew} />
         <Route path="/workrooms/:id" component={WorkroomDetail} />

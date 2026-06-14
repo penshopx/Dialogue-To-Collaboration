@@ -512,6 +512,20 @@ paths:
                 items:
                   $ref: "#/components/schemas/Workroom"
 
+  # ── Insights ────────────────────────────────────────────────────────────────
+  /insights:
+    get:
+      operationId: getInsights
+      tags: [dashboard]
+      summary: Get aggregated insights across all workrooms
+      responses:
+        "200":
+          description: Insights data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsSummary"
+
 # ── Schemas ──────────────────────────────────────────────────────────────────
 components:
   schemas:
@@ -917,3 +931,74 @@ components:
           type: string
         count:
           type: integer
+
+    # ── Insights ─────────────────────────────────────────────────────────────
+    InsightsSummary:
+      type: object
+      required: [tasksByRole, stageCompletionFunnel, templateUsage, totalTasksDone, totalTasksAll, completedWorkrooms, activeWorkrooms]
+      properties:
+        tasksByRole:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleTaskStats"
+        stageCompletionFunnel:
+          type: array
+          items:
+            $ref: "#/components/schemas/StageFunnelEntry"
+        templateUsage:
+          type: array
+          items:
+            $ref: "#/components/schemas/TemplateUsageEntry"
+        totalTasksDone:
+          type: integer
+        totalTasksAll:
+          type: integer
+        completedWorkrooms:
+          type: integer
+        activeWorkrooms:
+          type: integer
+
+    RoleTaskStats:
+      type: object
+      required: [role, total, done, doing, todo]
+      properties:
+        role:
+          type: string
+        total:
+          type: integer
+        done:
+          type: integer
+        doing:
+          type: integer
+        todo:
+          type: integer
+
+    StageFunnelEntry:
+      type: object
+      required: [stageName, order, completed, active, pending, awaitingGate]
+      properties:
+        stageName:
+          type: string
+        order:
+          type: integer
+        completed:
+          type: integer
+        active:
+          type: integer
+        pending:
+          type: integer
+        awaitingGate:
+          type: integer
+
+    TemplateUsageEntry:
+      type: object
+      required: [templateName, sector, workroomCount, avgProgress]
+      properties:
+        templateName:
+          type: string
+        sector:
+          type: string
+        workroomCount:
+          type: integer
+        avgProgress:
+          type: number

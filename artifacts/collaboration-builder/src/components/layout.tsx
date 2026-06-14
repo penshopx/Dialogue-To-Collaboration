@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Library, Briefcase, Bot, Settings, Bell, Menu, X, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, Library, Briefcase, Bot, Settings, Bell, Menu, X, AlertTriangle, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -21,6 +21,7 @@ function NavLinks({ location, gateCount, onNavigate }: { location: string; gateC
     { href: "/workrooms", label: "Workrooms", icon: Briefcase, badge: gateCount },
     { href: "/templates", label: "Templates", icon: Library, badge: 0 },
     { href: "/agents", label: "Agents", icon: Bot, badge: 0 },
+    { href: "/insights", label: "Insights", icon: Lightbulb, badge: 0 },
   ];
 
   return (
@@ -62,6 +63,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/workrooms", label: "Workrooms", icon: Briefcase, badge: gateCount },
     { href: "/templates", label: "Templates", icon: Library, badge: 0 },
     { href: "/agents", label: "Agents", icon: Bot, badge: 0 },
+    { href: "/insights", label: "Insights", icon: Lightbulb, badge: 0 },
   ];
 
   return (

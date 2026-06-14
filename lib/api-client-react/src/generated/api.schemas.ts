@@ -233,3 +233,37 @@ export interface DashboardSummary {
   workroomsBySector: SectorCount[];
 }
 
+export interface RoleTaskStats {
+  role: string;
+  total: number;
+  done: number;
+  doing: number;
+  todo: number;
+}
+
+export interface StageFunnelEntry {
+  stageName: string;
+  order: number;
+  completed: number;
+  active: number;
+  pending: number;
+  awaitingGate: number;
+}
+
+export interface TemplateUsageEntry {
+  templateName: string;
+  sector: string;
+  workroomCount: number;
+  avgProgress: number;
+}
+
+export interface InsightsSummary {
+  tasksByRole: RoleTaskStats[];
+  stageCompletionFunnel: StageFunnelEntry[];
+  templateUsage: TemplateUsageEntry[];
+  totalTasksDone: number;
+  totalTasksAll: number;
+  completedWorkrooms: number;
+  activeWorkrooms: number;
+}
+

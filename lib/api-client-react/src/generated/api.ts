@@ -27,6 +27,7 @@ import type {
   AgentUpdate,
   DashboardSummary,
   HealthStatus,
+  InsightsSummary,
   WorkflowTemplate,
   WorkflowTemplateInput,
   WorkflowTemplateUpdate,
@@ -1964,6 +1965,83 @@ export function useGetRecentWorkrooms<TData = Awaited<ReturnType<typeof getRecen
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetRecentWorkroomsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetInsightsUrl = () => {
+
+
+
+
+  return `/api/insights`
+}
+
+/**
+ * @summary Get aggregated insights across all workrooms
+ */
+export const getInsights = async ( options?: RequestInit): Promise<InsightsSummary> => {
+
+  return customFetch<InsightsSummary>(getGetInsightsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetInsightsQueryKey = () => {
+    return [
+    `/api/insights`
+    ] as const;
+    }
+
+
+export const getGetInsightsQueryOptions = <TData = Awaited<ReturnType<typeof getInsights>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInsights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetInsightsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInsights>>> = ({ signal }) => getInsights({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getInsights>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetInsightsQueryResult = NonNullable<Awaited<ReturnType<typeof getInsights>>>
+export type GetInsightsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get aggregated insights across all workrooms
+ */
+
+export function useGetInsights<TData = Awaited<ReturnType<typeof getInsights>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInsights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetInsightsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

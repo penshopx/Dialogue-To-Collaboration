@@ -531,3 +531,35 @@ export const GetRecentWorkroomsResponseItem = zod.object({
 export const GetRecentWorkroomsResponse = zod.array(GetRecentWorkroomsResponseItem)
 
 
+/**
+ * @summary Get aggregated insights across all workrooms
+ */
+export const GetInsightsResponse = zod.object({
+  "tasksByRole": zod.array(zod.object({
+  "role": zod.string(),
+  "total": zod.number(),
+  "done": zod.number(),
+  "doing": zod.number(),
+  "todo": zod.number()
+})),
+  "stageCompletionFunnel": zod.array(zod.object({
+  "stageName": zod.string(),
+  "order": zod.number(),
+  "completed": zod.number(),
+  "active": zod.number(),
+  "pending": zod.number(),
+  "awaitingGate": zod.number()
+})),
+  "templateUsage": zod.array(zod.object({
+  "templateName": zod.string(),
+  "sector": zod.string(),
+  "workroomCount": zod.number(),
+  "avgProgress": zod.number()
+})),
+  "totalTasksDone": zod.number(),
+  "totalTasksAll": zod.number(),
+  "completedWorkrooms": zod.number(),
+  "activeWorkrooms": zod.number()
+})
+
+
