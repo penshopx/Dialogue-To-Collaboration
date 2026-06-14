@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
-import { useListKnowledgeItems } from "@workspace/api-client-react";
-import { Wrench, Play, Square, Copy, Download, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { useListKnowledgeItems, useListDeliverables, useGetWorkroomBrain } from "@workspace/api-client-react";
+import { Wrench, Play, Square, Copy, Download, ChevronDown, ChevronUp, Loader2, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -185,6 +185,54 @@ const MINI_APPS: MiniApp[] = [
       },
     ],
   },
+  {
+    id: "pack_compiler",
+    icon: "📦",
+    title: "Pack Compiler — Output Final",
+    desc: "Kompilasi SEMUA output workroom menjadi satu dokumen final siap kirim (dari Gustafta)",
+    category: "Kompilasi",
+    chain: [
+      {
+        role: "eksekutor",
+        label: "Ekstraksi & Inventaris Output",
+        promptFn: (ctx) => `Kamu adalah Pack Compiler. Dari semua konteks workroom berikut:\n\n${ctx}\n\nLakukan inventaris lengkap:\n1. Daftar semua deliverable dan statusnya\n2. Keputusan kunci yang sudah dibuat\n3. Temuan penting dari setiap stage\n4. Knowledge base yang relevan\n5. Gap yang masih ada\n\nFormat sebagai inventaris terstruktur — ini akan jadi bahan kompilasi dokumen final.`,
+      },
+      {
+        role: "sintetis",
+        label: "Sintesis & Konsolidasi",
+        promptFn: (ctx, prev) => `Berdasarkan inventaris output:\n${prev}\n\nKonteks proyek: ${ctx}\n\nSintesiskan semua output:\n- Temukan benang merah dari semua keputusan\n- Konsolidasi rekomendasi yang konsisten\n- Identifikasi area yang memerlukan klarifikasi\n- Buat narrative yang koheren dari semua stage\n\nHasil sintesis ini akan menjadi backbone dokumen final.`,
+      },
+      {
+        role: "pack_compiler",
+        label: "Compile Dokumen Final",
+        promptFn: (ctx, prev) => `Kamu adalah DocuGen — Pack Compiler. Berdasarkan sintesis:\n${prev}\n\nBuat DOKUMEN FINAL yang komprehensif dan siap diserahkan:\n\n# 📦 LAPORAN FINAL WORKROOM\n**Proyek:** ...\n**Tanggal Kompilasi:** ...\n**Status:** ...\n\n## 1. RINGKASAN EKSEKUTIF\n[2-3 paragraf — ditulis untuk decision maker]\n\n## 2. KONTEKS & LATAR BELAKANG\n[Dari Otak Proyek]\n\n## 3. PROSES & PIPELINE\n[Ringkasan 8-stage journey]\n\n## 4. OUTPUT & DELIVERABLES\n[Semua artefak yang dihasilkan dengan statusnya]\n\n## 5. KEPUTUSAN STRATEGIS\n[Decision log — semua gate decision dan keputusan kunci]\n\n## 6. TEMUAN & INSIGHTS\n[Dari Knowledge Base dan analisis agen]\n\n## 7. RISIKO & MITIGASI\n[Yang berhasil ditangani dan yang masih terbuka]\n\n## 8. REKOMENDASI & NEXT STEPS\n[Langkah konkret untuk stakeholder]\n\n## CHECKLIST KELENGKAPAN DOKUMEN\n- [ ] Ringkasan eksekutif tersedia\n- [ ] Semua deliverable tercantum\n- [ ] Keputusan gate terdokumentasi\n- [ ] Next steps jelas dan actionable\n\nKonteks: ${ctx}`,
+      },
+    ],
+  },
+  {
+    id: "gate_rubric_ai",
+    icon: "◆",
+    title: "Gate Rubric AI",
+    desc: "Analisis kesiapan gate dengan rubrik 4 kriteria (Kelengkapan, Kepatuhan, Risiko, Kesiapan)",
+    category: "Analisis",
+    chain: [
+      {
+        role: "evaluator",
+        label: "Evaluasi Rubrik Gate",
+        promptFn: (ctx) => `Kamu adalah gate evaluator. Evaluasi kesiapan gate workroom berdasarkan konteks:\n\n${ctx}\n\nNilai 4 kriteria (1-4):\n1. 📋 Kelengkapan Output — apakah semua deliverable selesai?\n2. ✅ Kepatuhan Standar — apakah sesuai standar/regulasi?\n3. ⚠️ Risiko Terkontrol — seberapa terkontrol risikonya?\n4. 💰 Kesiapan Lanjut — siapkah budget/jadwal untuk lanjut?\n\nBuat Gate Assessment Report:\n| Kriteria | Skor | Level | Temuan | Rekomendasi |\n|----------|------|-------|--------|-------------|\n\nTotal: ?/16\nRekomendasi: Setujui (13-16) / Revisi (9-12) / Tolak (≤8)`,
+      },
+      {
+        role: "skeptis",
+        label: "Review & Tantangan",
+        promptFn: (_, prev) => `Review gate assessment berikut dengan kritis:\n${prev}\n\nIdentifikasi:\n- Asumsi yang terlalu optimis\n- Risiko yang mungkin terlewat\n- Kondisi tambahan yang sebaiknya disyaratkan sebelum approve\n- Apakah rekomendasi sudah tepat?\n\nBerikan "Devil's Advocate" perspective.`,
+      },
+      {
+        role: "sintetis",
+        label: "Gate Decision Brief",
+        promptFn: (ctx, prev) => `Berdasarkan evaluasi dan review:\n${prev}\n\nBuat Gate Decision Brief siap presentasi ke PIC:\n\n## ◆ GATE DECISION BRIEF\n**Stage:** ...\n**Workroom:** ...\n\n### Skor Rubrik\n...\n\n### Rekomendasi Final\n...\n\n### Kondisi / Syarat\n...\n\n### Risiko Jika Dilanjutkan\n...\n\n### Risiko Jika Ditolak\n...\n\nKonteks: ${ctx}`,
+      },
+    ],
+  },
 ];
 
 const CATEGORIES = ["Semua", ...Array.from(new Set(MINI_APPS.map(a => a.category)))];
@@ -193,9 +241,10 @@ interface AppState {
   running: boolean;
   steps: Array<{ label: string; output: string; done: boolean }>;
   expanded: number | null;
-  fullOutput: string;
-  error?: string;
+  started: boolean;
 }
+
+const defaultState = (): AppState => ({ running: false, steps: [], expanded: null, started: false });
 
 interface Props {
   workroomId: number;
@@ -205,124 +254,122 @@ interface Props {
 
 export function MiniAppsTab({ workroomId, workroomName, objective }: Props) {
   const { data: kbItems = [] } = useListKnowledgeItems(workroomId);
+  const { data: deliverables = [] } = useListDeliverables(workroomId);
+  const { data: brain } = useGetWorkroomBrain(workroomId);
   const { toast } = useToast();
-  const abortRefs = useRef<Record<string, AbortController>>({});
 
   const [activeCategory, setActiveCategory] = useState("Semua");
+  const [activeApp, setActiveApp] = useState<string | null>(null);
   const [appStates, setAppStates] = useState<Record<string, AppState>>({});
-  const [customContext, setCustomContext] = useState("");
-  const [showContext, setShowContext] = useState<string | null>(null);
+  const [customPrompt, setCustomPrompt] = useState("");
+  const abortRefs = useRef<Record<string, AbortController>>({});
+
+  const getState = (id: string): AppState => appStates[id] ?? defaultState();
+  const patchState = (id: string, patch: Partial<AppState>) =>
+    setAppStates(prev => ({ ...prev, [id]: { ...getState(id), ...patch } }));
+  const patchStep = (id: string, idx: number, patch: Partial<AppState["steps"][number]>) =>
+    setAppStates(prev => {
+      const cur = prev[id] ?? defaultState();
+      const steps = [...cur.steps];
+      steps[idx] = { ...steps[idx], ...patch };
+      return { ...prev, [id]: { ...cur, steps } };
+    });
 
   const buildContext = () => {
-    const kbContext = kbItems.slice(0, 6).map(i => `[${i.title}]: ${i.content.slice(0, 300)}`).join("\n\n");
-    const base = [
-      workroomName ? `Nama Workroom: ${workroomName}` : "",
-      objective ? `Objective: ${objective}` : "",
-      kbContext ? `\nKnowledge Base:\n${kbContext}` : "",
-      customContext ? `\nKonteks Tambahan:\n${customContext}` : "",
-    ].filter(Boolean).join("\n");
-    return base;
-  };
+    const kbCtx = kbItems.slice(0, 5).map(i => `[KB] ${i.title}: ${i.content.slice(0, 200)}`).join("\n");
+    const brainCtx = brain ? [
+      brain.context ? `Konteks: ${brain.context}` : "",
+      brain.goals ? `Tujuan: ${brain.goals}` : "",
+      brain.constraints ? `Batasan: ${brain.constraints}` : "",
+      brain.stakeholders ? `Stakeholders: ${brain.stakeholders}` : "",
+    ].filter(Boolean).join("\n") : "";
+    const delivCtx = deliverables.length > 0
+      ? `Deliverables (${deliverables.length}): ` + deliverables.map(d => `${d.title} [${d.status}]`).join(", ")
+      : "";
 
-  const setStep = (appId: string, stepIdx: number, patch: Partial<AppState["steps"][0]>) => {
-    setAppStates(s => {
-      const prev = s[appId];
-      if (!prev) return s;
-      const steps = [...prev.steps];
-      steps[stepIdx] = { ...steps[stepIdx], ...patch };
-      return { ...s, [appId]: { ...prev, steps, expanded: stepIdx } };
-    });
+    return [
+      workroomName ? `Workroom: ${workroomName}` : "",
+      objective ? `Objective: ${objective}` : "",
+      brainCtx,
+      delivCtx,
+      kbCtx ? `\nKnowledge Base:\n${kbCtx}` : "",
+      customPrompt ? `\nKonteks tambahan:\n${customPrompt}` : "",
+    ].filter(Boolean).join("\n");
   };
 
   const runApp = async (app: MiniApp) => {
+    const initialSteps = app.chain.map(s => ({ label: s.label, output: "", done: false }));
+    patchState(app.id, { running: true, started: true, steps: initialSteps, expanded: 0 });
+    abortRefs.current[app.id] = new AbortController();
+
     const ctx = buildContext();
-    const abort = new AbortController();
-    abortRefs.current[app.id] = abort;
+    let prev = "";
 
-    setAppStates(s => ({
-      ...s,
-      [app.id]: {
-        running: true,
-        steps: app.chain.map(c => ({ label: c.label, output: "", done: false })),
-        expanded: 0,
-        fullOutput: "",
-        error: undefined,
-      },
-    }));
-
-    let prevOutput = "";
     try {
       for (let i = 0; i < app.chain.length; i++) {
+        patchState(app.id, { expanded: i });
         const step = app.chain[i];
-        const prompt = step.promptFn(ctx, prevOutput);
-        setStep(app.id, i, { output: "", done: false });
-        setAppStates(s => ({ ...s, [app.id]: { ...s[app.id], expanded: i } }));
+        const prompt = step.promptFn(ctx, prev);
 
-        const res = await fetch("/api/agent/invoke", {
+        const res = await fetch("/api/agent/openclaw", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ role: step.role, prompt, context: ctx }),
-          signal: abort.signal,
+          body: JSON.stringify({
+            prompt,
+            chain: [step.role],
+            context: { workroomName, objective, knowledgeBase: kbItems.slice(0, 3).map(k => `${k.title}: ${k.content.slice(0, 150)}`).join("\n") },
+          }),
+          signal: abortRefs.current[app.id].signal,
         });
 
         const reader = res.body!.getReader();
         const dec = new TextDecoder();
-        let stepOut = "";
+        let out = "";
+        let leftover = "";
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          for (const line of dec.decode(value).split("\n")) {
-            if (line.startsWith("data: ")) {
-              try {
-                const d = JSON.parse(line.slice(6));
-                if (d.text) {
-                  stepOut += d.text;
-                  setStep(app.id, i, { output: stepOut });
-                }
-              } catch { /**/ }
-            }
+          const text = leftover + dec.decode(value, { stream: true });
+          const lines = text.split("\n");
+          leftover = lines.pop() ?? "";
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            try {
+              const d = JSON.parse(line.slice(6));
+              if (d.content) { out += d.content; patchStep(app.id, i, { output: out }); }
+              if (d.phase === "chain_complete") break;
+            } catch { /**/ }
           }
         }
-
-        setStep(app.id, i, { output: stepOut, done: true });
-        prevOutput = stepOut;
+        patchStep(app.id, i, { output: out, done: true });
+        prev = out;
       }
-
-      setAppStates(s => ({ ...s, [app.id]: { ...s[app.id], running: false, fullOutput: prevOutput } }));
     } catch (e: unknown) {
-      if ((e as { name?: string }).name !== "AbortError") {
-        setAppStates(s => ({ ...s, [app.id]: { ...s[app.id], running: false, error: "Gagal menjalankan mini app" } }));
-        toast({ title: "Error menjalankan mini app", variant: "destructive" });
-      } else {
-        setAppStates(s => ({ ...s, [app.id]: { ...s[app.id], running: false } }));
-      }
+      if ((e as { name?: string }).name !== "AbortError") toast({ title: `${app.title} gagal`, variant: "destructive" });
+    } finally {
+      patchState(app.id, { running: false });
     }
   };
 
-  const stopApp = (appId: string) => {
-    abortRefs.current[appId]?.abort();
-    setAppStates(s => ({ ...s, [appId]: { ...s[appId], running: false } }));
+  const stopApp = (id: string) => {
+    abortRefs.current[id]?.abort();
+    patchState(id, { running: false });
   };
 
-  const copyOutput = (appId: string) => {
-    const state = appStates[appId];
-    if (!state) return;
-    const text = state.steps.map(s => `## ${s.label}\n\n${s.output}`).join("\n\n---\n\n");
+  const copyOutput = (app: MiniApp, state: AppState) => {
+    const text = state.steps.map((s, i) => `## ${app.chain[i].label}\n\n${s.output}`).join("\n\n---\n\n");
     navigator.clipboard.writeText(text);
     toast({ title: "Output disalin ✓" });
   };
 
-  const downloadOutput = (app: MiniApp, appId: string) => {
-    const state = appStates[appId];
-    if (!state) return;
-    const text = state.steps.map(s => `## ${s.label}\n\n${s.output}`).join("\n\n---\n\n");
-    const blob = new Blob([text], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
+  const downloadOutput = (app: MiniApp, state: AppState) => {
+    const text = state.steps.map((s, i) => `## ${app.chain[i].label}\n\n${s.output}`).join("\n\n---\n\n");
+    const blob = new Blob([`# ${app.title}\n\n${text}`], { type: "text/plain" });
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `${app.title.replace(/\s+/g, "-").toLowerCase()}.txt`;
+    a.href = URL.createObjectURL(blob);
+    a.download = `${app.id}-output.txt`;
     a.click();
-    URL.revokeObjectURL(url);
   };
 
   const filtered = activeCategory === "Semua" ? MINI_APPS : MINI_APPS.filter(a => a.category === activeCategory);
@@ -333,134 +380,151 @@ export function MiniAppsTab({ workroomId, workroomName, objective }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Wrench className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold">Mini Apps</h3>
-          <p className="text-xs text-muted-foreground">— alat AI yang memproses data workroom ini</p>
+          <h3 className="text-sm font-semibold">Mini Apps AI</h3>
+          <p className="text-xs text-muted-foreground">— tools siap pakai untuk workroom ini</p>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          {kbItems.length > 0 && <Badge variant="outline" className="text-[9px]">{kbItems.length} KB</Badge>}
+          {deliverables.length > 0 && <Badge variant="outline" className="text-[9px]">{deliverables.length} deliverables</Badge>}
+          {brain?.context && <Badge variant="outline" className="text-[9px]">Brain ✓</Badge>}
         </div>
       </div>
 
+      {/* Context input */}
+      <div className="rounded-lg border border-border/50 bg-muted/20 p-3 space-y-2">
+        <p className="text-[11px] font-medium text-muted-foreground">Konteks Tambahan (opsional — diinjeksikan ke semua mini apps)</p>
+        <Textarea
+          className="resize-none text-xs min-h-[48px]"
+          placeholder="Masukkan detail spesifik: catatan rapat, data aktual, kondisi khusus yang relevan untuk mini app ini…"
+          value={customPrompt}
+          onChange={e => setCustomPrompt(e.target.value)}
+          rows={2}
+        />
+      </div>
+
       {/* Category filter */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
+      <div className="flex gap-1.5 flex-wrap">
         {CATEGORIES.map(cat => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={cn("px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors", activeCategory === cat ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground hover:bg-muted")}
+            className={cn(
+              "text-xs px-3 py-1 rounded-full border transition-colors",
+              activeCategory === cat ? "bg-primary text-primary-foreground border-primary" : "border-border/60 text-muted-foreground hover:bg-muted/40"
+            )}
           >
             {cat}
           </button>
         ))}
       </div>
 
-      {/* Custom context input */}
-      <div className="rounded-lg border border-border/50 bg-muted/20 p-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-[11px] font-medium text-muted-foreground">Konteks tambahan (opsional)</p>
-          <Badge variant="outline" className="text-[9px]">{kbItems.length} KB articles auto-injected</Badge>
-        </div>
-        <Textarea
-          className="resize-none text-xs min-h-[60px]"
-          placeholder="Tambahkan catatan rapat, data mentah, atau konteks spesifik yang akan diproses mini app…"
-          value={customContext}
-          onChange={e => setCustomContext(e.target.value)}
-          rows={2}
-        />
-      </div>
-
-      {/* App grid */}
-      <div className="grid grid-cols-1 gap-3">
+      {/* App cards grid */}
+      <div className="space-y-3">
         {filtered.map(app => {
-          const state = appStates[app.id];
-          const hasOutput = state && state.steps.some(s => s.output.trim().length > 0);
-          const allDone = state && state.steps.every(s => s.done);
+          const state = getState(app.id);
+          const isActive = activeApp === app.id;
+          const hasOutput = state.started && state.steps.some(s => s.output);
+          const isPackCompiler = app.id === "pack_compiler";
 
           return (
-            <div key={app.id} className={cn("rounded-xl border bg-card/60 overflow-hidden transition-all", state?.running && "border-primary/30")}>
+            <div key={app.id} className={cn("rounded-xl border overflow-hidden transition-all", isActive ? "border-primary/40" : "border-border/60", isPackCompiler && "border-violet-500/30")}>
               {/* App header */}
-              <div className="flex items-center gap-3 p-3">
-                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-lg shrink-0">{app.icon}</div>
+              <div
+                className={cn("flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/20 transition-colors", isPackCompiler && "bg-violet-500/5")}
+                onClick={() => setActiveApp(isActive ? null : app.id)}
+              >
+                <span className="text-2xl shrink-0">{app.icon}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold">{app.title}</p>
                     <Badge variant="outline" className="text-[9px] h-4 px-1.5">{app.category}</Badge>
+                    {isPackCompiler && <Badge className="text-[9px] h-4 px-1.5 bg-violet-500/20 text-violet-400 border-violet-500/30">Gustafta</Badge>}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">{app.desc}</p>
-                  {/* Chain pills */}
-                  <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-                    {app.chain.map((step, i) => (
-                      <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">
-                        {i + 1}. {step.label}
+                  <p className="text-xs text-muted-foreground truncate">{app.desc}</p>
+                  <div className="flex gap-1 mt-1">
+                    {app.chain.map((s, i) => (
+                      <span key={i} className={cn("text-[9px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground", state.steps[i]?.done && "bg-green-500/10 text-green-400")}>
+                        {s.label}
                       </span>
                     ))}
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {hasOutput && (
+                  {hasOutput && !state.running && (
                     <>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyOutput(app.id)} title="Salin output"><Copy className="w-3.5 h-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadOutput(app, app.id)} title="Download"><Download className="w-3.5 h-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); copyOutput(app, state); }}><Copy className="w-3 h-3" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); downloadOutput(app, state); }}><Download className="w-3 h-3" /></Button>
                     </>
                   )}
-                  {state?.running ? (
-                    <Button variant="destructive" size="sm" className="h-7 px-2.5 gap-1 text-xs" onClick={() => stopApp(app.id)}>
+                  {state.running ? (
+                    <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" onClick={e => { e.stopPropagation(); stopApp(app.id); }}>
                       <Square className="w-3 h-3" /> Stop
                     </Button>
                   ) : (
-                    <Button size="sm" className="h-7 px-2.5 gap-1 text-xs" onClick={() => { setShowContext(showContext === app.id ? null : null); runApp(app); }}>
-                      <Play className="w-3 h-3" /> Jalankan
+                    <Button
+                      size="sm"
+                      className={cn("h-7 text-xs gap-1", isPackCompiler && "bg-violet-600 hover:bg-violet-700")}
+                      onClick={e => { e.stopPropagation(); setActiveApp(app.id); runApp(app); }}
+                    >
+                      {state.started ? "▶ Ulang" : <><Play className="w-3 h-3" /> Jalankan</>}
                     </Button>
                   )}
                 </div>
               </div>
 
-              {/* Step outputs */}
-              {state && state.steps.some(s => s.output || state.running) && (
-                <div className="border-t border-border/50 divide-y divide-border/30">
+              {/* Step outputs (visible when expanded) */}
+              {isActive && state.started && (
+                <div className="border-t border-border/40 divide-y divide-border/30">
                   {state.steps.map((step, i) => {
-                    const isActive = state.expanded === i;
-                    const isDone = step.done;
-                    const isRunning = state.running && !isDone && i === state.steps.findIndex(s => !s.done);
+                    const stepConf = app.chain[i];
+                    const isStepOpen = state.expanded === i;
+                    const isRunning = state.running && !step.done && state.steps.slice(0, i).every(s => s.done);
+                    if (!step.output && !isRunning) return null;
                     return (
-                      <div key={i} className={cn("transition-colors", isDone ? "bg-green-500/3" : isRunning ? "bg-primary/3" : "")}>
+                      <div key={i}>
                         <button
-                          className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/20 transition-colors"
-                          onClick={() => setAppStates(s => ({ ...s, [app.id]: { ...s[app.id], expanded: isActive ? null : i } }))}
+                          className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/10 transition-colors"
+                          onClick={() => patchState(app.id, { expanded: isStepOpen ? null : i })}
                         >
-                          {isRunning
-                            ? <Loader2 className="w-3 h-3 text-primary animate-spin shrink-0" />
-                            : isDone
-                              ? <span className="text-green-400 text-xs shrink-0">✓</span>
-                              : <span className="w-3 h-3 rounded-full border border-border/50 shrink-0" />}
-                          <span className="text-[11px] font-medium flex-1">{i + 1}. {step.label}</span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {step.output ? `${step.output.length} chars` : isRunning ? "Streaming…" : "Menunggu"}
-                          </span>
-                          {isActive ? <ChevronUp className="w-3 h-3 text-muted-foreground" /> : <ChevronDown className="w-3 h-3 text-muted-foreground" />}
+                          <span className="w-5 h-5 rounded-full bg-muted/40 text-[10px] flex items-center justify-center shrink-0">{i + 1}</span>
+                          <span className="text-xs font-medium flex-1">{stepConf.label}</span>
+                          {isRunning && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+                          {step.done && <span className="text-[10px] text-green-400">✓</span>}
+                          {step.output && (isStepOpen ? <ChevronUp className="w-3 h-3 text-muted-foreground" /> : <ChevronDown className="w-3 h-3 text-muted-foreground" />)}
                         </button>
-                        {isActive && step.output && (
-                          <div className="px-3 pb-3">
-                            <div className="rounded-md bg-muted/40 p-2.5 max-h-64 overflow-y-auto">
-                              <pre className="text-[11px] text-muted-foreground leading-relaxed whitespace-pre-wrap font-sans">{step.output}</pre>
-                            </div>
+                        {isStepOpen && step.output && (
+                          <div className="px-3 pb-3 max-h-72 overflow-y-auto">
+                            <pre className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap font-sans">{step.output}</pre>
                           </div>
                         )}
                       </div>
                     );
                   })}
 
-                  {/* All done summary */}
-                  {allDone && (
-                    <div className="px-3 py-2 bg-green-500/5 flex items-center justify-between">
-                      <p className="text-[11px] text-green-400 font-medium">✓ Selesai — {app.chain.length} langkah selesai</p>
+                  {/* All done */}
+                  {!state.running && state.steps.every(s => s.done) && (
+                    <div className="flex items-center justify-between px-3 py-2 bg-green-500/5">
+                      <span className="text-[11px] text-green-400">✓ Selesai — {app.title}</span>
                       <div className="flex gap-1.5">
-                        <Button variant="outline" size="sm" className="h-6 text-[10px] gap-1 px-2" onClick={() => copyOutput(app.id)}>
-                          <Copy className="w-2.5 h-2.5" /> Salin
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-6 text-[10px] gap-1 px-2" onClick={() => downloadOutput(app, app.id)}>
-                          <Download className="w-2.5 h-2.5" /> Download
-                        </Button>
+                        <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => copyOutput(app, state)}><Copy className="w-3 h-3" /> Salin</Button>
+                        <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => downloadOutput(app, state)}><Download className="w-3 h-3" /> Download</Button>
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Pack Compiler empty state hint */}
+              {isActive && !state.started && isPackCompiler && (
+                <div className="border-t border-violet-500/20 p-4 bg-violet-500/5">
+                  <div className="flex items-center gap-2 text-xs text-violet-400">
+                    <Package className="w-4 h-4" />
+                    <span className="font-medium">Pack Compiler akan mengambil seluruh konteks workroom</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    Inventaris output → Sintesis → Dokumen final yang komprehensif dan siap diserahkan ke stakeholder.
+                    Pastikan Brain, KB, dan Deliverables sudah terisi untuk hasil terbaik.
+                  </p>
                 </div>
               )}
             </div>

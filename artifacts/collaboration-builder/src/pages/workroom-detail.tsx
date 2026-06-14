@@ -25,6 +25,7 @@ import { MulticlawPanel } from "@/components/multiclaw-panel";
 import { OpenclawChain } from "@/components/openclaw-chain";
 import { SummaryTab } from "@/components/summary-tab";
 import { MiniAppsTab } from "@/components/mini-apps-tab";
+import { GateRubricPanel } from "@/components/gate-rubric-panel";
 import { BriefMarketingTab } from "@/components/brief-marketing-tab";
 import { WidgetTab } from "@/components/widget-tab";
 import { WorkroomHealth } from "@/components/workroom-health";
@@ -113,85 +114,6 @@ function StageTimeline({ stages, activeStageId, onSelect }: {
   );
 }
 
-function GateDecisionPanel({ stage, workroomId }: { stage: { id: number; name: string; gateDecision?: string | null; gateNote?: string | null }; workroomId: number }) {
-  const [decision, setDecision] = useState("");
-  const [note, setNote] = useState("");
-  const { toast } = useToast();
-  const qc = useQueryClient();
-  const updateStage = useUpdateWorkroomStage();
-
-  async function decide(action: "approved" | "rejected") {
-    await updateStage.mutateAsync(
-      { workroomId, stageId: stage.id, data: { gateDecision: action, gateNote: note || undefined } as Parameters<typeof updateStage.mutateAsync>[0]["data"] },
-      {
-        onSuccess: () => {
-          toast({ title: action === "approved" ? "Gate approved ✓" : "Gate rejected", description: note || undefined });
-          qc.invalidateQueries({ queryKey: getListWorkroomStagesQueryKey(workroomId) });
-          qc.invalidateQueries({ queryKey: getGetWorkroomQueryKey(workroomId) });
-          qc.invalidateQueries({ queryKey: getListWorkroomActivityQueryKey(workroomId) });
-        },
-      }
-    );
-    void decision;
-  }
-
-  if (stage.gateDecision) {
-    return (
-      <Card className={cn("border", stage.gateDecision === "approved" ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5")}>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 font-medium">
-            {stage.gateDecision === "approved" ? (
-              <CheckCircle2 className="w-5 h-5 text-green-500" />
-            ) : (
-              <AlertTriangle className="w-5 h-5 text-red-500" />
-            )}
-            Gate {stage.gateDecision === "approved" ? "Approved" : "Rejected"}
-          </div>
-          {stage.gateNote && (
-            <p className="text-sm text-muted-foreground mt-2">{stage.gateNote}</p>
-          )}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="border-amber-500/30 bg-amber-500/5">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-400" />
-          Human Gate — {stage.name}
-        </CardTitle>
-        <CardDescription>Review the outputs from the previous stage and decide whether to proceed or reject.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Textarea
-          placeholder="Add your gate notes or decision rationale…"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={3}
-        />
-        <div className="flex gap-3">
-          <Button
-            variant="destructive"
-            className="flex-1"
-            disabled={updateStage.isPending}
-            onClick={() => decide("rejected")}
-          >
-            Reject & Revise
-          </Button>
-          <Button
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-            disabled={updateStage.isPending}
-            onClick={() => decide("approved")}
-          >
-            {updateStage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Approve & Continue"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function StageNotesEditor({ stage, workroomId }: { stage: { id: number; notes?: string | null }; workroomId: number }) {
   const [notes, setNotes] = useState(stage.notes ?? "");
@@ -488,9 +410,11 @@ export default function WorkroomDetail() {
           )}
 
           {displayStage?.stageType === "gate" && (
-            <GateDecisionPanel
+            <GateRubricPanel
               stage={{ id: displayStage.id, name: displayStage.name, gateDecision: displayStage.gateDecision, gateNote: displayStage.gateNote }}
               workroomId={workroomId}
+              workroomName={workroom?.name}
+              objective={workroom?.objective ?? undefined}
             />
           )}
 
