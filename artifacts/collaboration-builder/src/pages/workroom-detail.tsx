@@ -28,6 +28,7 @@ import { MiniAppsTab } from "@/components/mini-apps-tab";
 import { BriefMarketingTab } from "@/components/brief-marketing-tab";
 import { WidgetTab } from "@/components/widget-tab";
 import { WorkroomHealth } from "@/components/workroom-health";
+import { RangkumanTab } from "@/components/rangkuman-tab";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -545,6 +546,9 @@ export default function WorkroomDetail() {
               <TabsTrigger value="widget" className="gap-1.5">
                 <span>🔗</span> Widget
               </TabsTrigger>
+              <TabsTrigger value="rangkuman" className="gap-1.5">
+                <span>✨</span> AI Rangkuman
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="tasks" className="mt-4 space-y-5">
@@ -738,6 +742,10 @@ export default function WorkroomDetail() {
                 workroomId={workroomId}
                 workroomName={workroom?.name}
               />
+            </TabsContent>
+
+            <TabsContent value="rangkuman" className="mt-4">
+              <RangkumanTab workroomId={workroomId} workroomName={workroom?.name} />
             </TabsContent>
           </Tabs>
         </div>

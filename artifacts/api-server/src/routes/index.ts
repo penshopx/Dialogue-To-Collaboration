@@ -9,6 +9,7 @@ import knowledgeRouter from "./knowledge";
 import deliverablesRouter from "./deliverables";
 import brainRouter from "./brain";
 import configRouter from "./config";
+import summarizeRouter from "./summarize";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(knowledgeRouter);
 router.use(deliverablesRouter);
 router.use(brainRouter);
 router.use(configRouter);
+router.use(summarizeRouter);
 
 export default router;
