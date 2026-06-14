@@ -26,6 +26,7 @@ import { OpenclawChain } from "@/components/openclaw-chain";
 import { SummaryTab } from "@/components/summary-tab";
 import { MiniAppsTab } from "@/components/mini-apps-tab";
 import { GateRubricPanel } from "@/components/gate-rubric-panel";
+import { TaskDetailPanel, RoleBadge } from "@/components/task-detail-panel";
 import { BriefMarketingTab } from "@/components/brief-marketing-tab";
 import { WidgetTab } from "@/components/widget-tab";
 import { WorkroomHealth } from "@/components/workroom-health";
@@ -55,14 +56,6 @@ const STAGE_STATUS_CONFIG: Record<string, { label: string; color: string; icon: 
   rejected: { label: "Rejected", color: "text-red-400", icon: AlertTriangle },
 };
 
-const ROLE_ICONS: Record<string, React.ElementType> = {
-  strategis: Brain,
-  skeptis: Shield,
-  eksekutor: Wrench,
-  narasumber: Star,
-  pack_compiler: FileText,
-  evaluator: CheckSquare,
-};
 
 const PRIORITY_COLORS: Record<string, string> = {
   high: "text-red-400 border-red-400/30 bg-red-400/10",
@@ -253,6 +246,7 @@ export default function WorkroomDetail() {
 
   const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
 
   async function completeStage(stageId: number) {
     await advanceStage.mutateAsync(
@@ -498,44 +492,61 @@ export default function WorkroomDetail() {
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{label} ({items.length})</p>
                         <div className="space-y-2">
                           {items.map((task) => {
-                            const RoleIcon = ROLE_ICONS[task.assigneeRole ?? ""] ?? Bot;
+                            const isExpanded = expandedTaskId === task.id;
                             return (
-                              <div
-                                key={task.id}
-                                className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card hover:border-primary/20 transition-colors group"
-                              >
-                                <button
-                                  onClick={() => cycleTaskStatus(task.id, task.status)}
-                                  className="mt-0.5 shrink-0"
+                              <div key={task.id} className="space-y-1">
+                                <div
+                                  className={cn(
+                                    "flex items-start gap-3 p-3 rounded-lg border bg-card transition-colors group cursor-pointer",
+                                    isExpanded ? "border-primary/40 bg-primary/5" : "border-border hover:border-primary/20"
+                                  )}
+                                  onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
                                 >
-                                  {task.status === "done" ? (
-                                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                                  ) : task.status === "doing" ? (
-                                    <Clock className="w-5 h-5 text-blue-400" />
-                                  ) : (
-                                    <Circle className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                                  )}
-                                </button>
-                                <div className="flex-1 min-w-0">
-                                  <p className={cn("text-sm font-medium", task.status === "done" && "line-through text-muted-foreground")}>
-                                    {task.title}
-                                  </p>
-                                  {task.description && (
-                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
-                                  )}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); cycleTaskStatus(task.id, task.status); }}
+                                    className="mt-0.5 shrink-0"
+                                  >
+                                    {task.status === "done" ? (
+                                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                    ) : task.status === "doing" ? (
+                                      <Clock className="w-5 h-5 text-blue-400" />
+                                    ) : (
+                                      <Circle className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                    )}
+                                  </button>
+                                  <div className="flex-1 min-w-0">
+                                    <p className={cn("text-sm font-medium", task.status === "done" && "line-through text-muted-foreground")}>
+                                      {task.title}
+                                    </p>
+                                    {task.description && (
+                                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
+                                    )}
+                                    {task.output && (
+                                      <p className="text-xs text-muted-foreground/60 mt-0.5 line-clamp-1 italic">
+                                        Output: {task.output.slice(0, 80)}…
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    {task.priority && (
+                                      <Badge variant="outline" className={cn("text-[10px] py-0 h-4 border", PRIORITY_COLORS[task.priority])}>
+                                        {task.priority}
+                                      </Badge>
+                                    )}
+                                    <RoleBadge role={task.assigneeRole} size="xs" />
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  {task.priority && (
-                                    <Badge variant="outline" className={cn("text-[10px] py-0 h-4 border", PRIORITY_COLORS[task.priority])}>
-                                      {task.priority}
-                                    </Badge>
-                                  )}
-                                  {task.assigneeRole && (
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                      <RoleIcon className="w-3 h-3" />
-                                    </div>
-                                  )}
-                                </div>
+                                {isExpanded && (
+                                  <TaskDetailPanel
+                                    task={task}
+                                    workroomId={workroomId}
+                                    workroomName={workroom?.name}
+                                    stageName={displayStage?.name}
+                                    objective={workroom?.objective ?? undefined}
+                                    onClose={() => setExpandedTaskId(null)}
+                                    onDeleted={() => setExpandedTaskId(null)}
+                                  />
+                                )}
                               </div>
                             );
                           })}
