@@ -10,5 +10,6 @@ export interface KnowledgeItemUpdate {
   title?: string;
   content?: string;
   type?: string;
+  layer?: string;
   tags?: string;
 }

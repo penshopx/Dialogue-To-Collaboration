@@ -1255,7 +1255,7 @@ components:
     # ── Knowledge Base ────────────────────────────────────────────────────────
     KnowledgeItem:
       type: object
-      required: [id, workroomId, title, content, type, createdAt, updatedAt]
+      required: [id, workroomId, title, content, type, layer, createdAt, updatedAt]
       properties:
         id:
           type: integer
@@ -1266,6 +1266,8 @@ components:
         content:
           type: string
         type:
+          type: string
+        layer:
           type: string
         tags:
           type: ["string", "null"]
@@ -1286,6 +1288,8 @@ components:
           minLength: 1
         type:
           type: string
+        layer:
+          type: string
         tags:
           type: string
 
@@ -1297,6 +1301,8 @@ components:
         content:
           type: string
         type:
+          type: string
+        layer:
           type: string
         tags:
           type: string

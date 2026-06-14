@@ -279,6 +279,7 @@ export interface KnowledgeItem {
   title: string;
   content: string;
   type: string;
+  layer: string;
   /** @nullable */
   tags?: string | null;
   createdAt: string;
@@ -291,6 +292,7 @@ export interface KnowledgeItemInput {
   /** @minLength 1 */
   content: string;
   type?: string;
+  layer?: string;
   tags?: string;
 }
 
@@ -298,6 +300,7 @@ export interface KnowledgeItemUpdate {
   title?: string;
   content?: string;
   type?: string;
+  layer?: string;
   tags?: string;
 }
 

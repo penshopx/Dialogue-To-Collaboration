@@ -24,6 +24,7 @@ import { PersonaConfigTab } from "@/components/persona-config-tab";
 import { MulticlawPanel } from "@/components/multiclaw-panel";
 import { OpenclawChain } from "@/components/openclaw-chain";
 import { SummaryTab } from "@/components/summary-tab";
+import { MiniAppsTab } from "@/components/mini-apps-tab";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -530,6 +531,9 @@ export default function WorkroomDetail() {
               <TabsTrigger value="summary" className="gap-1.5">
                 <span>📊</span> Rangkuman
               </TabsTrigger>
+              <TabsTrigger value="miniapps" className="gap-1.5">
+                <span>🛠️</span> Mini Apps
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="tasks" className="mt-4 space-y-5">
@@ -667,7 +671,7 @@ export default function WorkroomDetail() {
               )}
             </TabsContent>
             <TabsContent value="knowledge" className="mt-4">
-              <KnowledgeBaseTab workroomId={workroomId} />
+              <KnowledgeBaseTab workroomId={workroomId} workroomName={workroom?.name} objective={workroom?.objective ?? undefined} />
             </TabsContent>
 
             <TabsContent value="brain" className="mt-4">
@@ -679,7 +683,7 @@ export default function WorkroomDetail() {
             </TabsContent>
 
             <TabsContent value="persona" className="mt-4">
-              <PersonaConfigTab workroomId={workroomId} />
+              <PersonaConfigTab workroomId={workroomId} workroomName={workroom?.name} objective={workroom?.objective ?? undefined} />
             </TabsContent>
 
             <TabsContent value="multiclaw" className="mt-4">
@@ -700,6 +704,14 @@ export default function WorkroomDetail() {
 
             <TabsContent value="summary" className="mt-4">
               <SummaryTab workroomId={workroomId} />
+            </TabsContent>
+
+            <TabsContent value="miniapps" className="mt-4">
+              <MiniAppsTab
+                workroomId={workroomId}
+                workroomName={workroom?.name}
+                objective={workroom?.objective ?? undefined}
+              />
             </TabsContent>
           </Tabs>
         </div>

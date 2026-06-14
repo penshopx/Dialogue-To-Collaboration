@@ -580,6 +580,7 @@ export const ListKnowledgeItemsResponseItem = zod.object({
   "title": zod.string(),
   "content": zod.string(),
   "type": zod.string(),
+  "layer": zod.string(),
   "tags": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -602,6 +603,7 @@ export const CreateKnowledgeItemBody = zod.object({
   "title": zod.string().min(1),
   "content": zod.string().min(1),
   "type": zod.string().optional(),
+  "layer": zod.string().optional(),
   "tags": zod.string().optional()
 })
 
@@ -617,6 +619,7 @@ export const UpdateKnowledgeItemBody = zod.object({
   "title": zod.string().optional(),
   "content": zod.string().optional(),
   "type": zod.string().optional(),
+  "layer": zod.string().optional(),
   "tags": zod.string().optional()
 })
 
@@ -626,6 +629,7 @@ export const UpdateKnowledgeItemResponse = zod.object({
   "title": zod.string(),
   "content": zod.string(),
   "type": zod.string(),
+  "layer": zod.string(),
   "tags": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()

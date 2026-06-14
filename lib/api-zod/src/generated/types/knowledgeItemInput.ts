@@ -12,5 +12,6 @@ export interface KnowledgeItemInput {
   /** @minLength 1 */
   content: string;
   type?: string;
+  layer?: string;
   tags?: string;
 }

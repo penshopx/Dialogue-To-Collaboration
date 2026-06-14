@@ -12,6 +12,7 @@ export interface KnowledgeItem {
   title: string;
   content: string;
   type: string;
+  layer: string;
   /** @nullable */
   tags?: string | null;
   createdAt: string;
