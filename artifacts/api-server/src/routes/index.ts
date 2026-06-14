@@ -4,6 +4,7 @@ import templatesRouter from "./templates";
 import agentsRouter from "./agents";
 import workroomsRouter from "./workrooms";
 import insightsRouter from "./insights";
+import agentRouter from "./agent";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(templatesRouter);
 router.use(agentsRouter);
 router.use(workroomsRouter);
 router.use(insightsRouter);
+router.use(agentRouter);
 
 export default router;

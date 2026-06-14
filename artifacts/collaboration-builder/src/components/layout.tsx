@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Library, Briefcase, Bot, Settings, Bell, Menu, X, AlertTriangle, Lightbulb } from "lucide-react";
+import { LayoutDashboard, Library, Briefcase, Bot, Settings, Bell, Menu, X, AlertTriangle, Lightbulb, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useListWorkrooms } from "@workspace/api-client-react";
+import { CommandPalette } from "@/components/command-palette";
 
 const GATE_STAGE_NAMES = new Set(["Skeptic Gate", "QA Gate"]);
 
@@ -56,7 +57,19 @@ function NavLinks({ location, gateCount, onNavigate }: { location: string; gateC
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
   const gateCount = usePendingGateCount();
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCmdOpen(prev => !prev);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const mobileNavItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard, badge: 0 },
@@ -129,6 +142,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex-1 hidden md:block" />
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setCmdOpen(true)}
+              className="hidden md:flex items-center gap-2 px-3 h-8 rounded-md border border-border bg-muted/40 hover:bg-muted transition-colors text-xs text-muted-foreground"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span>Cari…</span>
+              <kbd className="ml-1 text-[10px] border border-border rounded px-1 py-0.5">⌘K</kbd>
+            </button>
             <Button variant="ghost" size="icon" className="text-muted-foreground relative">
               <Bell className="w-4 h-4" />
               {gateCount > 0 && (
@@ -149,6 +170,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {children}
           </div>
         </div>
+
+        <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
         <nav className="md:hidden border-t border-border bg-card flex items-center justify-around h-14 shrink-0">
           {mobileNavItems.map((item) => {

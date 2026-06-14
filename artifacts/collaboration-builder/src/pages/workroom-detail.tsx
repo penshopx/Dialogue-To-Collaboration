@@ -13,8 +13,10 @@ import {
   ArrowLeft, CheckCircle2, Circle, Clock, Loader2, Plus,
   ChevronRight, AlertTriangle, FileText, MessageSquare, Bot,
   Shield, Wrench, Brain, Star, CheckSquare, ArrowRight,
-  StickyNote, Save, ExternalLink,
+  StickyNote, Save, ExternalLink, Kanban,
 } from "lucide-react";
+import { AgentChat } from "@/components/agent-chat";
+import { KanbanBoard } from "@/components/kanban-board";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -491,6 +493,14 @@ export default function WorkroomDetail() {
                 Notes
                 {displayStage?.notes && <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />}
               </TabsTrigger>
+              <TabsTrigger value="board" className="gap-1.5">
+                <Kanban className="w-3.5 h-3.5" />
+                Board
+              </TabsTrigger>
+              <TabsTrigger value="agent" className="gap-1.5">
+                <Bot className="w-3.5 h-3.5" />
+                Agent
+              </TabsTrigger>
               <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
 
@@ -576,6 +586,30 @@ export default function WorkroomDetail() {
               ) : (
                 <p className="text-sm text-muted-foreground py-8 text-center">Pilih stage untuk menulis catatan.</p>
               )}
+            </TabsContent>
+
+            <TabsContent value="board" className="mt-4">
+              <KanbanBoard
+                tasks={tasks ?? []}
+                stages={stages ?? []}
+                workroomId={workroomId}
+              />
+            </TabsContent>
+
+            <TabsContent value="agent" className="mt-4">
+              <AgentChat
+                workroomName={workroom?.name ?? ""}
+                stageName={displayStage?.name ?? ""}
+                objective={workroom?.objective}
+                stageNotes={displayStage?.notes}
+                onSaveToNotes={displayStage ? (text) => {
+                  const existing = displayStage.notes ?? "";
+                  const combined = existing ? `${existing}\n\n---\n${text}` : text;
+                  advanceStage.mutateAsync({ workroomId, stageId: displayStage.id, data: { notes: combined } as Parameters<typeof advanceStage.mutateAsync>[0]["data"] }).then(() => {
+                    qc.invalidateQueries({ queryKey: getListWorkroomStagesQueryKey(workroomId) });
+                  });
+                } : undefined}
+              />
             </TabsContent>
 
             <TabsContent value="activity" className="mt-4">
