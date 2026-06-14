@@ -1,18 +1,28 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Library, Briefcase, Bot, Settings, Bell, Menu, X } from "lucide-react";
+import { LayoutDashboard, Library, Briefcase, Bot, Settings, Bell, Menu, X, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useListWorkrooms } from "@workspace/api-client-react";
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/workrooms", label: "Workrooms", icon: Briefcase },
-  { href: "/templates", label: "Templates", icon: Library },
-  { href: "/agents", label: "Agents", icon: Bot },
-];
+const GATE_STAGE_NAMES = new Set(["Skeptic Gate", "QA Gate"]);
 
-function NavLinks({ location, onNavigate }: { location: string; onNavigate?: () => void }) {
+function usePendingGateCount() {
+  const { data: workrooms } = useListWorkrooms();
+  return workrooms?.filter(
+    (w) => w.status === "active" && w.currentStageName && GATE_STAGE_NAMES.has(w.currentStageName)
+  ).length ?? 0;
+}
+
+function NavLinks({ location, gateCount, onNavigate }: { location: string; gateCount: number; onNavigate?: () => void }) {
+  const navItems = [
+    { href: "/", label: "Dashboard", icon: LayoutDashboard, badge: 0 },
+    { href: "/workrooms", label: "Workrooms", icon: Briefcase, badge: gateCount },
+    { href: "/templates", label: "Templates", icon: Library, badge: 0 },
+    { href: "/agents", label: "Agents", icon: Bot, badge: 0 },
+  ];
+
   return (
     <nav className="space-y-1">
       {navItems.map((item) => {
@@ -27,8 +37,13 @@ function NavLinks({ location, onNavigate }: { location: string; onNavigate?: () 
                   : "text-muted-foreground hover:text-foreground hover:bg-accent"
               )}
             >
-              <item.icon className="w-4 h-4" />
-              {item.label}
+              <item.icon className="w-4 h-4 shrink-0" />
+              <span className="flex-1">{item.label}</span>
+              {item.badge > 0 && (
+                <span className="flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold px-1">
+                  {item.badge}
+                </span>
+              )}
             </div>
           </Link>
         );
@@ -40,6 +55,14 @@ function NavLinks({ location, onNavigate }: { location: string; onNavigate?: () 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const gateCount = usePendingGateCount();
+
+  const mobileNavItems = [
+    { href: "/", label: "Dashboard", icon: LayoutDashboard, badge: 0 },
+    { href: "/workrooms", label: "Workrooms", icon: Briefcase, badge: gateCount },
+    { href: "/templates", label: "Templates", icon: Library, badge: 0 },
+    { href: "/agents", label: "Agents", icon: Bot, badge: 0 },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
@@ -55,8 +78,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
         <div className="px-4 py-2 flex-1">
-          <NavLinks location={location} />
+          <NavLinks location={location} gateCount={gateCount} />
         </div>
+        {gateCount > 0 && (
+          <div className="px-4 pb-4">
+            <Link href="/workrooms">
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs font-medium text-amber-400 cursor-pointer hover:bg-amber-500/20 transition-colors">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>{gateCount} gate{gateCount > 1 ? "s" : ""} awaiting review</span>
+              </div>
+            </Link>
+          </div>
+        )}
       </aside>
 
       <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -64,8 +97,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3 md:hidden">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="relative">
                   <Menu className="w-5 h-5" />
+                  {gateCount > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400" />
+                  )}
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-64 p-0 bg-card">
@@ -81,7 +117,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </Button>
                 </div>
                 <div className="px-4">
-                  <NavLinks location={location} onNavigate={() => setMobileOpen(false)} />
+                  <NavLinks location={location} gateCount={gateCount} onNavigate={() => setMobileOpen(false)} />
                 </div>
               </SheetContent>
             </Sheet>
@@ -91,8 +127,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex-1 hidden md:block" />
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
+            <Button variant="ghost" size="icon" className="text-muted-foreground relative">
               <Bell className="w-4 h-4" />
+              {gateCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-400" />
+              )}
             </Button>
             <Button variant="ghost" size="icon" className="text-muted-foreground hidden md:inline-flex">
               <Settings className="w-4 h-4" />
@@ -110,16 +149,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="md:hidden border-t border-border bg-card flex items-center justify-around h-14 shrink-0">
-          {navItems.map((item) => {
+          {mobileNavItems.map((item) => {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             return (
               <Link key={item.href} href={item.href}>
                 <div className={cn(
-                  "flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-md transition-colors cursor-pointer",
+                  "relative flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-md transition-colors cursor-pointer",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}>
                   <item.icon className="w-5 h-5" />
                   <span className="text-[10px] font-medium">{item.label}</span>
+                  {item.badge > 0 && (
+                    <span className="absolute top-0.5 right-2.5 w-2 h-2 rounded-full bg-amber-400" />
+                  )}
                 </div>
               </Link>
             );

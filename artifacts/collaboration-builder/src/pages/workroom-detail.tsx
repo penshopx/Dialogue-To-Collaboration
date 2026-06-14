@@ -287,7 +287,11 @@ export default function WorkroomDetail() {
     );
   }
 
-  const activeStage = stages?.find((s) => s.id === selectedStageId) ?? stages?.find((s) => s.status === "active") ?? stages?.[0];
+  const activeStage =
+    stages?.find((s) => s.id === selectedStageId) ??
+    stages?.find((s) => s.status === "active") ??
+    stages?.find((s) => s.status === "awaiting_gate") ??
+    stages?.[0];
   const displayStageId = selectedStageId ?? activeStage?.id ?? null;
   const displayStage = stages?.find((s) => s.id === displayStageId) ?? activeStage;
 
