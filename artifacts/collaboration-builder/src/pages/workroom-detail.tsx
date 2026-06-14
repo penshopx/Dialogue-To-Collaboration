@@ -12,7 +12,7 @@ import { useState } from "react";
 import {
   ArrowLeft, CheckCircle2, Circle, Clock, Loader2, Plus,
   ChevronRight, AlertTriangle, FileText, MessageSquare, Bot,
-  Shield, Wrench, Brain, Star, CheckSquare
+  Shield, Wrench, Brain, Star, CheckSquare, ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -265,11 +265,27 @@ export default function WorkroomDetail() {
   const { data: tasks } = useListWorkroomTasks(workroomId);
   const { data: activity } = useListWorkroomActivity(workroomId);
   const updateTask = useUpdateTask();
+  const advanceStage = useUpdateWorkroomStage();
   const qc = useQueryClient();
   const { toast } = useToast();
 
   const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
+
+  async function completeStage(stageId: number) {
+    await advanceStage.mutateAsync(
+      { workroomId, stageId, data: { status: "completed" } as Parameters<typeof advanceStage.mutateAsync>[0]["data"] },
+      {
+        onSuccess: () => {
+          toast({ title: "Stage completed", description: "Pipeline advanced to next stage." });
+          setSelectedStageId(null);
+          qc.invalidateQueries({ queryKey: getListWorkroomStagesQueryKey(workroomId) });
+          qc.invalidateQueries({ queryKey: getGetWorkroomQueryKey(workroomId) });
+          qc.invalidateQueries({ queryKey: getListWorkroomActivityQueryKey(workroomId) });
+        },
+      }
+    );
+  }
 
   const activeStage = stages?.find((s) => s.id === selectedStageId) ?? stages?.find((s) => s.status === "active") ?? stages?.[0];
   const displayStageId = selectedStageId ?? activeStage?.id ?? null;
@@ -365,7 +381,7 @@ export default function WorkroomDetail() {
 
         <div className="lg:col-span-3 space-y-5">
           {displayStage && (
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">
                   Stage {displayStage.order}: {displayStage.name}
@@ -375,10 +391,25 @@ export default function WorkroomDetail() {
                 </p>
               </div>
               {displayStage.stageType !== "gate" && displayStage.status === "active" && (
-                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAddTaskOpen(true)}>
-                  <Plus className="w-3.5 h-3.5" />
-                  Add Task
-                </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAddTaskOpen(true)}>
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Task
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+                    disabled={advanceStage.isPending}
+                    onClick={() => completeStage(displayStage.id)}
+                  >
+                    {advanceStage.isPending ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    )}
+                    Complete Stage
+                  </Button>
+                </div>
               )}
             </div>
           )}
