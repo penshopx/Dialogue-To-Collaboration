@@ -21,6 +21,9 @@ import { KnowledgeBaseTab } from "@/components/knowledge-base-tab";
 import { ProjectBrainTab } from "@/components/project-brain-tab";
 import { DeliverablesTab } from "@/components/deliverables-tab";
 import { PersonaConfigTab } from "@/components/persona-config-tab";
+import { MulticlawPanel } from "@/components/multiclaw-panel";
+import { OpenclawChain } from "@/components/openclaw-chain";
+import { SummaryTab } from "@/components/summary-tab";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -518,6 +521,15 @@ export default function WorkroomDetail() {
               <TabsTrigger value="persona" className="gap-1.5">
                 <span>🤖</span> Persona
               </TabsTrigger>
+              <TabsTrigger value="multiclaw" className="gap-1.5">
+                <span>⚡</span> Multiclaw
+              </TabsTrigger>
+              <TabsTrigger value="openclaw" className="gap-1.5">
+                <span>🌀</span> Openclaw
+              </TabsTrigger>
+              <TabsTrigger value="summary" className="gap-1.5">
+                <span>📊</span> Rangkuman
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="tasks" className="mt-4 space-y-5">
@@ -668,6 +680,26 @@ export default function WorkroomDetail() {
 
             <TabsContent value="persona" className="mt-4">
               <PersonaConfigTab workroomId={workroomId} />
+            </TabsContent>
+
+            <TabsContent value="multiclaw" className="mt-4">
+              <MulticlawPanel
+                workroomId={workroomId}
+                workroomName={workroom?.name}
+                objective={workroom?.objective ?? undefined}
+              />
+            </TabsContent>
+
+            <TabsContent value="openclaw" className="mt-4">
+              <OpenclawChain
+                workroomId={workroomId}
+                workroomName={workroom?.name}
+                objective={workroom?.objective ?? undefined}
+              />
+            </TabsContent>
+
+            <TabsContent value="summary" className="mt-4">
+              <SummaryTab workroomId={workroomId} />
             </TabsContent>
           </Tabs>
         </div>

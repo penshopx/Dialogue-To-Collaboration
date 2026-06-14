@@ -1,0 +1,378 @@
+AI Agents
+Atur perilaku, tingkat otonomi, dan cara AI merespons.
+
+Mode Lanjutan
+Tampilkan pengaturan detail untuk pengguna berpengalaman.
+
+
+Orchestrator Multi-Agent
+Aktif
+
+Aktifkan agar AI secara otomatis mendeteksi topik query (tender, SKK, dokumen, hukum, K3, marketing) dan mengaktifkan prompt specialist yang tepat — tanpa biaya tinggi.
+Model Routing (Classifier — Murah & Cepat)
+
+DeepSeek Chat (~$0.0001/call) — Direkomendasikan
+Model ini hanya dipakai untuk klasifikasi topik (~10 token). Jawaban tetap menggunakan model utama chatbot.
+
+Efisiensi biaya: Classifier hanya ~$0.0001 per pesan. Jawaban specialist menggunakan model yang sudah dikonfigurasi — tidak ada biaya tambahan signifikan.
+Specialist Agents (7)
+📋
+Agen Tender
+
+🏆
+Agen SKK/SBU
+
+📄
+Agen Dokumen
+
+⚖️
+Agen Hukum
+
+🦺
+Agen K3
+
+📈
+Agen Marketing
+
+💬
+Agen Umum
+
+
++
+Tambah Specialist Baru
+Preset Perilaku
+Pilih gaya kerja AI yang paling cocok.
+
+Balanced
+Seimbang & Fleksibel
+Reset ke Preset
+Cocok untuk sebagian besar kasus. AI responsif, memberikan jawaban terstruktur, dan meminta klarifikasi sebelum bertindak.
+
+Otonomi Sedang
+Terstruktur
+Tanya Dulu
+Sebagian pengaturan mengikuti preset. Aktifkan Mode Lanjutan untuk detail.
+
+Tingkat Otonomi
+Seberapa aktif AI mengambil inisiatif.
+
+Terbatas
+Mode Agentic
+Aktif
+
+Aktifkan kemampuan lanjutan (perencanaan & langkah bertahap).
+Peran & Mode Kerja
+Tentukan peran agen dalam sistem multi-agent dan mode operasinya.
+Peran Agen
+Posisi agen dalam ekosistem multi-agent.
+
+
+Standalone
+Mode Kerja
+Mode operasi aktif agen saat ini.
+
+
+Answer Mode
+·
+Answer Mode:
+Jawab cepat berbasis KB.
+·
+Advisor Mode:
+Beri opsi + tradeoff.
+·
+Task Intake Mode:
+Kumpulkan requirement tugas.
+·
+Execution Mode:
+Jalankan tool dan laporkan hasil.
+·
+Review Mode:
+Verifikasi dan minta persetujuan.
+MultiClaw Orchestration Planner
+AI
+MULTI-AGENT
+AI menganalisis semua agen dalam chatbot ini dan merancang routing rules, handoff protocol, gap analysis, serta saran orchestrator system prompt secara otomatis.
+Generate Orchestration Plan
+OpenClaw
+AKTIF
+EXECUTION ENGINE
+Lapisan keamanan eksekusi multi-level. Setiap tindakan AI dicegat, dikategorikan, dan dikonfirmasi sebelum berjalan — memberi Anda kontrol penuh atas apa yang dilakukan AI.
+Gerbang Eksekusi
+Level konfirmasi sebelum AI melakukan tindakan.
+
+
+Write Gate — konfirmasi 1× untuk tindakan tulis
+Matriks Tindakan
+
+READ
+Cari KB · Hitung · Rangkum · Sarankan
+Otomatis
+WRITE
+Draft dokumen · Update rekaman · Buat laporan
+1× Konfirmasi
+DESTRUCTIVE
+Hapus data · Publish · Kirim massal
+Konfirmasi Ganda
+Aksi Selalu Diizinkan (Trusted)
+Tindakan ini dijalankan tanpa konfirmasi apapun.
+
+
+Cari di Knowledge Base
+
+Hitung formula
+
+Ringkas dokumen
+
+Sarankan langkah selanjutnya
+
+Tampilkan mini app
+
+Arahkan ke chatbot lain
+
+Generate teks saja
+Aksi Selalu Diblokir (Blocked)
+Tindakan ini tidak bisa dijalankan meski diminta.
+
+
+Hapus data pengguna
+
+Kirim email massal
+
+Publish ke publik tanpa konfirmasi
+
+Akses data sensitif langsung
+
+Ubah konfigurasi sistem
+
+Bayar atau charge kartu
+Transparansi & Audit
+
+Lacak Langkah Eksekusi
+Tampilkan rantai tindakan AI step-by-step di chat.
+
+
+Simpan Audit Log Sesi
+Catat semua tindakan AI dalam sesi ke log internal.
+
+
+Notifikasi saat Gate Terpicu
+Kirim notifikasi ketika AI meminta konfirmasi eksekusi.
+
+
+Track & Routing Dokumen
+
+Track Pengadaan
+Menentukan skema routing dan persyaratan dokumen yang dihasilkan.
+
+Komersial
+PBJ Formal
+Internal
+Kualitas Respons
+Kontrol cara jawaban disajikan.
+Kedalaman Jawaban
+Atur tingkat detail penjelasan AI.
+
+
+Terstruktur
+Format Output Utama
+Bentuk jawaban yang paling sering digunakan.
+
+
+Ringkasan + langkah
+Pemeriksaan Mandiri
+AI mengecek ulang jawaban sebelum dikirim.
+
+
+Penalaran Multi-Langkah
+AI memecah masalah menjadi langkah-langkah terstruktur.
+
+
+Klarifikasi & Ketidakpastian
+Mengurangi halusinasi dan meningkatkan kualitas dialog.
+Minta Klarifikasi Dulu
+AI bertanya jika informasi belum cukup.
+
+
+Saat Tidak Yakin
+Cara AI merespons ketika informasinya tidak pasti.
+
+
+Sarankan verifikasi ke sumber resmi
+Tampilkan Peringatan Risiko
+Tambahkan catatan kehati-hatian untuk topik sensitif.
+
+
+Pemicu Klarifikasi
+Kondisi yang membuat AI otomatis meminta klarifikasi.
+
+
+Output target tidak jelas
+
+Risiko salah tinggi
+
+Butuh data spesifik untuk eksekusi
+
+Pertanyaan ambigu / multi-tafsir
+
+Informasi pengguna tampak bertentangan
+Memori & Konteks
+Kontrol apa yang diingat dan diprioritaskan AI.
+Mendengarkan dengan Teliti
+AI membaca konteks dan maksud lebih cermat.
+
+
+Retensi Konteks
+Banyaknya pesan terakhir yang jadi acuan.
+
+10 pesan
+Normal
+1 pesan
+50 pesan
+Prioritas Konteks
+Urutan konteks yang paling diutamakan.
+
+
+1.
+Pertanyaan terakhir
+
+
+
+2.
+Tujuan pengguna
+
+
+
+3.
+Riwayat percakapan
+
+
+
+Profil pengguna
+
+Data proyek
+
+Hasil tools
+Bantuan Proaktif
+Seberapa sering AI memberi bantuan tambahan.
+Bantuan Proaktif
+Seberapa sering AI memberi bantuan tambahan.
+
+
+Rendah
+Jenis Bantuan Proaktif
+Jenis bantuan yang boleh ditampilkan.
+
+
+Saran langkah berikutnya
+
+Pertanyaan klarifikasi
+
+Checklist
+
+Peringatan risiko
+
+Rekomendasi mini apps
+
+Rekomendasi chatbot spesialis
+
+Rekomendasi dokumen
+Gaya Interaksi & Empati
+Nada dan cara AI berkomunikasi.
+Gaya Interaksi
+Cara AI menyampaikan jawaban.
+
+
+Konsultatif
+Empati Kontekstual
+Seberapa peka AI terhadap emosi pengguna.
+
+
+Ringan
+Batas Tindakan & Eskalasi
+Guardrails dan aturan keamanan AI.
+Batas Tindakan AI
+Apa saja tindakan yang diizinkan.
+
+
+Hanya menjawab
+
+Boleh menyarankan
+
+Boleh bertanya balik
+
+Boleh memanggil mini apps
+
+Boleh mengarahkan ke chatbot lain
+
+Boleh memberi CTA bisnis
+Aturan Eskalasi
+Apa yang dilakukan saat kasus sensitif/rumit.
+
+
+Arahkan ke sumber resmi
+
+Sarankan konsultasi manusia
+
+Pindahkan ke chatbot spesialis
+
+Sarankan mini app terkait
+
+Tampilkan disclaimer
+Perilaku di Luar Topik
+Cara AI merespons ketika pertanyaan tidak relevan.
+Saat di Luar Topik
+Respons AI ketika pertanyaan tidak relevan.
+
+
+Jawab singkat lalu arahkan kembali
+Pembelajaran & Telemetri
+Kontrol adaptasi dan penyimpanan sinyal interaksi.
+Mode Pembelajaran Adaptif
+Apakah AI menyesuaikan diri dari interaksi.
+
+
+Off
+Simpan Sinyal Interaksi
+Simpan sinyal untuk evaluasi kualitas.
+
+
+Prioritas Sumber Jawaban
+Urutan sumber yang diprioritaskan AI.
+Geser urutan sumber yang diutamakan AI saat menjawab.
+
+1.
+System Prompt
+
+
+2.
+Knowledge Engine
+
+
+3.
+Riwayat percakapan
+
+
+4.
+Mini Apps
+
+
+5.
+Integrations
+
+
+6.
+Sumber eksternal
+
+
+MultiClaw Inter-Agent API
+L4
+
+MultiClaw Level 4: selective fan-out, JSON structured reports, critic gate. Sub-agen dipilih cerdas oleh router dan hasilnya disintesis oleh orchestrator.
+Agentic Deliverables
+Artefak terstruktur yang dihasilkan otomatis oleh MultiClaw L4 setelah setiap sesi orkestrasi.
+Belum ada deliverable. Jalankan sesi orkestrasi untuk menghasilkan artefak.
+Memori AI
+
+Informasi yang diingat AI dari percakapan sebelumnya dengan pengguna.
+Mode Lanjutan Aktif
+Semua pengaturan ditampilkan. Nilai tersimpan otomatis saat diubah.
