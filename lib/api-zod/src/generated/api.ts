@@ -263,6 +263,7 @@ export const GetWorkroomResponse = zod.object({
   "status": zod.string().describe('pending | active | awaiting_gate | approved | rejected | completed'),
   "gateDecision": zod.string().nullish(),
   "gateNote": zod.string().nullish(),
+  "notes": zod.string().nullish().describe('Stage-level notes and context captured by users'),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })),
@@ -338,6 +339,7 @@ export const ListWorkroomStagesResponseItem = zod.object({
   "status": zod.string().describe('pending | active | awaiting_gate | approved | rejected | completed'),
   "gateDecision": zod.string().nullish(),
   "gateNote": zod.string().nullish(),
+  "notes": zod.string().nullish().describe('Stage-level notes and context captured by users'),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })
@@ -355,7 +357,8 @@ export const UpdateWorkroomStageParams = zod.object({
 export const UpdateWorkroomStageBody = zod.object({
   "status": zod.string().optional(),
   "gateDecision": zod.string().optional(),
-  "gateNote": zod.string().optional()
+  "gateNote": zod.string().optional(),
+  "notes": zod.string().optional()
 })
 
 export const UpdateWorkroomStageResponse = zod.object({
@@ -368,6 +371,7 @@ export const UpdateWorkroomStageResponse = zod.object({
   "status": zod.string().describe('pending | active | awaiting_gate | approved | rejected | completed'),
   "gateDecision": zod.string().nullish(),
   "gateNote": zod.string().nullish(),
+  "notes": zod.string().nullish().describe('Stage-level notes and context captured by users'),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })

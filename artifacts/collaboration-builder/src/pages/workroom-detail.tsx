@@ -12,7 +12,8 @@ import { useState } from "react";
 import {
   ArrowLeft, CheckCircle2, Circle, Clock, Loader2, Plus,
   ChevronRight, AlertTriangle, FileText, MessageSquare, Bot,
-  Shield, Wrench, Brain, Star, CheckSquare, ArrowRight
+  Shield, Wrench, Brain, Star, CheckSquare, ArrowRight,
+  StickyNote, Save, ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -175,6 +176,51 @@ function GateDecisionPanel({ stage, workroomId }: { stage: { id: number; name: s
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function StageNotesEditor({ stage, workroomId }: { stage: { id: number; notes?: string | null }; workroomId: number }) {
+  const [notes, setNotes] = useState(stage.notes ?? "");
+  const [dirty, setDirty] = useState(false);
+  const updateStage = useUpdateWorkroomStage();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+
+  async function save() {
+    await updateStage.mutateAsync(
+      { workroomId, stageId: stage.id, data: { notes } as Parameters<typeof updateStage.mutateAsync>[0]["data"] },
+      {
+        onSuccess: () => {
+          toast({ title: "Notes saved ✓" });
+          setDirty(false);
+          qc.invalidateQueries({ queryKey: getListWorkroomStagesQueryKey(workroomId) });
+        },
+      }
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <Textarea
+        placeholder="Tulis catatan, konteks, keputusan, atau output untuk stage ini…"
+        value={notes}
+        rows={7}
+        onChange={(e) => { setNotes(e.target.value); setDirty(true); }}
+        className="resize-none text-sm"
+      />
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">Catatan tersimpan per stage — terlihat di laporan workroom.</p>
+        <Button
+          size="sm"
+          disabled={!dirty || updateStage.isPending}
+          onClick={save}
+          className="gap-1.5"
+        >
+          {updateStage.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+          Simpan
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -354,6 +400,13 @@ export default function WorkroomDetail() {
             <p className="text-muted-foreground text-sm mt-0.5 line-clamp-1">{workroom.objective}</p>
           )}
         </div>
+        <Link href={`/workrooms/${workroomId}/report`}>
+          <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+            <FileText className="w-3.5 h-3.5" />
+            Report
+            <ExternalLink className="w-3 h-3 text-muted-foreground" />
+          </Button>
+        </Link>
       </div>
 
       <div className="flex items-center gap-3">
@@ -433,6 +486,11 @@ export default function WorkroomDetail() {
                   <Badge variant="secondary" className="ml-1.5 text-xs h-4 px-1.5">{stageTasks.length}</Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="notes" className="gap-1.5">
+                <StickyNote className="w-3.5 h-3.5" />
+                Notes
+                {displayStage?.notes && <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />}
+              </TabsTrigger>
               <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
 
@@ -505,6 +563,18 @@ export default function WorkroomDetail() {
                     )
                   )}
                 </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="notes" className="mt-4">
+              {displayStage ? (
+                <StageNotesEditor
+                  key={displayStage.id}
+                  stage={{ id: displayStage.id, notes: displayStage.notes }}
+                  workroomId={workroomId}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground py-8 text-center">Pilih stage untuk menulis catatan.</p>
               )}
             </TabsContent>
 

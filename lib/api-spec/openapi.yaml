@@ -774,6 +774,9 @@ components:
           type: ["string", "null"]
         gateNote:
           type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+          description: "Stage-level notes and context captured by users"
         completedAt:
           type: ["string", "null"]
         createdAt:
@@ -787,6 +790,8 @@ components:
         gateDecision:
           type: string
         gateNote:
+          type: string
+        notes:
           type: string
 
     # ── WorkroomTask ──────────────────────────────────────────────────────────

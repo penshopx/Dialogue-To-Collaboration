@@ -113,6 +113,11 @@ export interface WorkroomStage {
   gateDecision?: string | null;
   /** @nullable */
   gateNote?: string | null;
+  /**
+     * Stage-level notes and context captured by users
+     * @nullable
+     */
+  notes?: string | null;
   /** @nullable */
   completedAt?: string | null;
   createdAt: string;
@@ -173,6 +178,7 @@ export interface WorkroomStageUpdate {
   status?: string;
   gateDecision?: string;
   gateNote?: string;
+  notes?: string;
 }
 
 export interface WorkroomTaskInput {

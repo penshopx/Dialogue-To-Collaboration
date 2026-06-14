@@ -24,6 +24,7 @@ export const workroomStagesTable = pgTable("workroom_stages", {
   status: text("status").notNull().default("pending"),
   gateDecision: text("gate_decision"),
   gateNote: text("gate_note"),
+  notes: text("notes"),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

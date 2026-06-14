@@ -10,4 +10,5 @@ export interface WorkroomStageUpdate {
   status?: string;
   gateDecision?: string;
   gateNote?: string;
+  notes?: string;
 }
