@@ -1,0 +1,1 @@
+- [Orval mutation body shape](orval-mutation-shape.md) — generated mutations wrap request body as `{ data: InputType }`, not the raw type directly.

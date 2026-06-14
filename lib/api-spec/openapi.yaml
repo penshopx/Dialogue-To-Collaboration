@@ -1,22 +1,28 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Collaboration Builder API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: templates
+  - name: workrooms
+  - name: agents
+  - name: tasks
+  - name: stages
+  - name: gates
+  - name: activity
+  - name: dashboard
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +30,890 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Templates ──────────────────────────────────────────────────────────────
+  /templates:
+    get:
+      operationId: listTemplates
+      tags: [templates]
+      summary: List all workflow templates
+      responses:
+        "200":
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowTemplate"
+    post:
+      operationId: createTemplate
+      tags: [templates]
+      summary: Create a workflow template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkflowTemplateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowTemplate"
+
+  /templates/{id}:
+    get:
+      operationId: getTemplate
+      tags: [templates]
+      summary: Get a workflow template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowTemplate"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateTemplate
+      tags: [templates]
+      summary: Update a workflow template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkflowTemplateUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowTemplate"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteTemplate
+      tags: [templates]
+      summary: Delete a workflow template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Agents ─────────────────────────────────────────────────────────────────
+  /agents:
+    get:
+      operationId: listAgents
+      tags: [agents]
+      summary: List all agents
+      responses:
+        "200":
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Agent"
+    post:
+      operationId: createAgent
+      tags: [agents]
+      summary: Create an agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agent"
+
+  /agents/{id}:
+    get:
+      operationId: getAgent
+      tags: [agents]
+      summary: Get an agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Agent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agent"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateAgent
+      tags: [agents]
+      summary: Update an agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agent"
+    delete:
+      operationId: deleteAgent
+      tags: [agents]
+      summary: Delete an agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Workrooms ──────────────────────────────────────────────────────────────
+  /workrooms:
+    get:
+      operationId: listWorkrooms
+      tags: [workrooms]
+      summary: List all workrooms
+      responses:
+        "200":
+          description: List of workrooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workroom"
+    post:
+      operationId: createWorkroom
+      tags: [workrooms]
+      summary: Create a workroom from a template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkroomInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workroom"
+
+  /workrooms/{id}:
+    get:
+      operationId: getWorkroom
+      tags: [workrooms]
+      summary: Get a workroom with stages and tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Workroom detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkroomDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateWorkroom
+      tags: [workrooms]
+      summary: Update a workroom
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkroomUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workroom"
+    delete:
+      operationId: deleteWorkroom
+      tags: [workrooms]
+      summary: Delete a workroom
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Workroom Stages ────────────────────────────────────────────────────────
+  /workrooms/{workroomId}/stages:
+    get:
+      operationId: listWorkroomStages
+      tags: [stages]
+      summary: List stages for a workroom
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of stages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkroomStage"
+
+  /workrooms/{workroomId}/stages/{stageId}:
+    patch:
+      operationId: updateWorkroomStage
+      tags: [stages]
+      summary: Update stage status (advance, approve gate, etc.)
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: stageId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkroomStageUpdate"
+      responses:
+        "200":
+          description: Updated stage
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkroomStage"
+
+  # ── Workroom Tasks ─────────────────────────────────────────────────────────
+  /workrooms/{workroomId}/tasks:
+    get:
+      operationId: listWorkroomTasks
+      tags: [tasks]
+      summary: List tasks for a workroom
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkroomTask"
+    post:
+      operationId: createWorkroomTask
+      tags: [tasks]
+      summary: Create a task in a workroom
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkroomTaskInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkroomTask"
+
+  /tasks/{id}:
+    patch:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkroomTaskUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkroomTask"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Activity Log ──────────────────────────────────────────────────────────
+  /workrooms/{workroomId}/activity:
+    get:
+      operationId: listWorkroomActivity
+      tags: [activity]
+      summary: Get activity log for a workroom
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activity entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityEntry"
+    post:
+      operationId: addWorkroomActivity
+      tags: [activity]
+      summary: Add an activity entry
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityEntryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityEntry"
+
+  # ── Dashboard ─────────────────────────────────────────────────────────────
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/recent-workrooms:
+    get:
+      operationId: getRecentWorkrooms
+      tags: [dashboard]
+      summary: Get recently updated workrooms
+      responses:
+        "200":
+          description: Recent workrooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workroom"
+
+# ── Schemas ──────────────────────────────────────────────────────────────────
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ── WorkflowTemplate ────────────────────────────────────────────────────
+    WorkflowTemplate:
+      type: object
+      required: [id, name, sector, description, outputFinal, mode, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sector:
+          type: string
+        description:
+          type: string
+        outputFinal:
+          type: string
+        mode:
+          type: string
+          description: "profesional | organisasi"
+        stageCount:
+          type: ["integer", "null"]
+        workroomCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    WorkflowTemplateInput:
+      type: object
+      required: [name, sector, description, outputFinal, mode]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        sector:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        outputFinal:
+          type: string
+        mode:
+          type: string
+
+    WorkflowTemplateUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        sector:
+          type: string
+        description:
+          type: string
+        outputFinal:
+          type: string
+        mode:
+          type: string
+
+    # ── Agent ────────────────────────────────────────────────────────────────
+    Agent:
+      type: object
+      required: [id, name, slugUrl, category, agentType, functionRole, active, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slugUrl:
+          type: string
+        category:
+          type: string
+        agentType:
+          type: string
+          description: "dialog | specialist | multi_agent"
+        functionRole:
+          type: string
+          description: "strategis | skeptis | eksekutor | narasumber | pack_compiler"
+        systemPrompt:
+          type: ["string", "null"]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    AgentInput:
+      type: object
+      required: [name, slugUrl, category, agentType, functionRole]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        slugUrl:
+          type: string
+          minLength: 1
+        category:
+          type: string
+        agentType:
+          type: string
+        functionRole:
+          type: string
+        systemPrompt:
+          type: string
+        active:
+          type: boolean
+
+    AgentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        slugUrl:
+          type: string
+        category:
+          type: string
+        agentType:
+          type: string
+        functionRole:
+          type: string
+        systemPrompt:
+          type: string
+        active:
+          type: boolean
+
+    # ── Workroom ─────────────────────────────────────────────────────────────
+    Workroom:
+      type: object
+      required: [id, name, templateId, templateName, sector, status, currentStageName, progress, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        templateId:
+          type: integer
+        templateName:
+          type: string
+        sector:
+          type: string
+        status:
+          type: string
+          description: "active | paused | completed | blocked"
+        currentStageName:
+          type: string
+        progress:
+          type: integer
+          description: "0-100 percent"
+        objective:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    WorkroomDetail:
+      type: object
+      required: [id, name, templateId, templateName, sector, status, currentStageName, progress, stages, tasks, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        templateId:
+          type: integer
+        templateName:
+          type: string
+        sector:
+          type: string
+        status:
+          type: string
+        currentStageName:
+          type: string
+        progress:
+          type: integer
+        objective:
+          type: ["string", "null"]
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkroomStage"
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkroomTask"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    WorkroomInput:
+      type: object
+      required: [name, templateId]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        templateId:
+          type: integer
+        objective:
+          type: string
+
+    WorkroomUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+        objective:
+          type: string
+
+    # ── WorkroomStage ─────────────────────────────────────────────────────────
+    WorkroomStage:
+      type: object
+      required: [id, workroomId, order, name, stageType, operandPattern, status, createdAt]
+      properties:
+        id:
+          type: integer
+        workroomId:
+          type: integer
+        order:
+          type: integer
+        name:
+          type: string
+        stageType:
+          type: string
+          description: "kerja | gate"
+        operandPattern:
+          type: string
+          description: "sequential | multiclaw | openclaw"
+        status:
+          type: string
+          description: "pending | active | awaiting_gate | approved | rejected | completed"
+        gateDecision:
+          type: ["string", "null"]
+        gateNote:
+          type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    WorkroomStageUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        gateDecision:
+          type: string
+        gateNote:
+          type: string
+
+    # ── WorkroomTask ──────────────────────────────────────────────────────────
+    WorkroomTask:
+      type: object
+      required: [id, workroomId, stageId, title, priority, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        workroomId:
+          type: integer
+        stageId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        assigneeRole:
+          type: ["string", "null"]
+        agentId:
+          type: ["integer", "null"]
+        priority:
+          type: string
+          description: "low | medium | high"
+        status:
+          type: string
+          description: "todo | doing | blocked | done"
+        output:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    WorkroomTaskInput:
+      type: object
+      required: [stageId, title]
+      properties:
+        stageId:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        assigneeRole:
+          type: string
+        agentId:
+          type: integer
+        priority:
+          type: string
+        status:
+          type: string
+        output:
+          type: string
+
+    WorkroomTaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        assigneeRole:
+          type: string
+        agentId:
+          type: integer
+        priority:
+          type: string
+        status:
+          type: string
+        output:
+          type: string
+
+    # ── Activity ──────────────────────────────────────────────────────────────
+    ActivityEntry:
+      type: object
+      required: [id, workroomId, eventType, description, createdAt]
+      properties:
+        id:
+          type: integer
+        workroomId:
+          type: integer
+        eventType:
+          type: string
+        description:
+          type: string
+        actor:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    ActivityEntryInput:
+      type: object
+      required: [eventType, description]
+      properties:
+        eventType:
+          type: string
+        description:
+          type: string
+        actor:
+          type: string
+
+    # ── Dashboard ─────────────────────────────────────────────────────────────
+    DashboardSummary:
+      type: object
+      required: [totalWorkrooms, activeWorkrooms, completedWorkrooms, totalTemplates, totalAgents, workroomsByStatus, workroomsBySector]
+      properties:
+        totalWorkrooms:
+          type: integer
+        activeWorkrooms:
+          type: integer
+        completedWorkrooms:
+          type: integer
+        totalTemplates:
+          type: integer
+        totalAgents:
+          type: integer
+        workroomsByStatus:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusCount"
+        workroomsBySector:
+          type: array
+          items:
+            $ref: "#/components/schemas/SectorCount"
+
+    StatusCount:
+      type: object
+      required: [status, count]
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+
+    SectorCount:
+      type: object
+      required: [sector, count]
+      properties:
+        sector:
+          type: string
+        count:
+          type: integer

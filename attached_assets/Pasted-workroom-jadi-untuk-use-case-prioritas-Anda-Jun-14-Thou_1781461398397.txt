@@ -1,0 +1,1300 @@
+workroom jadi” untuk use case prioritas Anda.
+Jun 14
+Thought
+Biar saya bisa turunkan jadi spesifikasi MVP yang siap dibangun, pilih 2 hal singkat di bawah ini.
+MVP pertama fokus ke mana?
+Konstruksi (Tender/Proyek)
+Platform target yang Anda inginkan?
+Web app no-code terpisah
+Berarti MVP #1 = Konstruksi (Tender/Proyek) dan platform = web app no‑code terpisah. Di bawah ini saya turunkan jadi “spesifikasi MVP” yang bisa langsung Anda bangun (Bubble/WeWeb + Xano/Supabase/Airtable, dll).
+A. Ruang lingkup MVP (yang harus ada)
+Goal: dari lead/tender masuk → kualifikasi → penawaran → proyek jalan → progress & dokumen rapi.
+Modul MVP:
+1) Intake Tender (Form publik)  
+2) CRM Perusahaan/Client + PIC  
+3) Workroom Tender (checklist, dokumen, timeline, penugasan)  
+4) Konversi Tender → Proyek  
+5) Workroom Proyek (jadwal, progress, BA/MC, dokumen, issue)  
+6) Dashboard ringkas (pipeline tender + proyek aktif)
+Di luar MVP (fase 2): e‑signature, integrasi WhatsApp/email otomatis, budgeting detail & akuntansi, manajemen gudang/alat, sertifikasi LSBU/LSP.
+B. Struktur database (tabel) final + field inti
+1) Users
+id
+name
+email
+role (Admin/BD/Estimator/PM/Engineer/Finance/Viewer)
+status (active/inactive)
+2) Companies (Client/Owner/Vendor)
+id
+type (Client / Owner / Vendor / Partner)
+name
+npwp (opsional)
+address
+city
+industry (opsional)
+notes
+3) Contacts (PIC)
+id
+company_id (relasi ke Companies)
+name
+position
+phone
+email
+notes
+4) Tender_Leads
+id
+lead_source (Referral/Portal/Repeat client/dll)
+title (nama paket)
+client_company_id
+client_contact_id
+location_city
+category (MEP/Sipil/IT/dll)
+estimated_value (angka)
+closing_date (deadline pemasukan)
+status (New / Qualified / No Go / Go / Submitted / Won / Lost)
+qualification_score (0–100 atau Low/Med/High)
+owner_user_id (BD/penanggung jawab)
+created_at
+5) Tender_Workroom
+Satu lead yang “Go” akan punya 1 workroom tender.
+id
+tender_lead_id
+tender_code (auto: TDR-YYYY-####)
+bid_type (Lumpsum/Unit Price/dll)
+submission_method (Hardcopy/Email/Portal)
+current_phase (Survey / Costing / Admin Docs / Final Review)
+bid_status (Draft/Ready/Submitted)
+risk_notes
+created_by
+6) Tasks
+Dipakai untuk tender dan proyek (generic).
+id
+context_type (Tender/Project)
+context_id (tender_workroom_id atau project_id)
+title
+assignee_user_id
+due_date
+status (To do / Doing / Blocked / Done)
+priority (Low/Med/High)
+description
+7) Documents
+Register dokumen + versi.
+id
+context_type (Tender/Project)
+context_id
+doc_type (RKS/Gambar/Addendum/BOQ/Metode Kerja/Surat Penawaran/BA/MC/dll)
+title
+file_url / storage_key
+version
+status (Draft/Final/Sent)
+owner_user_id
+uploaded_at
+8) Bid_Submissions
+id
+tender_workroom_id
+submission_date
+bid_value_final
+margin_target (opsional)
+notes
+result (Pending/Won/Lost)
+reason_lost (opsional)
+9) Projects
+Terbentuk saat tender “Won” atau proyek direct.
+id
+project_code (PRJ-YYYY-####)
+name
+client_company_id
+client_contact_id
+location
+contract_value
+start_date
+end_date_target
+status (Planned/Active/On hold/Closed)
+pm_user_id
+from_tender_workroom_id (nullable)
+10) Project_Progress
+Minimal untuk progress mingguan.
+id
+project_id
+date
+progress_percent (0–100)
+summary
+issues
+next_week_plan
+updated_by
+11) (Opsional tapi kuat untuk konstruksi) Site_Reports
+id
+project_id
+report_date
+weather (opsional)
+manpower_count
+activities_done
+constraints
+photos (multi file)
+C. Struktur “Template Library” (untuk web app)
+Karena Anda web app terpisah, “template” biasanya berupa record blueprint + dokumen standar.
+1) Template_TaskSets
+id
+name (mis. “Tender – Standard Checklist” / “Project – Mobilization”)
+context_type (Tender/Project)
+is_default
+2) Template_Tasks
+id
+taskset_id
+title
+default_assignee_role (BD/Estimator/PM)
+relative_due_days (contoh: -3 dari closing date)
+order
+3) Template_DocSets & Template_Docs
+Dokumen wajib per jenis tender/proyek.
+contoh: “Tender Docs – Admin” berisi: Company profile, SBU, NPWP, Surat Pernyataan, dll.
+D. Alur 1 contoh konkret: “Form → Workroom jadi” (use case prioritas)
+Use case: “Tender baru masuk dari form, otomatis jadi workroom tender lengkap checklist & dokumen wajib.”
+Step 1 — Public Form: “Submit Tender”
+Fields form (minimal):
+Nama paket tender
+Perusahaan/Client
+PIC + nomor HP
+Lokasi
+Deadline submit
+Nilai perkiraan
+Lampiran awal (RKS/Gambar) (opsional)
+Step 2 — Automation (backend workflow)
+Saat form submit:
+1) Buat/temukan Company (by name + city)  
+2) Buat/temukan Contact (by phone/email)  
+3) Create record Tender_Leads status = New  
+4) Auto-assign owner_user_id (rule: round robin atau default BD)
+5) Jika BD set “Go” → tombol/aksi “Create Workroom Tender”
+Step 3 — Create Workroom Tender (aksi)
+Ketika status jadi Go:
+1) Create Tender_Workroom + generate tender_code  
+2) Copy template:
+buat 20–40 Tasks dari Template_TaskSets “Tender – Standard Checklist”
+buat daftar Documents placeholder dari “Tender Docs – Admin/Technical/Commercial”
+3) Buat Bid_Submissions draft (kosong) untuk tempat final angka & tanggal submit
+4) UI Workroom menampilkan tab:
+Overview (deadline, nilai, risk)
+Tasks (kanban)
+Documents (register + upload)
+Submission (angka final + catatan)
+Activity log (optional)
+Step 4 — Convert to Project
+Jika result = Won:
+Create Projects dari data tender
+Copy Tasks dari template “Project – Mobilization”
+Documents proyek: kontrak, BA, jadwal, gambar IFC, dll.
+E. Hal teknis no‑code (rekomendasi arsitektur)
+UI builder: Bubble (paling cepat end‑to‑end) atau WeWeb (lebih modern)  
+Backend/data: Supabase (relational + auth) atau Xano (workflow kuat)  
+File storage: Supabase Storage / S3-compatible  
+Auth & roles: role-based access (Admin/BD/PM/Estimator/Viewer)
+Audit log minimal: simpan created_by, updated_by, updated_at di tabel penting.
+F. Definisi “Done” untuk MVP (supaya tidak melebar)
+MVP dianggap selesai jika:
+Form tender masuk dan tampil di pipeline
+1 klik “Go” membuat workroom + checklist + dokumen placeholder
+Tim bisa upload dokumen, assign task, dan submit penawaran
+Tender bisa dikonversi jadi proyek dan progress mingguan bisa dicatat
+Kalau Anda jawab 3 detail singkat ini, saya bisa kunci spesifikasi lebih “presisi produksi” (tanpa mengubah arah MVP):
+1) Jenis pekerjaan dominan: MEP / Sipil / IT / Mixed?  
+2) Anda ingin multi-cabang (beberapa kota/unit) atau satu tim dulu?  
+3) Tools favorit untuk dibangun: Bubble atau WeWeb+Supabase/Xano?
+1. Sipil
+2. multi cabang
+3. tidak tahu..ikut rekomendasimu
+Jun 14
+Thought
+Mantap, sekarang spesifikasinya saya kunci untuk profil Anda: Sipil, multi‑cabang, dengan rekomendasi tools dari saya. Ini versi “presisi produksi”.
+0. Rekomendasi Tools (final pick saya)
+Untuk konstruksi sipil, multi‑cabang, banyak dokumen & relasi antar data, rekomendasi saya:
+Stack utama (rekomendasi #1):
+Database/Backend: Supabase (PostgreSQL relational + Auth + Storage + Row Level Security) → cocok untuk multi‑cabang & role.
+UI builder: WeWeb (terhubung native ke Supabase, UI modern, cocok untuk dashboard & workroom).
+Workflow/automation: n8n atau Supabase Edge Functions (untuk “Form → Workroom”).
+Alternatif lebih cepat dibangun (rekomendasi #2): Bubble all‑in‑one (data + UI + workflow jadi satu). Lebih cepat MVP, tapi kontrol multi‑cabang/role harus dirancang manual.
+Saran praktis: kalau tim teknis Anda kecil/non‑developer → Bubble. Kalau ingin skalabel jangka panjang & kontrol akses cabang ketat → Supabase + WeWeb. Default rekomendasi saya: Supabase + WeWeb.
+1. Perubahan penting karena MULTI‑CABANG
+Tambah 1 tabel induk dan branch_id di hampir semua tabel transaksi + scoping akses per cabang.
+Tabel baru: Branches
+id
+branch_code (mis. JKT, SBY, MKS)
+name
+city
+head_user_id (Kepala Cabang)
+status (active/inactive)
+branch_id ditambahkan ke:
+Tender_Leads, Tender_Workroom, Projects, Tasks, Documents, Bid_Submissions, Project_Progress, Site_Reports.
+Role + scoping (Row Level Security di Supabase)
+Super Admin → semua cabang
+Branch Manager → hanya cabangnya
+BD/Estimator/PM/Engineer → data cabangnya + record yang ditugaskan
+Finance → read pipeline + nilai, semua/sesuai cabang
+Viewer → read‑only
+2. Penyesuaian field untuk SIPIL (bukan MEP/IT)
+Tambahan field khusus konstruksi sipil:
+Tender_Leads (+):
+scope_sipil (multi-select: Struktur / Jalan & Jembatan / Drainase / Gedung / Tanah & Pondasi / Earthwork)
+owner_type (Pemerintah/BUMN/Swasta)
+funding_source (APBN/APBD/Swasta) – penting untuk tender pemerintah
+Projects (+):
+contract_type (Lumpsum / Unit Price / Gabungan)
+retention_percent (retensi, umum 5%)
+warranty_period_days (masa pemeliharaan)
+progress_method (Bobot BOQ / Fisik)
+Project_Progress (+):
+physical_progress_percent
+plan_progress_percent (kurva‑S rencana)
+deviation (auto: plan − actual)
+Tabel baru BOQ_Items (inti proyek sipil, untuk progress berbobot):
+id
+project_id
+branch_id
+item_no
+description
+unit (m³, m², kg, ls, dll)
+volume
+unit_price
+weight_percent (bobot terhadap total)
+progress_percent (per item)
+3. Template Library (untuk sipil)
+Template_TaskSets
+“Tender Sipil – Standard Checklist”
+“Project Sipil – Mobilisasi”
+“Project Sipil – Pelaksanaan”
+Contoh isi Template_Tasks → “Tender Sipil – Standard Checklist”
+Ambil/registrasi dokumen tender (RKS, gambar, BOQ) — due −10 hari
+Site visit / aanwijzing lapangan — due −8
+Hitung volume & RAB (analisa harga satuan) — due −5
+Susun metode pelaksanaan & jadwal (kurva‑S) — due −4
+Siapkan dokumen administrasi (SBU sipil, NPWP, neraca, dukungan bank) — due −3
+Siapkan dokumen teknis (personil, peralatan, pengalaman) — due −2
+Final review & harga penawaran — due −1
+Submit penawaran — due 0
+Template_DocSets (dokumen wajib tender sipil)
+Admin: SBU (klasifikasi sipil), NPWP, Akta, NIB, neraca/laporan keuangan, dukungan bank, pakta integritas
+Teknis: metode pelaksanaan, jadwal/kurva‑S, daftar personil inti (SKA/SKT), daftar peralatan, pengalaman sejenis
+Komersial: surat penawaran, rekap BOQ, analisa harga satuan (AHS), daftar harga
+4. Alur konkret “Form → Workroom jadi” (final, multi‑cabang)
+Step 1 — Public Form “Submit Tender”:
+Nama paket • Cabang tujuan (branch) • Client/Owner • PIC + HP • Lokasi • Sumber dana • Deadline submit • Nilai perkiraan • Lampiran (RKS/Gambar/BOQ)
+Step 2 — Automation:
+Resolve Branches dari pilihan cabang
+Buat/temukan Companies + Contacts
+Create Tender_Leads (status New, branch_id terisi)
+Auto‑assign owner_user_id = BD aktif di cabang itu (round‑robin per cabang)
+Notifikasi ke Branch Manager cabang terkait
+Step 3 — Klik “Go” → Create Workroom:
+Create Tender_Workroom + generate tender_code per cabang (mis. JKT-TDR-2026-0007)
+Copy “Tender Sipil – Standard Checklist” → Tasks (due dihitung dari closing_date)
+Generate Documents placeholder dari Template_DocSets
+Create Bid_Submissions draft kosong
+(Opsional) buat kerangka BOQ_Items kosong untuk diisi estimator
+Step 4 — Won → Convert to Project:
+Create Projects (warisi branch, client, nilai)
+Copy “Project Sipil – Mobilisasi”
+Pindahkan BOQ_Items dari tender → proyek (jadi dasar progress berbobot)
+Mulai Project_Progress mingguan (plan vs actual / kurva‑S)
+5. Dashboard MVP (per cabang + konsolidasi)
+Pipeline Tender: jumlah & nilai per status, per cabang
+Win rate per cabang & per jenis pekerjaan sipil
+Proyek aktif: progress fisik vs rencana (deviasi), proyek “merah” (deviasi > X%)
+Deadline minggu ini: task tender & milestone proyek
+Filter global: by branch_id (Super Admin lihat semua, Branch Manager auto‑terkunci ke cabangnya)
+6. Definition of Done (MVP terkunci)
+Form tender masuk → tampil di pipeline cabang yang benar
+1 klik “Go” → workroom + checklist sipil + dokumen wajib otomatis
+Estimator isi BOQ + harga, tim upload dokumen, submit penawaran
+Won → otomatis jadi proyek dengan BOQ sebagai dasar progress
+Progress mingguan (fisik vs rencana) tercatat & tampil di dashboard
+Akses data terbatas per cabang sesuai role
+Kalau Anda setuju dengan arah ini, langkah berikutnya yang paling berguna: saya bisa rapikan seluruh spesifikasi ini menjadi satu halaman Notion (lengkap dengan daftar tabel, field, template checklist, dan diagram alur) supaya jadi dokumen acuan tim Anda saat membangun. Mau saya buatkan halamannya?
+karena saya no code.. saya akan bikin aplikasinya di replit
+Jun 14
+Thought
+Bagus, Replit cocok untuk Anda yang no‑code — Anda cukup “ngobrol” dengan Replit Agent (AI‑nya), dan dia yang menuliskan kodenya. Saya sesuaikan rekomendasi & saya siapkan prompt siap tempel supaya Replit Agent langsung membangun MVP sesuai spesifikasi tadi.
+1. Stack yang sebaiknya Anda minta ke Replit Agent
+Anda tidak perlu paham teknisnya — cukup minta Agent pakai ini (sudah native di Replit, paling sedikit drama):
+Frontend: React  
+Backend: Node/Express  
+Database: PostgreSQL (bawaan Replit)  
+Auth: Replit Auth (login + role)  
+Storage file: Replit Object Storage (untuk upload dokumen/foto)
+Tips inti: bangun bertahap (jangan minta semua sekaligus). Agent lebih akurat kalau diberi 1 fase per prompt, lalu Anda tes, baru lanjut fase berikutnya.
+2. Cara mulai di Replit (langkah praktis)
+Create App → pilih mode Agent (deskripsi pakai bahasa biasa).  
+Tempel Prompt Fase 0 di bawah (fondasi + database + auth + multi‑cabang).  
+Setelah jadi & bisa login, lanjut Fase 1 → 2 → 3 → 4.  
+Tiap selesai 1 fase: klik Run, tes, lalu lanjut.
+3. PROMPT SIAP TEMPEL untuk Replit Agent
+ Fase 0 — Fondasi, Database, Auth, Multi‑cabang
+Buatkan web app manajemen tender & proyek konstruksi sipil (multi-cabang) bernama "Gustafta Collaboration Builder".
+
+Stack: React (frontend), Node/Express (backend), PostgreSQL (database), Replit Auth (login & role), Replit Object Storage (upload file).
+
+Buat sistem login dengan role: Super Admin, Branch Manager, BD, Estimator, PM, Engineer, Finance, Viewer.
+
+Buat tabel database berikut beserta relasinya:
+- Branches: branch_code, name, city, head_user_id, status
+- Users: name, email, role, branch_id, status
+- Companies: type (Client/Owner/Vendor/Partner), name, npwp, address, city, notes
+- Contacts: company_id, name, position, phone, email, notes
+
+Aturan akses (penting): data dibatasi per cabang (branch_id). Super Admin & Finance bisa lihat semua cabang. Branch Manager dan staf hanya bisa lihat data cabangnya sendiri.
+
+Buat halaman: Login, Dashboard kosong, dan halaman CRUD untuk Branches, Users, Companies, Contacts. Sidebar navigasi dengan filter cabang di atas (Super Admin bisa ganti cabang, role lain terkunci ke cabangnya).
+​
+ Fase 1 — Pipeline Tender + Form Publik
+Lanjutkan app. Tambahkan modul Tender.
+
+Tabel Tender_Leads: lead_source, title, client_company_id, client_contact_id, branch_id, location_city, scope_sipil (multi-select: Struktur/Jalan & Jembatan/Drainase/Gedung/Tanah & Pondasi/Earthwork), owner_type (Pemerintah/BUMN/Swasta), funding_source (APBN/APBD/Swasta), estimated_value, closing_date, status (New/Qualified/No Go/Go/Submitted/Won/Lost), qualification_score, owner_user_id, created_at.
+
+Buat halaman Pipeline Tender berupa tampilan Kanban berdasarkan status, difilter per cabang.
+
+Buat FORM PUBLIK "Submit Tender" (bisa diakses tanpa login) dengan field: nama paket, cabang tujuan, client, PIC + nomor HP, lokasi, sumber dana, deadline submit, nilai perkiraan, lampiran (RKS/Gambar/BOQ).
+
+Saat form disubmit: otomatis buat/temukan Company & Contact, buat Tender_Leads status "New" dengan branch_id sesuai pilihan, auto-assign BD aktif di cabang itu (round-robin), dan kirim notifikasi ke Branch Manager cabang tersebut.
+​
+ Fase 2 — Workroom Tender + Template Checklist + Dokumen
+Lanjutkan app. Tambahkan Workroom Tender.
+
+Tabel:
+- Tender_Workroom: tender_lead_id, tender_code (auto, format CABANG-TDR-TAHUN-NOMOR mis. JKT-TDR-2026-0007), bid_type, submission_method, current_phase, bid_status, risk_notes, branch_id
+- Tasks (generic): context_type (Tender/Project), context_id, branch_id, title, assignee_user_id, due_date, status (To do/Doing/Blocked/Done), priority, description
+- Documents: context_type, context_id, branch_id, doc_type, title, file_url, version, status (Draft/Final/Sent), owner_user_id, uploaded_at
+- Bid_Submissions: tender_workroom_id, submission_date, bid_value_final, margin_target, notes, result (Pending/Won/Lost), reason_lost
+- Template_TaskSets & Template_Tasks (title, default_assignee_role, relative_due_days, order)
+- Template_DocSets & Template_Docs
+
+Saat status Tender_Leads diubah ke "Go", muncul tombol "Create Workroom". Saat diklik:
+1. Buat Tender_Workroom + generate tender_code per cabang
+2. Salin template "Tender Sipil – Standard Checklist" menjadi Tasks (due_date dihitung dari closing_date + relative_due_days)
+3. Buat Documents placeholder dari Template_DocSets (Admin/Teknis/Komersial)
+4. Buat Bid_Submissions draft kosong
+
+Halaman Workroom punya tab: Overview, Tasks (kanban), Documents (register + upload file), Submission (isi nilai final + tanggal submit).
+
+Isi data awal Template "Tender Sipil – Standard Checklist": registrasi dokumen tender (-10 hari), site visit/aanwijzing (-8), hitung volume & RAB/AHS (-5), metode pelaksanaan & kurva-S (-4), dokumen administrasi/SBU/NPWP/dukungan bank (-3), dokumen teknis personil & peralatan (-2), final review & harga (-1), submit penawaran (0).
+​
+ Fase 3 — Konversi ke Proyek + BOQ + Progress
+Lanjutkan app. Tambahkan modul Proyek.
+
+Tabel:
+- Projects: project_code (auto PRJ-TAHUN-NOMOR), name, client_company_id, client_contact_id, branch_id, location, contract_value, contract_type (Lumpsum/Unit Price/Gabungan), retention_percent, warranty_period_days, progress_method (Bobot BOQ/Fisik), start_date, end_date_target, status (Planned/Active/On hold/Closed), pm_user_id, from_tender_workroom_id
+- BOQ_Items: project_id, branch_id, item_no, description, unit, volume, unit_price, weight_percent, progress_percent
+- Project_Progress: project_id, branch_id, date, physical_progress_percent, plan_progress_percent, deviation (otomatis = plan - actual), summary, issues, next_week_plan, updated_by
+- Site_Reports: project_id, branch_id, report_date, weather, manpower_count, activities_done, constraints, photos (multi-file)
+
+Saat Bid_Submissions.result = "Won", muncul tombol "Convert to Project". Saat diklik: buat Projects dari data tender, salin template "Project Sipil – Mobilisasi" jadi Tasks, dan pindahkan BOQ_Items dari tender ke proyek sebagai dasar progress berbobot.
+
+Halaman Proyek punya tab: Overview, Tasks, BOQ (progress per item otomatis menghitung progress total berdasarkan weight_percent), Progress Mingguan (fisik vs rencana + deviasi), Site Reports, Documents.
+​
+ Fase 4 — Dashboard
+Lanjutkan app. Buat Dashboard dengan kartu:
+- Pipeline Tender: jumlah & total nilai per status (per cabang)
+- Win rate per cabang dan per scope_sipil
+- Proyek aktif: progress fisik vs rencana, tandai proyek "merah" jika deviasi > 10%
+- Deadline minggu ini: gabungan task tender & milestone proyek
+- Filter cabang global: Super Admin bisa pilih semua/Cabang tertentu; role lain terkunci ke cabangnya.
+Sajikan angka dengan grafik sederhana (bar & donut).
+​
+4. Tips agar lancar di Replit
+Kalau Agent “kebablasan” atau error, ketik: “Jangan ubah fitur lain, perbaiki hanya bagian X.”
+Selalu tes login + 1 alur sebelum lanjut fase berikutnya.
+Untuk upload file besar/foto lapangan, pastikan minta Object Storage, bukan disimpan di database.
+Simpan nama tabel & field persis seperti di atas supaya antar fase tetap nyambung.
+Mau saya rapikan seluruh blueprint + 5 prompt ini menjadi satu halaman Notion sebagai dokumen acuan (biar gampang Anda salin‑tempel ke Replit sambil membangun)?
+ok sebelum lanjut.. ini teap dalam konsep kita mau bikin aplication factory ?
+Jun 14
+Thought
+Pertanyaan bagus — dan penting ditanyakan sekarang sebelum lanjut, karena ada sedikit pergeseran yang perlu kita sadari.
+Jawaban singkat
+Setengah ya, setengah belum. Yang barusan kita spec itu satu aplikasi vertikal (tender/proyek konstruksi sipil), bukan “application factory” dalam arti murni. Tapi DNA factory‑nya sudah ada di dalam desain kita. Jadi kita belum melenceng total — kita baru “menyentuh” konsep factory lewat satu instance.
+Bedakan 2 lapisan ini (ini inti masalahnya)
+Konsep Gustafta Collaboration Builder sebenarnya punya 2 lapis:
+Lapis 1 — The Factory (Engine/Builder)
+Mesin generik yang bisa mencetak banyak aplikasi/workroom dari template. Polanya: Form → (template) → Workroom jadi. Ini yang membuatnya disebut “factory”.
+Lapis 2 — The Instance (Vertical App)
+Satu aplikasi konkret hasil cetakan factory. Contoh kita: Konstruksi (Tender/Proyek Sipil).
+Posisi spec kita sekarang
+Yang tadi kita rancang itu Lapis 2 (instance konstruksi). Tapi beberapa komponen kuncinya sebenarnya komponen Lapis 1 (factory):
+Komponen
+Sifatnya
+Factory atau Instance?
+Template_TaskSets, Template_Docs
+Cetakan yang bisa diganti‑ganti
+Factory ​
+Mesin “Form → Workroom”
+Pola generik
+Factory ​
+Workroom (Tasks/Docs/Activity)
+Wadah generik
+Factory ​
+Sistem cabang + role
+Generik
+Factory ​
+Tender_Leads, BOQ_Items, scope_sipil
+Khusus konstruksi
+Instance ​
+Artinya: ±70% yang kita bangun adalah pondasi factory, hanya ±30% yang spesifik konstruksi.
+Rekomendasi saya (supaya tetap setia ke konsep factory)
+Jangan bangun “factory penuh” dulu — itu jebakan over‑engineering untuk no‑code. Sebaiknya:
+Bangun MVP Konstruksi dulu (instance pertama) — persis seperti 5 fase tadi.
+Tapi rancang komponen generiknya seolah‑olah “module”, jangan di‑hardcode ke konstruksi. Caranya gampang di Replit: cukup tambahkan 1 instruksi di prompt → “buat Workroom & Template engine bersifat generik (punya field app_type / workroom_type), supaya nanti bisa dipakai untuk jenis aplikasi lain selain konstruksi.”
+Setelah konstruksi terbukti jalan → instance ke‑2 (mis. Sertifikasi LSBU/LSP) tinggal menambah template & field, bukan bikin app baru dari nol. Itulah momen “factory” yang sesungguhnya menyala.
+Keputusan yang perlu Anda ambil sekarang
+Supaya saya bisa kunci arah build di Replit:
+Opsi A — “Factory‑ready MVP” (rekomendasi saya): bangun konstruksi dulu, tapi engine‑nya dibuat generik (siap dicetak ulang). Sedikit lebih banyak field di awal, hemat besar di masa depan.
+Opsi B — “Konstruksi murni dulu”: fokus 100% konstruksi, urusan factory dipikir nanti (lebih cepat, tapi nanti ada kemungkinan refactor).
+Pilih A atau B, lalu kita lanjut. Mau saya buatkan juga prompt Fase 0 versi “factory‑ready” (revisi dari yang tadi) kalau Anda pilih A?
+saya megikuti rekomendasi terbaikmu.. ini nanti aplikasi yang kita hasilkan adalah no code ? cuma mengisi form/field seperti Gustafta Dialog Builder ?
+Jun 14
+Thought
+Ya — dan ini justru inti keindahan konsepnya. Tapi biar tidak ada salah paham, saya jelaskan dulu bahwa “no‑code” itu ada di 3 lapisan berbeda. Banyak orang tercampur di sini.
+3 lapisan “no‑code” dalam proyek kita
+Lapis 1 — Membangun platform‑nya (Anda + Replit Agent)
+Anda tidak menulis kode. Anda “ngobrol” dengan Replit Agent pakai bahasa biasa (prompt yang saya buat tadi), AI yang menulis kodenya. → No‑code untuk Anda. Ini fase pembuatan pondasi.
+Lapis 2 — Mengoperasikan “factory” (Admin mencetak app/workroom)
+Setelah platform jadi, untuk membuat aplikasi/workroom baru Anda cukup mengisi form/field — persis seperti Gustafta Dialog Builder. Tidak menyentuh Replit lagi.
+Contoh: buat template baru → isi field (nama checklist, daftar tugas, dokumen wajib) → simpan → jadi “cetakan” baru. → No‑code, berbasis form. ​
+Lapis 3 — Pengguna akhir memakai aplikasinya (Tim Anda)
+Tim cabang tinggal isi form (Submit Tender), klik tombol, upload dokumen, update progress. → 100% no‑code, isi form/field saja. ​
+Jadi jawaban langsung pertanyaan Anda
+“Aplikasi yang kita hasilkan apakah no‑code, cuma mengisi form/field seperti Gustafta Dialog Builder?”
+Betul. Hasil akhirnya:
+Untuk pengguna → murni isi form/field, tidak ada koding.
+Untuk Anda sebagai operator factory → menambah jenis app/workroom baru juga lewat isi form/field (mirip Dialog Builder), selama kita rancang engine‑nya generik (inilah Opsi A yang Anda pilih).
+Tapi ada 1 garis batas jujur yang perlu Anda tahu
+Supaya ekspektasi realistis pada MVP:
+Yang BISA via isi‑form (no‑code)
+Yang masih perlu “sentuhan” awal di Replit
+Buat workroom baru dari template
+Menambah jenis field yang betul‑betul baru (mis. tipe data baru yang belum pernah ada)
+Edit/duplikat template checklist & dokumen
+Membuat modul vertikal baru yang strukturnya beda jauh (mis. dari Konstruksi → Kesehatan)
+Tambah cabang, user, role
+Mengubah logika alur inti (workflow engine)
+Artinya: mengisi form untuk mencetak app sejenis = no‑code penuh. Tapi menciptakan kategori yang benar‑benar baru dari nol, untuk MVP, masih butuh 1x setup via Agent. Versi “factory sepenuhnya bisa bikin app apa saja hanya dari form” itu target jangka panjang, bukan MVP.
+Konsekuensi ke desain (karena Anda pilih Opsi A)
+Supaya Lapis 2 benar‑benar terasa seperti Dialog Builder, engine kita harus generik. Konkretnya saya akan menambahkan ke prompt Replit:
+Tabel App_Types / Workroom_Types (supaya app bisa lebih dari satu jenis)
+“Template Builder” berbasis form → halaman admin untuk membuat/mengedit template (task set & dokumen) tanpa koding
+Field bersifat konfigurasi data, bukan hardcode
+Kalau Anda setuju, langkah berikutnya saya revisi Fase 0 menjadi versi “factory‑ready” (termincludekan App_Types + Template Builder berbasis form). Mau saya tuliskan sekarang prompt Fase 0 versi factory‑ready‑nya?
+setuju
+Jun 14
+Thought
+Siap. Ini Fase 0 versi “factory‑ready” — revisi dari yang tadi, sudah dilengkapi App_Types/Workroom_Types dan Template Builder berbasis form supaya operasionalnya terasa seperti Gustafta Dialog Builder (cukup isi form, tanpa koding).
+Apa yang berubah dari Fase 0 lama
+Ditambah lapisan engine generik: App_Types, Workroom_Types, dan Template Builder (halaman admin berbasis form).
+Konstruksi sipil bukan lagi di‑hardcode, tapi menjadi App Type pertama yang “diisi” lewat engine. Inilah yang membuatnya jadi factory.
+ PROMPT FASE 0 (factory‑ready) — siap tempel ke Replit Agent
+Buatkan web app bernama "Gustafta Collaboration Builder".
+
+KONSEP INTI: ini adalah sebuah "application factory" — sebuah engine generik yang bisa mencetak banyak aplikasi/workroom dari template, di mana admin cukup MENGISI FORM (tanpa koding) untuk membuat jenis aplikasi & template baru. Aplikasi pertama yang akan kita isi adalah "Konstruksi Sipil (Tender & Proyek)", tapi engine harus tetap generik agar bisa dipakai untuk jenis lain di masa depan.
+
+Stack: React (frontend), Node/Express (backend), PostgreSQL (database), Replit Auth (login & role), Replit Object Storage (upload file).
+
+=== LAPISAN 1: ENGINE GENERIK (FACTORY) ===
+
+Buat tabel inti generik:
+- App_Types: name, slug, description, icon, status (active/inactive)
+- Workroom_Types: app_type_id, name, slug, description, code_prefix (untuk auto-number, mis. "TDR" atau "PRJ")
+- Template_TaskSets: workroom_type_id, name, is_default
+- Template_Tasks: taskset_id, title, default_assignee_role, relative_due_days (integer, relatif terhadap tanggal acuan), order
+- Template_DocSets: workroom_type_id, name (mis. Admin/Teknis/Komersial)
+- Template_Docs: docset_id, doc_type, title, is_required, order
+- Workrooms (generik): workroom_type_id, app_type_id, branch_id, code (auto-generate: PREFIX-TAHUN-NOMOR), title, status, current_phase, owner_user_id, created_by, created_at
+- Tasks (generik): workroom_id, branch_id, title, assignee_user_id, due_date, status (To do/Doing/Blocked/Done), priority, description
+- Documents (generik): workroom_id, branch_id, doc_type, title, file_url, version, status (Draft/Final/Sent), is_required, owner_user_id, uploaded_at
+
+Buat ENGINE "Create Workroom from Template":
+- Sebuah fungsi/aksi yang menerima workroom_type_id + tanggal acuan + branch_id, lalu otomatis:
+  1. Membuat record Workrooms baru + generate code dari code_prefix
+  2. Menyalin semua Template_Tasks (taskset default) menjadi Tasks (due_date = tanggal acuan + relative_due_days)
+  3. Menyalin semua Template_Docs menjadi Documents placeholder (status Draft)
+
+=== TEMPLATE BUILDER (NO-CODE, BERBASIS FORM) ===
+
+Buat halaman admin "Template Builder" di mana Super Admin bisa, HANYA DENGAN MENGISI FORM (tanpa koding):
+- Membuat/mengedit App Types
+- Membuat/mengedit Workroom Types (beserta code_prefix)
+- Membuat/mengedit Template TaskSets & Template Tasks (tambah/hapus/urutkan tugas, atur relative_due_days & role)
+- Membuat/mengedit Template DocSets & Template Docs (daftar dokumen wajib)
+
+=== LAPISAN 2: AUTH, CABANG, ROLE ===
+
+Sistem login dengan role: Super Admin, Branch Manager, BD, Estimator, PM, Engineer, Finance, Viewer.
+
+Tabel:
+- Branches: branch_code, name, city, head_user_id, status
+- Users: name, email, role, branch_id, status
+- Companies: type (Client/Owner/Vendor/Partner), name, npwp, address, city, notes
+- Contacts: company_id, name, position, phone, email, notes
+
+Aturan akses per cabang (penting): data dibatasi berdasarkan branch_id. Super Admin & Finance bisa lihat semua cabang. Branch Manager & staf hanya melihat data cabangnya sendiri.
+
+=== HALAMAN & NAVIGASI ===
+
+Buat halaman: Login, Dashboard (kosong dulu), Template Builder, dan CRUD untuk App_Types, Workroom_Types, Branches, Users, Companies, Contacts.
+Sidebar dengan filter cabang di atas (Super Admin bisa ganti cabang; role lain terkunci ke cabangnya).
+
+=== SEED DATA AWAL ===
+
+Isi data awal lewat engine (bukan hardcode):
+- App Type: "Konstruksi Sipil"
+- Workroom Types: "Tender" (prefix TDR) dan "Proyek" (prefix PRJ)
+- Template TaskSet "Tender Sipil – Standard Checklist" dengan tasks: registrasi dokumen tender (-10), site visit/aanwijzing (-8), hitung volume & RAB/AHS (-5), metode pelaksanaan & kurva-S (-4), dokumen administrasi SBU/NPWP/dukungan bank (-3), dokumen teknis personil & peralatan (-2), final review & harga (-1), submit penawaran (0).
+- Template DocSets: Admin, Teknis, Komersial (isi dokumen wajib yang umum untuk tender konstruksi).
+​
+Dampak ke fase‑fase berikutnya
+Karena engine sekarang generik, fase berikutnya jadi lebih ramping (tinggal “menempel” field khusus konstruksi ke engine, bukan bikin struktur dari nol):
+Fase 1 → tetap: Pipeline Tender + Form Publik “Submit Tender” (sekarang Tender_Leads terhubung ke App_Type = Konstruksi Sipil).
+Fase 2 → tinggal aktifkan tombol “Create Workroom” yang memanggil engine factory (bukan logika baru) + field khusus tender (bid_type, Bid_Submissions).
+Fase 3 → Proyek + BOQ_Items + progress (memakai Workroom generik tipe “Proyek”).
+Fase 4 → Dashboard.
+Catatan: nanti membuat app type ke‑2 (mis. Sertifikasi LSBU/LSP) cukup lewat Template Builder — isi form, tanpa Replit. Itulah “factory” yang menyala. ​
+Kalau Fase 0 ini sudah berjalan & Anda bisa login + lihat Template Builder, bilang saja “lanjut Fase 1”, nanti saya berikan prompt Fase 1 versi factory‑ready.
+lanjut
+Jun 14
+Thought
+Lanjut. Ini Fase 1 versi factory‑ready — Pipeline Tender + Form Publik “Submit Tender”, sudah terhubung ke engine (App_Type = Konstruksi Sipil).
+ PROMPT FASE 1 (factory‑ready) — siap tempel ke Replit Agent
+Lanjutkan app "Gustafta Collaboration Builder". Tambahkan modul TENDER untuk App Type "Konstruksi Sipil".
+
+CATATAN ARSITEKTUR: Tender adalah data khusus konstruksi yang "menempel" ke engine generik. Tender_Leads adalah tahap pra-workroom (pipeline). Saat sebuah lead berstatus "Go", nanti (di Fase 2) ia akan memanggil engine "Create Workroom from Template" dengan workroom_type = "Tender".
+
+=== TABEL ===
+
+Tender_Leads:
+- app_type_id (terhubung ke "Konstruksi Sipil")
+- branch_id
+- lead_source (Referral/Portal/Repeat client/Lainnya)
+- title (nama paket)
+- client_company_id (relasi ke Companies)
+- client_contact_id (relasi ke Contacts)
+- location_city
+- scope_sipil (multi-select: Struktur / Jalan & Jembatan / Drainase / Gedung / Tanah & Pondasi / Earthwork)
+- owner_type (Pemerintah / BUMN / Swasta)
+- funding_source (APBN / APBD / Swasta)
+- estimated_value (angka)
+- closing_date (deadline pemasukan)
+- status (New / Qualified / No Go / Go / Submitted / Won / Lost)
+- qualification_score (0-100)
+- owner_user_id (BD penanggung jawab)
+- workroom_id (nullable — terisi setelah workroom dibuat di Fase 2)
+- created_at
+
+=== HALAMAN PIPELINE TENDER ===
+
+Buat halaman "Pipeline Tender" berupa papan Kanban berdasarkan kolom status (New, Qualified, Go, Submitted, Won, Lost). 
+- Kartu menampilkan: title, client, nilai perkiraan, closing_date (highlight merah jika < 3 hari lagi), owner.
+- Difilter otomatis per cabang (mengikuti filter cabang global). Super Admin bisa lihat semua / pilih cabang.
+- Bisa drag kartu untuk mengubah status.
+- Klik kartu → halaman detail lead (semua field bisa diedit) + tombol aksi sesuai status.
+
+=== FORM PUBLIK "SUBMIT TENDER" ===
+
+Buat halaman form PUBLIK (bisa diakses TANPA login, via URL khusus mis. /submit-tender) dengan field:
+- Nama paket tender (wajib)
+- Cabang tujuan (dropdown dari Branches, wajib)
+- Nama perusahaan/client (wajib)
+- Nama PIC (wajib)
+- Nomor HP PIC (wajib)
+- Email PIC (opsional)
+- Lokasi (kota)
+- Sumber dana (APBN/APBD/Swasta)
+- Scope sipil (multi-select)
+- Deadline submit (tanggal)
+- Nilai perkiraan (angka)
+- Lampiran awal: RKS/Gambar/BOQ (upload file ke Object Storage, boleh multi-file, opsional)
+
+=== AUTOMATION SAAT FORM DISUBMIT ===
+
+Saat form publik disubmit, jalankan otomatis:
+1. Cari Company berdasarkan (nama + kota); jika tidak ada, buat baru (type = Client).
+2. Cari Contact berdasarkan (nomor HP atau email); jika tidak ada, buat baru dan kaitkan ke Company tadi.
+3. Buat record Tender_Leads dengan status "New", app_type_id = "Konstruksi Sipil", branch_id = cabang yang dipilih, dan field lain dari form. Simpan lampiran sebagai Documents awal (context = lead).
+4. Auto-assign owner_user_id: pilih user dengan role "BD" yang aktif di cabang tersebut secara round-robin (bergiliran merata).
+5. Kirim notifikasi (in-app) ke Branch Manager cabang tersebut dan ke BD yang ditugaskan, berisi ringkasan lead baru.
+6. Tampilkan halaman "Terima kasih, tender Anda sudah kami terima" setelah submit.
+
+Pastikan lead baru langsung muncul di kolom "New" pada Pipeline Tender cabang yang sesuai.
+​
+Setelah Fase 1 jalan, tes hal ini dulu:
+Buka URL form publik (tanpa login) → submit 1 tender percobaan.  
+Cek: Company & Contact otomatis terbuat, lead muncul di kolom New di cabang yang benar.  
+Cek: BD ter‑assign & notifikasi masuk ke Branch Manager.  
+Coba drag kartu antar kolom status.
+Kalau keempatnya beres, bilang “lanjut Fase 2” — nanti saya berikan prompt Fase 2 (Workroom Tender yang memanggil engine factory + Bid_Submissions).
+lanjut
+Jun 14
+Thought
+Lanjut. Ini Fase 2 versi factory‑ready — Workroom Tender yang memanggil engine factory (bukan logika baru) + Bid_Submissions.
+ PROMPT FASE 2 (factory‑ready) — siap tempel ke Replit Agent
+Lanjutkan app "Gustafta Collaboration Builder". Tambahkan WORKROOM TENDER.
+
+PENTING: jangan buat logika pembuatan workroom yang baru. Gunakan engine generik "Create Workroom from Template" yang sudah dibuat di Fase 0. Workroom Tender = record di tabel Workrooms generik dengan workroom_type = "Tender".
+
+=== TABEL TAMBAHAN (khusus tender) ===
+
+Tender_Details (extension dari Workrooms untuk data khusus tender):
+- workroom_id (relasi 1-1 ke Workrooms)
+- tender_lead_id (relasi ke Tender_Leads)
+- bid_type (Lumpsum / Unit Price / Gabungan)
+- submission_method (Hardcopy / Email / Portal)
+- risk_notes
+
+Bid_Submissions:
+- workroom_id
+- branch_id
+- submission_date
+- bid_value_final (angka)
+- margin_target (opsional)
+- notes
+- result (Pending / Won / Lost)
+- reason_lost (opsional)
+
+=== AKSI "CREATE WORKROOM" DARI LEAD ===
+
+Pada halaman detail Tender_Leads, saat status = "Go", tampilkan tombol "Create Workroom Tender".
+Saat tombol diklik, panggil engine "Create Workroom from Template" dengan parameter:
+- workroom_type = "Tender"
+- branch_id = branch_id milik lead
+- tanggal acuan = closing_date milik lead (untuk menghitung due_date task dari relative_due_days)
+
+Engine akan otomatis:
+1. Membuat record Workrooms baru + generate code (format CABANG-TDR-TAHUN-NOMOR, mis. JKT-TDR-2026-0007 — sisipkan branch_code di depan).
+2. Menyalin Template_Tasks "Tender Sipil – Standard Checklist" menjadi Tasks (due_date = closing_date + relative_due_days).
+3. Menyalin Template_Docs menjadi Documents placeholder (status Draft).
+
+Setelah workroom dibuat, lakukan juga:
+4. Buat record Tender_Details (kaitkan workroom_id + tender_lead_id).
+5. Buat record Bid_Submissions draft kosong (result = Pending).
+6. Isi Tender_Leads.workroom_id dengan id workroom yang baru, dan ubah status lead menjadi "Submitted" hanya setelah penawaran benar-benar disubmit (lihat tab Submission). Untuk sekarang, biarkan status tetap "Go".
+7. Arahkan user ke halaman Workroom yang baru dibuat.
+
+=== HALAMAN WORKROOM TENDER (tabbed) ===
+
+Buat halaman detail Workroom dengan tab:
+- Overview: kode workroom, client, nilai perkiraan, closing_date (countdown), current_phase (Survey/Costing/Admin Docs/Final Review — bisa diubah), bid_type, submission_method, risk_notes.
+- Tasks: papan Kanban (To do/Doing/Blocked/Done), bisa tambah/edit task, assign user (dibatasi user di cabang yang sama), set due_date & priority.
+- Documents: register dokumen (tabel) dengan kolom doc_type, title, version, status (Draft/Final/Sent), tombol upload file ke Object Storage, tandai dokumen wajib yang belum lengkap.
+- Submission: form untuk isi bid_value_final, submission_date, margin_target, notes. Saat disimpan & ditandai "Sudah Submit", ubah status Tender_Leads menjadi "Submitted". Sediakan juga tombol untuk menandai hasil: Won / Lost (+ reason_lost) yang mengupdate Bid_Submissions.result dan status lead (Won/Lost).
+
+Semua data workroom dibatasi per cabang sesuai role (mengikuti aturan akses cabang yang sudah ada).
+​
+Setelah Fase 2 jalan, tes alur ini:
+Ambil 1 lead → ubah status ke Go → klik Create Workroom Tender.  
+Cek: workroom terbuat dengan kode ber‑prefix cabang (mis. JKT-TDR-2026-0007).  
+Cek: tab Tasks terisi otomatis dari template (due date dihitung dari closing date), tab Documents berisi daftar dokumen wajib.  
+Isi tab Submission → tandai “Sudah Submit” → status lead berubah jadi Submitted.  
+Tandai Won → pastikan status lead jadi Won (siap dikonversi ke proyek di Fase 3).
+Kalau beres, bilang “lanjut Fase 3” — nanti saya berikan prompt Fase 3 (Konversi ke Proyek + BOQ_Items + progress fisik vs rencana / kurva‑S).
+lanjut
+Jun 14
+Thought
+Lanjut. Ini Fase 3 versi factory‑ready — Konversi Tender → Proyek (memakai engine factory), BOQ_Items sebagai dasar progress berbobot, dan progress fisik vs rencana (kurva‑S).
+ PROMPT FASE 3 (factory‑ready) — siap tempel ke Replit Agent
+Lanjutkan app "Gustafta Collaboration Builder". Tambahkan modul PROYEK untuk App Type "Konstruksi Sipil".
+
+PENTING: Proyek juga memakai engine generik. Workroom Proyek = record di tabel Workrooms dengan workroom_type = "Proyek". Gunakan kembali engine "Create Workroom from Template" yang sudah ada; jangan buat logika pembuatan workroom baru.
+
+=== TABEL TAMBAHAN ===
+
+Project_Details (extension dari Workrooms untuk data khusus proyek):
+- workroom_id (relasi 1-1 ke Workrooms)
+- from_tender_workroom_id (nullable — workroom tender asal)
+- client_company_id
+- client_contact_id
+- contract_value (angka)
+- contract_type (Lumpsum / Unit Price / Gabungan)
+- retention_percent (default 5)
+- warranty_period_days
+- progress_method (Bobot BOQ / Fisik)
+- start_date
+- end_date_target
+- pm_user_id
+
+BOQ_Items:
+- workroom_id (workroom proyek)
+- branch_id
+- item_no
+- description
+- unit (m3, m2, kg, ls, dll)
+- volume (angka)
+- unit_price (angka)
+- weight_percent (bobot terhadap total — bisa diisi manual atau dihitung otomatis dari volume*unit_price)
+- progress_percent (0-100, progress per item)
+
+Project_Progress:
+- workroom_id
+- branch_id
+- date
+- plan_progress_percent (rencana / kurva-S)
+- physical_progress_percent (aktual — bisa diisi manual ATAU dihitung otomatis dari BOQ: SUM(weight_percent * progress_percent)/100)
+- deviation (otomatis = physical_progress_percent - plan_progress_percent)
+- summary
+- issues
+- next_week_plan
+- updated_by
+
+Site_Reports:
+- workroom_id
+- branch_id
+- report_date
+- weather
+- manpower_count
+- activities_done
+- constraints
+- photos (multi-file ke Object Storage)
+
+=== AKSI "CONVERT TO PROJECT" ===
+
+Pada Workroom Tender, di tab Submission, saat result = "Won", tampilkan tombol "Convert to Project".
+Saat diklik:
+1. Panggil engine "Create Workroom from Template" dengan workroom_type = "Proyek", branch_id sama, tanggal acuan = start_date (minta input start_date dulu via dialog kecil). Generate code format CABANG-PRJ-TAHUN-NOMOR.
+2. Engine menyalin Template_Tasks "Project Sipil – Mobilisasi" menjadi Tasks proyek, dan Template_Docs proyek menjadi Documents placeholder.
+3. Buat Project_Details (warisi client, contract_value dari nilai penawaran final, branch, dll; isi from_tender_workroom_id).
+4. SALIN BOQ_Items dari workroom tender (jika ada) ke workroom proyek sebagai dasar progress. Jika tender belum punya BOQ, biarkan kosong untuk diisi manual.
+5. Arahkan user ke halaman Workroom Proyek.
+
+Tambahkan juga seed Template TaskSet "Project Sipil – Mobilisasi" (lewat engine, bukan hardcode) berisi tugas: serah terima lapangan (0), mobilisasi alat & personil (+3), pembuatan shop drawing (+5), pengajuan material (+7), mulai pekerjaan fisik (+10).
+
+=== HALAMAN WORKROOM PROYEK (tabbed) ===
+
+- Overview: kode proyek, client, contract_value, contract_type, start_date, end_date_target (countdown), status (Planned/Active/On hold/Closed), pm, retention & warranty.
+- Tasks: Kanban (sama seperti tender).
+- BOQ: tabel BOQ_Items, bisa tambah/edit/hapus item. Tampilkan progress total proyek otomatis = SUM(weight_percent * progress_percent)/100. Tampilkan juga total nilai = SUM(volume*unit_price).
+- Progress Mingguan: form input mingguan (date, plan_progress_percent, physical_progress_percent atau auto dari BOQ, summary, issues, next_week_plan). Tampilkan tabel riwayat + grafik kurva-S (garis plan vs actual sepanjang waktu) + nilai deviasi (hijau jika >= 0, merah jika < 0).
+- Site Reports: form laporan harian/mingguan lapangan (tanggal, cuaca, jumlah tenaga kerja, aktivitas, kendala, upload foto multi-file).
+- Documents: register dokumen proyek (kontrak, BA, gambar IFC, jadwal) + upload.
+
+Semua data proyek dibatasi per cabang sesuai role.
+​
+Setelah Fase 3 jalan, tes alur ini:
+Dari Workroom Tender yang Won → klik Convert to Project (isi start_date).  
+Cek: workroom proyek terbuat dengan kode …-PRJ-…, Tasks mobilisasi otomatis terisi, BOQ tersalin (jika ada).  
+Isi beberapa BOQ_Items + progress per item → cek progress total proyek terhitung otomatis.  
+Input 2–3 minggu progress → cek grafik kurva‑S (plan vs actual) + deviasi muncul benar.  
+Buat 1 Site Report dengan foto.
+Kalau beres, bilang “lanjut Fase 4” — nanti saya berikan prompt Fase 4 (Dashboard konsolidasi pipeline + proyek, per cabang & lintas cabang).
+lanjut
+Jun 14
+Thought
+Lanjut. Ini Fase 4 versi factory‑ready — Dashboard konsolidasi (pipeline tender + proyek), per cabang & lintas cabang. Ini menutup MVP.
+ PROMPT FASE 4 (factory‑ready) — siap tempel ke Replit Agent
+Lanjutkan app "Gustafta Collaboration Builder". Buat DASHBOARD utama.
+
+PENTING: dashboard harus menghormati aturan akses cabang. Super Admin & Finance bisa memilih "Semua Cabang" atau cabang tertentu. Role lain otomatis terkunci ke cabangnya (filter cabang disembunyikan/dikunci untuk mereka).
+
+=== FILTER GLOBAL DI ATAS DASHBOARD ===
+- Dropdown Cabang (Semua / pilih satu) — untuk Super Admin & Finance saja.
+- Dropdown rentang waktu: Bulan ini / Kuartal ini / Tahun ini / Custom.
+
+=== KARTU & VISUALISASI ===
+
+1) RINGKASAN PIPELINE TENDER (kartu angka):
+- Jumlah lead per status (New, Qualified, Go, Submitted, Won, Lost).
+- Total nilai estimasi tender aktif (status belum Won/Lost).
+- Tampilkan grafik donut distribusi nilai per status.
+
+2) WIN RATE:
+- Win rate = Won / (Won + Lost) dalam rentang waktu terpilih.
+- Tampilkan win rate keseluruhan, lalu breakdown: per cabang (bar chart) dan per scope_sipil (bar chart).
+
+3) PROYEK AKTIF:
+- Jumlah proyek berstatus Active.
+- Tabel proyek aktif: nama, cabang, PM, progress fisik %, rencana %, deviasi.
+- Tandai baris MERAH jika deviasi < -10% (proyek terlambat), KUNING jika antara -10% dan 0, HIJAU jika >= 0.
+- Total nilai kontrak proyek aktif.
+
+4) DEADLINE MINGGU INI (gabungan):
+- Daftar gabungan: Tasks tender & proyek yang due dalam 7 hari ke depan + tender dengan closing_date dalam 7 hari.
+- Urutkan berdasarkan tanggal terdekat. Tampilkan: judul, jenis (Tender/Proyek), cabang, tanggal, penanggung jawab.
+- Highlight item yang sudah lewat tenggat (overdue) dengan warna merah.
+
+5) AKTIVITAS CABANG (khusus Super Admin, saat "Semua Cabang"):
+- Tabel ringkas per cabang: jumlah tender aktif, jumlah proyek aktif, win rate, nilai pipeline.
+
+=== TEKNIS ===
+- Semua angka dihitung real-time dari database, dihormati filter cabang & waktu.
+- Gunakan grafik sederhana (bar & donut) yang ringan.
+- Pastikan dashboard jadi halaman default setelah login.
+​
+ MVP factory‑ready Anda sudah lengkap
+Setelah Fase 4 jalan, Anda sudah punya 1 siklus penuh yang berfungsi:
+Form publik → Lead (pipeline) → Workroom Tender (template otomatis) → Submit → Won → Convert ke Proyek (BOQ + kurva‑S) → Dashboard konsolidasi, semuanya multi‑cabang + role‑based, dan dijalankan di atas engine factory generik (App Types, Workroom Types, Template Builder).
+Checklist tes akhir (end‑to‑end)
+Submit tender via form publik → muncul di pipeline cabang yang benar.  
+Go → Create Workroom → checklist & dokumen otomatis terisi.  
+Submit penawaran → tandai Won → Convert to Project.  
+Isi BOQ + progress mingguan → kurva‑S & deviasi tampil.  
+Buka Dashboard → angka pipeline, win rate, proyek aktif, deadline tampil benar & terkunci per cabang sesuai role.
+Langkah sesudah MVP (opsional, fase lanjutan)
+Instance ke‑2 lewat Template Builder (tanpa Replit): mis. Sertifikasi LSBU/LSP — cukup buat App Type + Workroom Type + template baru via form. Inilah bukti “factory” menyala.   
+Fase lanjut teknis: e‑signature, integrasi WhatsApp/email otomatis, export PDF penawaran, budgeting detail.
+Karena seluruh blueprint + 5 prompt ini sudah panjang dan akan Anda pakai berulang sambil membangun, akan jauh lebih praktis kalau saya rapikan semuanya menjadi satu halaman Notion sebagai dokumen acuan tim (daftar tabel, field, template, 5 prompt siap salin, dan checklist tes). Mau saya buatkan halaman Notion‑nya sekarang?
+maksudhnya setalah MVP Tender.. maka untuk lainya sudha bisa dibuatkan di aplikasi yang dibuat replit ?
+Jun 14
+Thought
+Ya, sebagian besar bisa — tapi ada garis batas yang penting Anda pahami supaya ekspektasinya tepat. Jawaban jujurnya: “bisa, selama bentuknya mirip; belum bisa kalau strukturnya beda jauh.”
+Yang BISA dibuat langsung di dalam aplikasi (no‑code, via Template Builder) ​
+Setelah MVP jadi, untuk app/workroom yang polanya sama (Form → Workroom → Tasks → Documents), Anda cukup buka Template Builder di dalam aplikasi dan isi form — tanpa kembali ke Replit:
+Membuat App Type baru (mis. “Sertifikasi LSBU/LSP”, “Pelatihan”, “Pengadaan”)
+Membuat Workroom Type baru + kode prefix (mis. SRT, LSP)
+Menyusun checklist/template tugas baru (tambah, urutkan, atur tenggat & role)
+Menyusun daftar dokumen wajib baru
+Menambah cabang, user, role
+→ Untuk kasus seperti Sertifikasi LSBU/LSP, kemungkinan besar cukup di Template Builder karena polanya = “ajukan → workroom → checklist dokumen → selesai”. Itu sudah no‑code penuh di dalam app.
+Yang MASIH perlu Replit Agent (sentuhan koding via prompt) ​
+Engine factory MVP kita generik untuk pola umum, tapi belum generik untuk hal‑hal yang strukturnya khas. Ini masih perlu 1x prompt ke Replit Agent:
+Kebutuhan baru
+Bisa di Template Builder?
+Field/tabel khusus baru (mis. BOQ_Items, kurva‑S) untuk vertikal lain
+ perlu Replit
+Form publik dengan field unik yang belum ada
+ perlu Replit
+Logika/perhitungan khusus (mis. skoring asesmen LSP, rumus kelulusan)
+ perlu Replit
+Tampilan/laporan khusus (grafik baru, export PDF format tertentu)
+ perlu Replit
+Analoginya: Template Builder = mengganti “isi cetakan” (tugas & dokumen). Replit Agent = membuat “bentuk cetakan baru” (field, logika, tampilan baru).
+Kesimpulan praktis
+App sejenis konstruksi (alur form→workroom→checklist→dokumen) → ya, langsung di app, no‑code. ​
+App dengan data/logika/laporan yang benar‑benar baru → masih perlu nambah lewat Replit Agent (1x setup), setelah itu pengoperasiannya kembali no‑code.
+Versi impian “semua jenis app bisa dibuat 100% hanya dari form” itu target jangka panjang (kita bisa perlebar engine secara bertahap), bukan hasil otomatis dari MVP.
+Kalau mau, saat Anda nanti butuh Sertifikasi LSBU/LSP, saya bisa bantu menilai dulu: “ini cukup Template Builder, atau perlu prompt Replit?” — jadi Anda tidak menebak‑nebak.
+cara periksa sama tidaknya darimana ?
+Jun 14
+Thought
+Pertanyaan bagus. “Periksa sama/tidak” itu maksudnya: membandingkan kebutuhan app baru dengan kemampuan engine yang sudah ada. Caranya pakai 4 pertanyaan uji di bawah ini. Kalau semua jawabannya “sama/sudah ada” → cukup Template Builder (no‑code). Kalau ada satu saja yang “baru” → perlu Replit Agent.
+4 Pertanyaan Uji (urutkan dari atas)
+1) POLA ALUR — apakah sama?
+Pola engine kita: Form masuk → Workroom → Tasks (checklist) → Documents → selesai/convert.
+ Sama → lanjut pertanyaan 2.
+ Beda (mis. butuh alur approval bertingkat, voting, marketplace) → perlu Replit.
+2) FIELD/DATA — apakah cukup dengan yang sudah ada?
+Field yang sudah tersedia di engine: judul, cabang, perusahaan, kontak, tanggal, status, dokumen, tugas, penanggung jawab.
+ Cukup pakai field itu → lanjut pertanyaan 3.
+ Butuh field/tabel khusus baru (mis. nilai_BOQ, skor_asesmen, nomor_sertifikat) → perlu Replit.
+3) LOGIKA/PERHITUNGAN — ada yang khusus?
+ Tidak ada (hanya isi checklist & upload dokumen) → lanjut pertanyaan 4.
+ Ada rumus/otomatisasi khusus (mis. hitung kelulusan, skoring, kurva‑S, auto‑generate nomor format tertentu) → perlu Replit.
+4) TAMPILAN/LAPORAN — ada yang khusus?
+ Cukup pakai tampilan standar (kanban tugas + tabel dokumen + dashboard yang ada) → CUKUP TEMPLATE BUILDER ​
+ Butuh grafik baru / export PDF format khusus / dashboard baru → perlu Replit.
+Aturan keputusan singkat
+Semua 4 = “sama/ada” → Template Builder (no‑code).
+Ada minimal 1 = “baru” → Replit Agent (1x setup), lalu operasional kembali no‑code.
+Contoh penerapan: Sertifikasi LSBU/LSP
+Mari kita uji bareng:
+Pola alur? → Ajukan permohonan → workroom → checklist verifikasi → dokumen → terbit. Sama ​
+Field cukup? → Kalau hanya butuh data pemohon + dokumen syarat → cukup . Tapi kalau butuh nomor sertifikat, masa berlaku, hasil asesmen → baru ​
+Logika khusus? → Kalau ada skoring asesmen / penilaian asesor → baru ​
+Laporan khusus? → Kalau butuh cetak sertifikat PDF → baru ​
+Kesimpulan contoh: Versi sederhana (sekadar checklist verifikasi dokumen) → cukup Template Builder. Versi lengkap (ada nomor sertifikat, skoring, cetak PDF) → perlu Replit. → Inilah cara Anda “memeriksa sama/tidaknya”.
+Tips praktis biar gampang
+Simpan tabel 4 pertanyaan ini. Setiap kali punya ide app baru, jawab 4 baris itu. Kalau ragu di salah satu baris, anggap saja “baru” (lebih aman minta bantuan Replit sekali, daripada mentok di tengah jalan).
+Kalau Anda mau, untuk setiap ide app baru nanti, cukup sebutkan nama + tujuannya ke saya, lalu saya jalankan 4 pertanyaan uji ini dan langsung kasih vonis: “Template Builder” atau “perlu Replit” (plus prompt‑nya kalau perlu Replit).
+ok berarti didalam aplikasi yang  dibuat replit nanti bisa saja ada 5 atau ekstrimnya 20 model aplikasi yang memiliki workflow berbeda-beda.. tinggal kalau mau bikin aplikasi tinggal memilih model mana yang cocok.. begitu maksudnya ?
+Jun 14
+Thought
+Betul sekali — itu persis konsepnya. Anda sudah menangkap inti “application factory” dengan tepat. ​
+Ya, satu aplikasi Replit → banyak “model” di dalamnya
+Di dalam satu aplikasi Gustafta Collaboration Builder, bisa hidup banyak model aplikasi (kita sebut App Type / Workroom Type) — 5, 10, bahkan 20 — masing‑masing dengan workflow & template sendiri:
+Model (App Type)
+Workflow / Template‑nya
+Konstruksi – Tender
+checklist tender, dokumen lelang, BOQ
+Konstruksi – Proyek
+mobilisasi, progress kurva‑S, site report
+Sertifikasi LSBU/LSP
+verifikasi dokumen, asesmen
+Pengadaan
+RFQ, evaluasi vendor
+Pelatihan
+jadwal, peserta, sertifikat
+… (dst sampai 20)
+…
+Lalu saat mau “bikin aplikasi/kerja baru”, Anda (atau tim) tinggal pilih model yang cocok → isi form → workroom langsung jadi lengkap dengan checklist & dokumennya. Itu = no‑code. ​
+Tapi bedakan 2 aktivitas ini (biar tidak rancu)
+1) MEMAKAI model yang sudah ada → 100% no‑code, tinggal pilih ​
+Ini yang Anda maksud: “tinggal pilih model mana yang cocok.” Betul, ini cukup klik + isi form.
+2) MENAMBAH model baru ke daftar → tergantung workflow‑nya
+Untuk mengisi daftar jadi 20 model, tiap model baru “didaftarkan” dulu. Caranya 2 jalur (pakai 4 pertanyaan uji tadi):
+Workflow mirip pola yang ada → daftarkan lewat Template Builder (no‑code, di dalam app). ​
+Workflow benar‑benar beda (field/logika/laporan baru) → daftarkan 1x lewat Replit Agent, setelah itu dia jadi “model” permanen di menu pilihan. ​
+Analogi paling gampang
+Bayangkan aplikasi Anda seperti mesin cetak dengan rak cetakan:
+Rak cetakan = daftar model (App Types). Bisa diisi 5–20 cetakan.
+Memilih cetakan + menuang = bikin app/workroom baru → no‑code. ​
+Menambah cetakan baru ke rak:
+bentuknya mirip → buat sendiri via Template Builder ​
+bentuknya unik → minta dibuatkan via Replit sekali ​
+Jadi visi Anda benar: satu aplikasi induk, banyak model di dalamnya, tinggal pilih saat mau pakai. Yang perlu diingat hanya: mengisi rak (menambah model unik) kadang butuh Replit, tapi memakai rak selalu no‑code.
+Konsep ini sudah solid dan MVP yang kita rancang sudah diarahkan ke sana (lewat App_Types, Workroom_Types, dan Template Builder). Kalau Anda mau, saya bisa bantu susun daftar awal “rak model” yang realistis untuk bisnis Anda — mana yang cukup Template Builder dan mana yang perlu Replit — sebagai peta jalan setelah MVP Tender.
+lanjut
+Jun 14
+Thought
+Lanjut. Berikut daftar awal “rak model” — peta jalan model aplikasi yang realistis untuk bisnis Anda (konstruksi sipil + LSBU/LSP + operasional umum), lengkap dengan vonis Template Builder (no‑code) atau perlu Replit, hasil menjalankan 4 pertanyaan uji.
+ Rak Model — Tahap 1: Inti Bisnis (sudah/akan dibangun di MVP)
+#
+Model
+Alur singkat
+Vonis
+1
+Tender Konstruksi
+Form → workroom → checklist → submit
+ Sudah di MVP
+2
+Proyek Konstruksi
+Convert → BOQ → kurva‑S → site report
+ Sudah di MVP (ada field & rumus khusus)
+Dua ini fondasi. Field khusus (BOQ, kurva‑S) sudah dibuat lewat Replit di MVP.
+ Rak Model — Tahap 2: Mudah ditambah via Template Builder ​
+Model‑model ini polanya sama persis dengan engine (form → workroom → checklist → dokumen), tanpa rumus/laporan khusus. Bisa Anda buat sendiri di dalam app, tanpa Replit.
+#
+Model
+Kenapa cukup Template Builder
+3
+Pengadaan / Procurement
+Ajukan kebutuhan → checklist evaluasi vendor → dokumen → selesai
+4
+Perizinan / Legalitas
+Checklist dokumen izin (SBU, NIB, dll) → status terbit
+5
+Onboarding Karyawan/Mandor
+Checklist berkas + tugas orientasi
+6
+Permintaan Dokumen Internal
+Form minta → workroom → upload → approve sederhana
+7
+Sertifikasi LSBU/LSP (versi sederhana)
+Verifikasi dokumen syarat → checklist → status lulus/tidak
+ Rak Model — Tahap 3: Perlu Replit (1x setup) ​
+Model ini punya field / logika / laporan khusus yang belum ada di engine. Sekali dibuatkan di Replit, lalu jadi model permanen di menu.
+#
+Model
+Yang membuatnya “baru”
+8
+Sertifikasi LSP (versi lengkap)
+Skoring asesmen, nomor sertifikat, masa berlaku, cetak PDF sertifikat
+9
+Manajemen Kontrak & Termin
+Perhitungan termin, retensi, jadwal penagihan
+10
+Budgeting / RAB Detail
+Rumus biaya, perbandingan rencana vs realisasi anggaran
+11
+Manajemen Alat & Logistik
+Stok, jadwal pemakaian alat antar proyek
+12
+Penilaian Kinerja Vendor/Subkon
+Skoring & rating, riwayat performa
+ Urutan rekomendasi membangun (roadmap)
+Selesaikan MVP Tender + Proyek (model #1–2) sampai betul‑betul dipakai harian.
+Uji “factory” dengan 1 model Tahap 2 (mis. Perizinan #4) lewat Template Builder — ini membuktikan engine bisa mencetak model baru tanpa Replit. ​
+Tambah model Tahap 2 lain sesuai kebutuhan nyata (jangan borong sekaligus).
+Baru sentuh Tahap 3 saat benar‑benar perlu (mis. LSP lengkap dengan cetak sertifikat).
+ Prinsip biar tidak melebar
+Jangan bikin 20 model sekaligus — tambah model hanya saat ada kebutuhan nyata & berulang.
+Setiap model baru: jalankan dulu 4 pertanyaan uji → tentukan Template Builder atau Replit.
+Model Tahap 3 sebaiknya diurutkan satu per satu, jangan paralel, supaya engine tetap stabil.
+Seluruh blueprint kita sekarang sudah sangat lengkap: konsep factory, 5 prompt fase (Fase 0–4), 4 pertanyaan uji, dan rak model ini. Supaya tidak tercecer di chat dan mudah dipakai tim sambil membangun di Replit, saya sarankan saya rapikan semuanya jadi satu halaman Notion sebagai dokumen acuan. Mau saya buatkan halaman Notion‑nya sekarang?
+kalau dari chatbot builder yamg sudah kamu miliki catatannya dan buku 2 trilogi:kolaborasi, bisa kamu bualtkan workflow nya.. sebagai basis awal produk workflow kolaborasi yang dapat ditawarkan ke user
+Jun 14
+Saya cari dulu catatan terkait di workspace dan riwayat chat sebelumnya — pencarian awal belum menemukan dokumen "chatbot builder" maupun "buku 2 trilogi: kolaborasi", jadi saya periksa thread‑thread sebelumnya.
+Thought
+Baik, saya rangkaikan workflow produk Kolaborasi ini langsung dari dua sumber milikmu: catatan Gustafta Dialog Builder (chatbot builder) dan Buku 2 Trilogi — "Dari Dialog ke Kolaborasi". Ini saya susun sebagai basis awal produk yang bisa langsung ditawarkan ke user.
+1. Posisi produk: dari Dialog → Kolaborasi
+Supaya jelas bedanya dengan produk pertamamu:
+Gustafta Dialog Builder (Buku 1)
+Gustafta Collaboration Builder (Buku 2)
+Yang diproduksi
+1 chatbot / agen yang menjawab
+1 tim agen + alur kerja yang menghasilkan karya
+Output
+Jawaban percakapan
+Artefak nyata: backlog, keputusan, dokumen final, risk register
+Peran manusia
+Pengguna bertanya
+Manusia ada di titik keputusan (◆ gate)
+Cara bikin
+Isi form → jadi chatbot
+Isi form → jadi workroom (ruang kerja tim agen)
+Intinya: Dialog Builder menjawab. Collaboration Builder mengerjakan dan menyerahkan hasil — dengan manusia tetap pegang kendali keputusan.
+2. Prinsip dasar (diambil dari Buku 2)
+Tujuh prinsip ini jadi "hukum" yang ditanam di setiap workflow yang dihasilkan pabrik:
+Banyak peran sempit, bukan satu agen serba bisa (MultiClaw).
+Manusia di titik keputusan, agen di titik pengulangan.
+Output agen berisiko tinggi → masuk ke manusia dulu, bukan langsung keluar.
+Gerbang manusia wajib (◆) — alur berhenti sampai manusia menyetujui.
+Log + ringkasan otomatis wajib di setiap langkah (jejak bukti).
+Eskalasi jujur — agen tahu kapan harus berhenti dan menyerahkan ke manusia.
+Indikator menang baru: kualitas hasil, waktu-ke-serah, dan turunnya waktu pengambilan keputusan.
+3. Tim agen inti (MultiClaw)
+Setiap workroom minimal punya 3 peran ini, lalu ditambah spesialis sesuai sektor:
+ Rekan Strategis (Senior Advisor) — membuka opsi, menyusun kerangka.
+ Rekan Skeptis (Devil's Advocate) — menantang, mencari risiko & lubang.
+ Rekan Eksekutor (Operator/PMO) — mengeksekusi, merapikan, menyusun artefak.
+ Spesialis domain (mis. Tender, BOQ, Lisensi LSP) — ditambahkan dari Library.
+4. Alur kerja kolaborasi (pipeline inti produk)
+Ini jantung produknya — alur baku yang dijalankan setiap workroom:
+flowchart TD
+    A["TAHAP 0 — INTAKE<br>Tangkap kebutuhan & konteks"] --> B["TAHAP 1 — FRAMING / DIVERGENSI<br>🧠 Rekan Strategis buka 2-3 opsi (openclaw)"]
+    B --> C{"◆ SKEPTIC GATE<br>🪨 Rekan Skeptis menantang<br>Manusia memutuskan"}
+    C -->|Ditolak| B
+    C -->|Disetujui, kunci 1 arah| D["TAHAP 3 — BLUEPRINT<br>Pecah jadi tugas paralel (multiclaw)"]
+    D --> E["TAHAP 4 — DELIVERY SPRINT<br>🛠️ Eksekutor + spesialis kerjakan<br>Integrator gabungkan"]
+    E --> F{"◆ QA / AUDIT GATE<br>Cek mutu + jejak bukti<br>Manusia menyetujui"}
+    F -->|Revisi| E
+    F -->|Lolos| G["RELEASE<br>Serahkan artefak final"]
+    G --> H["RETRO<br>Ringkasan + pembelajaran + log"]
+TAHAP 0 — INTAKE
+Tangkap kebutuhan & konteks
+
+TAHAP 1 — FRAMING / DIVERGENSI
+🧠 Rekan Strategis buka 2-3 opsi (openclaw)
+
+◆ SKEPTIC GATE
+🪨 Rekan Skeptis menantang
+Manusia memutuskan
+
+TAHAP 3 — BLUEPRINT
+Pecah jadi tugas paralel (multiclaw)
+
+TAHAP 4 — DELIVERY SPRINT
+🛠️ Eksekutor + spesialis kerjakan
+Integrator gabungkan
+
+◆ QA / AUDIT GATE
+Cek mutu + jejak bukti
+Manusia menyetujui
+
+RELEASE
+Serahkan artefak final
+
+RETRO
+Ringkasan + pembelajaran + log
+
+Ditolak
+
+Disetujui, kunci 1 arah
+
+Revisi
+
+Lolos
+
+​
+Dua mekanisme kunci di dalamnya:
+openclaw = buka banyak opsi dulu di Tahap 1, wajib ditutup jadi 1–2 arah oleh Skeptic Gate (tidak boleh menggantung).
+multiclaw = paralelkan pekerjaan secara aman di Tahap 4: satu brief sumber kebenaran, lalu Integrator yang menyatukan.
+Dan di setiap ◆ gate berlaku aturan: alur tidak jalan sebelum manusia menyetujui, dan semua langkah tercatat otomatis.
+5. Mesin produk: 6 Form → Workroom jadi
+Inilah cara produk ini "no-code". User cukup mengisi 6 form (seperti mengisi field di Dialog Builder), dan sistem merakit workroom siap pakai:
+Form
+Fungsi
+Menghasilkan
+Form 1 — Collaboration Spec
+Tujuan, output yang diharapkan, batasan
+Definisi proyek
+Form 2 — Team Builder (MultiClaw)
+Pilih peran agen + spesialis
+Tim agen
+Form 3 — Workflow Builder
+Pilih pola operan kerja
+Alur kolaborasi
+Form 4 — Human Gates (◆)
+Tentukan titik keputusan manusia
+Kontrol & akuntabilitas
+Form 5 — Logging & Evidence
+Apa yang dicatat & diringkas
+Jejak bukti
+Form 6 — Deliverables / Pack Compiler
+Bentuk artefak akhir
+Output final terkompilasi
+Form 3 menawarkan 4 pola operan kerja siap pilih:
+AI dulu → manusia review (cepat, risiko rendah)
+Manusia dulu → AI membantu (manusia memimpin)
+Eksplorasi paralel (banyak agen, lalu disaring)
+Agen-ke-agen + gerbang manusia (rantai kerja dengan ◆)
+6. Tiga lapisan produk
+Builder Layer — Form → Workroom (yang dipakai user sehari-hari).
+Library Layer — kumpulan template Peran, Workflow, dan Dokumen (yang membuat pabrik cepat).
+Governance Layer — ◆ gate, decision log, change log (yang membuatnya tepercaya untuk badan usaha).
+7. Kenapa ini layak dijual
+Dua mode pengguna:
+Mode A — Profesional (individu): workroom personal untuk kerja cepat.
+Mode B — Organisasi (badan usaha / LSBU / LSP): workroom dengan ◆ gate & log untuk akuntabilitas resmi.
+Generik tapi spesifik: satu mesin, banyak produk turunan per sektor (Tender, Proyek, Lisensi, dst.) — tinggal pilih template dari Library.
+Nilai jual utama: bukan "chatbot pintar", tapi "tim kerja yang menyerahkan hasil + jejak keputusan yang bisa diaudit" — persis yang dibutuhkan asosiasi & badan usaha.
+Ini sudah bisa jadi basis awal produk workflow kolaborasi yang ditawarkan ke user. Kalau mau, saya bisa simpan seluruh blueprint ini jadi satu halaman Notion (rapi dengan diagram & tabel) supaya bisa kamu kembangkan jadi spec produk — atau langsung saya terjemahkan jadi prompt Replit "Fase Kolaborasi" seperti yang sudah kita lakukan untuk MVP Tender. Pilih yang mana?
+AI Chatbot BiasaBrain Project AITENDERA AIIB TU CoordinatorEduCounsel AIAI Tutor AdaptifRakit Tim Agen — TrilogiKalkulator RAB OtomatisAI Vision K3 InspectorAI Tools HubCertTracker Biro JasaDocuGen — Pembuat Surat AITenderMate — Pipeline TenderClientHub — Manajemen KlienLaporanBJ — Laporan BisnisBoheerBot — AI Subkontraktor & Klaim TerminSupplierBot — AI Material & Supply ChainOwnerBot — AI Developer & Pemilik ProyekKonsultanBot — AI DED, MK & Jasa KonsultansiKontraktorBot — AI QS, RAB & Estimasi BiayaPerijinanBot — AI Konsultan OSS-RBA & NIBProyekBot — AI Manajemen Proyek KonstruksiSertifikasiBot — AI Konsultan SBU/SKK BUJKTenderBot — AI Intelijen Tender BUJKMLM — Jaringan Afiliasi 3 LevelAI Chatbot PremiumSBUClaw OpenClawData Master OpenClawLexCom AI HukumSKK CoachASKOM AIPJBUClaw (Manajerial)KeuanganClaw (BUJK)PajakClaw (Advisor)TenderaClaw (10 Agen)KonstraTender (LKPP)BGClaw (BG001–BG009)BSClaw (BS001–BS010)IMClaw (IM001–IM009)KOClaw (KO001–KO008)KKClaw (KK001–KK007)CSMSClaw (K3L)SafiraClaw (SKK K3)SMK3Claw (IMS)LKUTClaw (BUJK)PUB-LKUTClaw (Kegiatan Usaha)ISOClaw 9001 (Mutu)ISOClaw 14001 (LH)SMAPClaw ISO 37001PanCEKClaw KPKSipilClaw (Teknik Sipil)MEPClaw (MEP Gedung)K3Claw (K3 Teknis)LingkunganClaw (LH)ManprojakClaw (SKK)QSClaw (QS & Estimasi)PengawasClaw (Pengawas)KontrakClaw (Kontrak & Klaim)K3ManClaw (K3 Konstruksi)ArsitekturClaw (SKK)SurveiPemetaanClaw (SKK)GeoteknikClaw (SKK)JalanJembatanClaw (SKK)TataLingkunganClaw (SKK)ElektrikalClaw (SKK)Konstruksi — Manajemen & DigitalKonstraClaw (Manpro)BrainClaw (Project Intel)BIMClaw (BIM Digital)DesainClaw (Arsitektur)SiteOpsClaw (Lapangan)Energi & PertambanganKetenagalistrikanClawEnergiClaw (EBT)EbtSolarClaw (PLTS)TransisiEnergiClawMigasClaw (Energi)PertambanganClawGeologiClaw (Eksplorasi)OffshoreSafetyClawProperti & Real EstateDevPropertiClawEstateCareClawSertifikasi & PerizinanSkemaClaw (BUJK)SIMPKClaw (Peralatan)ESIMPANClaw (BUJK & TKK)LKPMClaw (Penanaman Modal)OSSClaw (NIB & Perizinan)ABUClaw (LSBU)PanduanSBU (Tanya Jawab)PanduanASKOM (Uji SKK)TerasLPJK#1 (SKK & LSP)ETLO & PendidikanEducounselClaw (Konseling)IBTUClaw (IB Testing)ETLOAcademyClawETLOBizDevClawTutorTeknikClawRisetSkripsiClawBisnis & HRDigitalMarketingClawCrmSalesClawBrandContentClawEcommerceClawRekrutmenClawLdKompetensiClawPenilaianKinerjaClawRegulasi & HukumNspkNavigatorClawKorporasiClaw
+
+AI Chatbot BiasaBrain Project AITENDERA AIIB TU CoordinatorEduCounsel AIAI Tutor AdaptifRakit Tim Agen — TrilogiKalkulator RAB OtomatisAI Vision K3 InspectorAI Tools HubCertTracker Biro JasaDocuGen — Pembuat Surat AITenderMate — Pipeline TenderClientHub — Manajemen KlienLaporanBJ — Laporan BisnisBoheerBot — AI Subkontraktor & Klaim TerminSupplierBot — AI Material & Supply ChainOwnerBot — AI Developer & Pemilik ProyekKonsultanBot — AI DED, MK & Jasa KonsultansiKontraktorBot — AI QS, RAB & Estimasi BiayaPerijinanBot — AI Konsultan OSS-RBA & NIBProyekBot — AI Manajemen Proyek KonstruksiSertifikasiBot — AI Konsultan SBU/SKK BUJKTenderBot — AI Intelijen Tender BUJKMLM — Jaringan Afiliasi 3 LevelAI Chatbot PremiumSBUClaw OpenClawData Master OpenClawLexCom AI HukumSKK CoachASKOM AIPJBUClaw (Manajerial)KeuanganClaw (BUJK)PajakClaw (Advisor)TenderaClaw (10 Agen)KonstraTender (LKPP)BGClaw (BG001–BG009)BSClaw (BS001–BS010)IMClaw (IM001–IM009)KOClaw (KO001–KO008)KKClaw (KK001–KK007)CSMSClaw (K3L)SafiraClaw (SKK K3)SMK3Claw (IMS)LKUTClaw (BUJK)PUB-LKUTClaw (Kegiatan Usaha)ISOClaw 9001 (Mutu)ISOClaw 14001 (LH)SMAPClaw ISO 37001PanCEKClaw KPKSipilClaw (Teknik Sipil)MEPClaw (MEP Gedung)K3Claw (K3 Teknis)LingkunganClaw (LH)ManprojakClaw (SKK)QSClaw (QS & Estimasi)PengawasClaw (Pengawas)KontrakClaw (Kontrak & Klaim)K3ManClaw (K3 Konstruksi)ArsitekturClaw (SKK)SurveiPemetaanClaw (SKK)GeoteknikClaw (SKK)JalanJembatanClaw (SKK)TataLingkunganClaw (SKK)ElektrikalClaw (SKK)Konstruksi — Manajemen & DigitalKonstraClaw (Manpro)BrainClaw (Project Intel)BIMClaw (BIM Digital)DesainClaw (Arsitektur)SiteOpsClaw (Lapangan)Energi & PertambanganKetenagalistrikanClawEnergiClaw (EBT)EbtSolarClaw (PLTS)TransisiEnergiClawMigasClaw (Energi)PertambanganClawGeologiClaw (Eksplorasi)OffshoreSafetyClawProperti & Real EstateDevPropertiClawEstateCareClawSertifikasi & PerizinanSkemaClaw (BUJK)SIMPKClaw (Peralatan)ESIMPANClaw (BUJK & TKK)LKPMClaw (Penanaman Modal)OSSClaw (NIB & Perizinan)ABUClaw (LSBU)PanduanSBU (Tanya Jawab)PanduanASKOM (Uji SKK)TerasLPJK#1 (SKK & LSP)ETLO & PendidikanEducounselClaw (Konseling)IBTUClaw (IB Testing)ETLOAcademyClawETLOBizDevClawTutorTeknikClawRisetSkripsiClawBisnis & HRDigitalMarketingClawCrmSalesClawBrandContentClawEcommerceClawRekrutmenClawLdKompetensiClawPenilaianKinerjaClawRegulasi & HukumNspkNavigatorClawKorporasiClaw
+Jun 14
+Thought
+Daftar ini sebenarnya bukan sekadar katalog produk — ini adalah Role Library (Perpustakaan Peran) yang sudah jadi untuk Collaboration Builder-mu. Artinya: bahan baku tim agen yang di blueprint kemarin saya sebut "ditambahkan dari Library" — ternyata sudah kamu miliki ratusan. Ini mengubah posisi produk secara signifikan. Saya petakan:
+1. Apa arti daftar ini dalam arsitektur produk
+Di blueprint kemarin ada 3 lapisan. Daftar ini langsung mengisi Library Layer:
+Lapisan
+Status sebelum
+Status setelah lihat daftar ini
+Builder Layer (Form→Workroom)
+perlu dibangun
+perlu dibangun
+Library Layer (Role Library)
+kosong, harus diisi
+ sudah terisi ~100 agen
+Governance Layer (◆ gate, log)
+perlu dibangun
+perlu dibangun
+Kesimpulan penting: kamu tidak perlu membuat agen dari nol. Pekerjaan tersisa tinggal lapisan orkestrasi — yang merangkai Claw-Claw ini jadi tim + alur kerja + gerbang manusia.
+2. Katalogmu punya 3 tingkat kematangan kolaborasi
+Saya klasifikasi ulang isi daftar berdasarkan sejauh mana ia sudah "kolaboratif":
+Tingkat 1 — Dialog tunggal (output Buku 1 / Dialog Builder)
+Menjawab pertanyaan, 1 agen. Contoh: TENDERA AI, EduCounsel AI, AI Tutor Adaptif, DocuGen, PanduanSBU, PanduanASKOM, LexCom, SKK Coach, ASKOM AI.
+→ Peran di workroom: narasumber / konsultan.
+Tingkat 2 — Spesialis Claw tunggal (domain expert)
+Satu peran sempit yang dalam. Inilah inti Role Library MultiClaw-mu. Contoh: QSClaw, KontrakClaw, K3ManClaw, SipilClaw, MEPClaw, GeoteknikClaw, OSSClaw, PajakClaw, KeuanganClaw, RekrutmenClaw, dst.
+→ Peran di workroom:  Eksekutor spesialis.
+Tingkat 3 — Multi-agen Claw (sudah prototipe kolaborasi!)
+Ini bukti bahwa pola kolaborasimu sudah jalan, tinggal digeneralisasi:
+TenderaClaw (10 Agen) — tim 10 agen dalam satu produk.
+SBUClaw OpenClaw & Data Master OpenClaw — sudah memakai pola openclaw (eksplorasi luas) dari Buku 2.
+Rumpun berkode (BGClaw BG001–BG009, BSClaw BS001–BS010, IMClaw, KOClaw, KKClaw) — sudah berstruktur banyak sub-peran.
+→ Ini template workroom siap pakai, bukan sekadar agen tunggal.
+3. Inilah "aha"-nya: produk kolaborasi = orkestrasi katalog ini
+Collaboration Builder tinggal menambahkan 3 peran generik kemarin di atas katalogmu:
+flowchart TD
+    subgraph GEN["3 Peran Generik (lem orkestrasi)"]
+        S["🧠 Rekan Strategis"]
+        K["🪨 Rekan Skeptis"]
+        E["🛠️ Rekan Eksekutor"]
+    end
+    subgraph LIB["Role Library = katalogmu (~100 Claw)"]
+        D["Spesialis domain:<br>QSClaw · KontrakClaw · OSSClaw · SipilClaw · ..."]
+    end
+    F["Form 2 — Team Builder"] --> GEN
+    F --> LIB
+    GEN --> W["WORKROOM<br>tim agen + ◆ gate + log"]
+    LIB --> W
+    W --> ART["Artefak final (bukan chat)"]
+Role Library = katalogmu (~100 Claw)
+
+3 Peran Generik (lem orkestrasi)
+
+Spesialis domain:
+QSClaw · KontrakClaw · OSSClaw · SipilClaw · ...
+
+🧠 Rekan Strategis
+
+🪨 Rekan Skeptis
+
+🛠️ Rekan Eksekutor
+
+Form 2 — Team Builder
+
+WORKROOM
+tim agen + ◆ gate + log
+
+Artefak final (bukan chat)
+
+​
+3 peran generik = "lem"-nya. Claw-Claw spesialismu = "isi"-nya.
+4. Contoh nyata: rakit workroom dari katalog yang sudah ada
+Workroom "Persiapan Tender BUJK" — dirakit otomatis lewat Form 2 dari agen yang SUDAH kamu punya:
+Peran di workflow
+Diisi oleh (agen existing-mu)
+ Strategis
+TenderaClaw / BrainClaw
+ Skeptis
+(peran generik baru) menantang harga & risiko
+ Estimasi
+QSClaw  • Kalkulator RAB
+ Legal/Kontrak
+KontrakClaw  • LexCom
+ Perizinan/Sertifikat
+OSSClaw  • SertifikasiBot  • SkemaClaw
+ K3/Mutu
+K3ManClaw  • ISOClaw 9001
+◆ Gate manusia
+PJBU menyetujui harga akhir & dokumen submit
+ Pack Compiler
+DocuGen merangkai dokumen penawaran final
+Hasilnya bukan jawaban chat, tapi paket dokumen tender + risk register + log keputusan — persis output Buku 2.
+Pola yang sama bisa merakit workroom Pendampingan Lisensi LSP, OSS-RBA/NIB, Audit ISO, Rekrutmen & Kompetensi, dst. — semua dari rak yang sama.
+5. Yang masih perlu dibangun (gap sebenarnya)
+Karena Library sudah penuh, fokus pembangunan tinggal 3 hal:
+Registry agen — daftarkan ~100 Claw ini jadi "kartu peran" (nama, domain, input, output) yang bisa dipilih di Form 2.
+Mesin operan & gate — yang menjalankan pipeline Intake → Divergensi → ◆ Skeptic Gate → Delivery → ◆ QA → Release lintas Claw.
+Log & Pack Compiler — pencatatan keputusan + perakit artefak final.
+Jadi posisi produkmu jauh lebih matang dari dugaan blueprint kemarin: 70% bahan (Role Library) sudah ada, tinggal 30% lapisan orkestrasi.
+Mau saya lanjutkan dengan salah satu ini?
+Bikin "Registry Peran" — tabel terstruktur ~100 Claw ini (domain, input, output, cocok untuk workroom apa) sebagai isi Form 2 → bisa saya simpan jadi halaman Notion.
+Rancang 3–5 template workroom siap jual (Tender, Lisensi LSP, OSS/NIB, Audit ISO, Rekrutmen) dari katalog ini.
+Terjemahkan jadi prompt Replit "Fase Kolaborasi" — skema database Registry + Workroom + Gate + Log.
+ya lanjutkan
+Jun 14
+Thought
+Saya lanjutkan dengan langkah fondasi: menyusun Registry Peran dari ~100 agen yang sudah kamu miliki plus rancangan template workroom siap jual, lalu saya rapikan jadi satu halaman Notion sebagai basis produk yang bisa kamu kembangkan.
+Saya buatkan halamannya sekarang.
+Halaman basis produk sudah jadi. Isinya: Registry Peran (~100 agenmu dikelompokkan per sektor dengan tipe & kecocokan workroom), 5 template workroom siap jual, pipeline kolaborasi, mekanisme 6 Form, dan roadmap pembangunan lapisan orkestrasi.
+Langkah lanjutan yang bisa saya kerjakan:
+Prompt Replit "Fase Kolaborasi" — skema database Registry + Workroom + Gate + Log untuk membangun lapisan orkestrasi (gap 30%).
+Detailkan 1 template workroom (mis. Tender BUJK) sampai level alur per-langkah + isi tiap ◆ gate, sebagai contoh produk pertama yang dijual.
+Susun isi 6 Form secara lengkap (field per field) supaya siap dijadikan form no-code seperti Dialog Builder.
+Mau lanjut ke yang mana?
+lanjut sesuai saranmu yang terbaik
+Jun 14
+Thought
+Sesuai saranku, langkah terbaik berikutnya adalah mengubah blueprint ini jadi prompt Replit "Fase Kolaborasi" — karena Library-mu sudah penuh, yang perlu dibangun tinggal lapisan orkestrasi (Registry + Workroom + Gate + Log). Ini melanjutkan engine generik dari Fase 0 yang sudah kita rancang, jadi nyambung langsung dengan aplikasi MVP-mu.
+Berikut prompt siap tempel ke Replit:
+ PROMPT REPLIT — FASE KOLABORASI (Lapisan Orkestrasi)
+Konteks untuk Replit: Lanjutkan aplikasi yang sudah ada (engine generik App_Types, Workroom_Types, Template, Workrooms, Tasks, Documents, Auth/Branches/Users/Companies). Sekarang tambahkan lapisan orkestrasi kolaborasi multi-agen dengan gerbang manusia (human gate) dan pencatatan keputusan. Jangan hapus tabel lama; tambahkan tabel baru di bawah ini dan saling hubungkan.
+A. Tabel baru
+1. Agents_Registry (Role Library — kartu peran tiap Claw)
+id, nama_agen, slug_url (mis. /qs-claw), kategori (Tender/Teknik/K3-Mutu/Sertifikasi/Manajerial/Energi/Pendidikan/Bisnis), tipe (enum: dialog  / spesialis  / multi_agen ), domain, input_dibutuhkan (text), output_dihasilkan (text), fungsi_peran (enum: strategis/skeptis/eksekutor/narasumber/pack_compiler), aktif (bool)
+2. Workroom_Templates (5 template siap jual)
+id, nama_template, sektor, deskripsi, output_akhir, mode (enum: profesional/organisasi), aktif
+3. Template_Roles (peran di tiap template → agen pengisi)
+id, template_id (FK Workroom_Templates), nama_peran, fungsi_peran (strategis/skeptis/eksekutor/dst), agent_id (FK Agents_Registry), urutan
+4. Workflow_Stages (pipeline baku, bisa di-reuse)
+id, template_id (FK), urutan, nama_tahap (Intake/Framing/Skeptic Gate/Blueprint/Delivery/QA Gate/Release/Retro), tipe_tahap (enum: kerja/gate), pola_operan (enum: ai_first_review/human_first_assist/paralel/agen_ke_agen_gate)
+5. Collaborations (instance workroom yang dibuat user)
+id, judul, template_id (FK), branch_id (FK Branches), company_id (FK Companies, nullable), pemilik_user_id (FK Users), status (enum: intake/berjalan/menunggu_gate/selesai/dibatalkan), tahap_aktif_id (FK Workflow_Stages), mode, created_at
+6. Collaboration_Roles (anggota tim workroom aktif)
+id, collaboration_id (FK), nama_peran, fungsi_peran, agent_id (FK, nullable), human_user_id (FK Users, nullable), is_pic (bool)
+7. Tasks (operan kerja — perluas tabel lama jika ada)
+id, collaboration_id (FK), stage_id (FK Workflow_Stages), judul, penanggung_jawab_role_id (FK Collaboration_Roles), status (enum: to_do/berjalan/menunggu_review/selesai/diblokir), input_brief (text), output_hasil (text), urutan
+8. Gates (gerbang manusia ◆ — inti governance)
+id, collaboration_id (FK), stage_id (FK), nama_gate (Skeptic Gate/QA Gate), status (enum: terbuka/disetujui/ditolak/revisi), keputusan_oleh_user_id (FK Users, nullable), catatan_keputusan (text), waktu_keputusan (datetime, nullable)
+9. Decision_Log (jejak keputusan — wajib, tak bisa dihapus)
+id, collaboration_id (FK), gate_id (FK, nullable), aktor (text: nama user/agen), tipe_aksi (enum: usulan/tantangan_skeptis/keputusan_gate/revisi/rilis), ringkasan (text), timestamp (auto)
+10. Deliverables (Pack Compiler — artefak final)
+id, collaboration_id (FK), nama_artefak, tipe (dokumen/risk_register/laporan/checklist), isi_atau_link (text), versi, disetujui (bool), created_at
+B. 6 Form (input no-code → workroom jadi)
+Buat wizard 6 langkah yang menulis ke tabel di atas:
+Collaboration Spec → buat baris Collaborations (judul, output, batasan, mode).
+Team Builder → pilih Workroom_Templates ATAU rakit manual dari Agents_Registry → isi Collaboration_Roles. Wajib ada 3 peran generik (strategis/skeptis/eksekutor).
+Workflow Builder → pilih pola_operan per tahap → isi Workflow_Stages.
+Human Gates → tentukan tahap mana jadi tipe_tahap=gate + siapa PIC penyetuju.
+Logging & Evidence → pilih aksi apa yang dicatat ke Decision_Log.
+Deliverables → tentukan bentuk Deliverables akhir + siapa pack compiler.
+C. Engine inti
+createCollaborationFromTemplate(template_id, judul, branch_id) — clone Template_Roles → Collaboration_Roles, clone Workflow_Stages, set status=intake, tulis baris awal Decision_Log.
+Mesin tahap: saat semua Tasks di tahap kerja selesai → pindah ke tahap berikut. Jika tahap berikut tipe_tahap=gate → set Collaborations.status=menunggu_gate, buat baris Gates status terbuka, kunci progres sampai PIC menekan Setujui/Tolak.
+Aturan gate (◆): alur tidak lanjut tanpa keputusan manusia. Setiap keputusan otomatis menulis Decision_Log.
+Pack Compiler: di tahap Release, kumpulkan semua output_hasil Tasks + keputusan jadi Deliverables.
+D. Halaman UI
+Registry Agen — tabel ~100 Claw (filter kategori/tipe/fungsi), tombol Aktif/Nonaktif.
+Galeri Template Workroom — 5 kartu + tombol "Buat Workroom".
+Workroom (detail) — papan tahap (kanban per Workflow_Stages), daftar Tasks, kotak ◆ Gate dengan tombol Setujui/Tolak/Revisi (hanya muncul untuk PIC), panel Decision Log (read-only), tab Deliverables.
+Dashboard — jumlah workroom per status, gate yang menunggu keputusan, waktu rata-rata ke-rilis.
+E. Seed data awal
+Isi Agents_Registry dengan ~100 Claw dari katalog (minimal kolom nama, slug, kategori, tipe, fungsi_peran).
+Isi Workroom_Templates + Template_Roles + Workflow_Stages untuk 5 template: Tender BUJK, Lisensi LSP/LSBU, OSS-RBA/NIB, Audit ISO, Rekrutmen & Kompetensi (sesuai pemetaan di halaman Notion).
+Pipeline default tiap template: Intake → Framing → ◆ Skeptic Gate → Blueprint → Delivery → ◆ QA Gate → Release → Retro.
+Prompt ini membangun tepat gap 30% (orkestrasi) di atas Library yang sudah ada — hasilnya: produk di mana user tinggal pilih template, isi 6 form, lalu menjalankan workroom multi-agen dengan kontrol ◆ gate & log.
+Mau saya simpan prompt ini ke halaman Notion tadi (sebagai lampiran Fase Kolaborasi) supaya rapi bersama blueprint, atau lanjut detailkan seed data 5 template (isi Templat
