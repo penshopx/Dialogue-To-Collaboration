@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useListDeliverables, useCreateDeliverable, useUpdateDeliverable, useDeleteDeliverable, getListDeliverablesQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { FileText, FileSpreadsheet, Presentation, BarChart3, Package, Plus, Pencil, Trash2, ChevronDown, ChevronUp, Save, Loader2 } from "lucide-react";
+import { FileText, FileSpreadsheet, Presentation, BarChart3, Package, Plus, Pencil, Trash2, ChevronDown, ChevronUp, Save, Loader2, Layers, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,19 +13,85 @@ import { useToast } from "@/hooks/use-toast";
 import type { WorkroomStage } from "@workspace/api-client-react";
 
 const FORMAT_CONFIG = {
-  document: { label: "Dokumen", icon: FileText, color: "text-blue-400" },
-  spreadsheet: { label: "Spreadsheet", icon: FileSpreadsheet, color: "text-green-400" },
-  presentation: { label: "Presentasi", icon: Presentation, color: "text-amber-400" },
-  report: { label: "Laporan", icon: BarChart3, color: "text-purple-400" },
-  data: { label: "Data", icon: Package, color: "text-cyan-400" },
+  document:     { label: "Dokumen",     icon: FileText,       color: "text-blue-400" },
+  spreadsheet:  { label: "Spreadsheet", icon: FileSpreadsheet, color: "text-green-400" },
+  presentation: { label: "Presentasi",  icon: Presentation,   color: "text-amber-400" },
+  report:       { label: "Laporan",     icon: BarChart3,      color: "text-purple-400" },
+  data:         { label: "Data",        icon: Package,        color: "text-cyan-400" },
 };
 
 const STATUS_CONFIG = {
-  draft: { label: "Draft", color: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
-  review: { label: "Review", color: "bg-amber-500/10 text-amber-400", dot: "bg-amber-400" },
-  final: { label: "Final", color: "bg-blue-500/10 text-blue-400", dot: "bg-blue-400" },
-  approved: { label: "Approved", color: "bg-green-500/10 text-green-400", dot: "bg-green-400" },
+  draft:    { label: "Draft",    color: "bg-muted text-muted-foreground",      dot: "bg-muted-foreground" },
+  review:   { label: "Review",   color: "bg-amber-500/10 text-amber-400",      dot: "bg-amber-400" },
+  final:    { label: "Final",    color: "bg-blue-500/10 text-blue-400",        dot: "bg-blue-400" },
+  approved: { label: "Approved", color: "bg-green-500/10 text-green-400",      dot: "bg-green-400" },
 };
+
+/* ─── Gustafta-style Bundles ─── */
+interface BundleItem { title: string; format: string; status: string; content: string }
+interface Bundle { id: string; icon: string; name: string; desc: string; color: string; items: BundleItem[] }
+
+const BUNDLES: Bundle[] = [
+  {
+    id: "mentor",
+    icon: "🎓",
+    name: "Mentor Bundle",
+    desc: "Handout + Latihan + Feedback — paket sesi belajar",
+    color: "text-blue-400 border-blue-400/20 bg-blue-400/5",
+    items: [
+      { title: "Handout Materi 1 Halaman", format: "document", status: "draft", content: "Ringkasan materi pembelajaran siap cetak atau kirim." },
+      { title: "Latihan / Kuis", format: "document", status: "draft", content: "Soal latihan atau kuis dengan pembahasan." },
+      { title: "Feedback & Penilaian (Rubrik)", format: "document", status: "draft", content: "Penilaian terstruktur berdasarkan rubrik yang telah ditetapkan." },
+    ],
+  },
+  {
+    id: "solve",
+    icon: "🔧",
+    name: "Solve Bundle",
+    desc: "Checklist + Rencana Aksi + Snapshot — dari isu ke solusi",
+    color: "text-amber-400 border-amber-400/20 bg-amber-400/5",
+    items: [
+      { title: "Checklist Solusi", format: "document", status: "draft", content: "Daftar centang untuk kelengkapan, audit, langkah kerja, atau verifikasi." },
+      { title: "Rencana Aksi (Action Plan)", format: "document", status: "draft", content: "Siapa melakukan apa, dalam urutan apa, dan apa risikonya." },
+      { title: "Snapshot Proyek", format: "report", status: "draft", content: "Status proyek satu pandang: isu aktif, risiko, keputusan terakhir, dan next action." },
+    ],
+  },
+  {
+    id: "project_update",
+    icon: "📸",
+    name: "Project Update Bundle",
+    desc: "Snapshot + Timeline + Next Action — laporan satu klik",
+    color: "text-green-400 border-green-400/20 bg-green-400/5",
+    items: [
+      { title: "Project Snapshot", format: "report", status: "draft", content: "Status proyek ringkas untuk stakeholder." },
+      { title: "Timeline Report", format: "spreadsheet", status: "draft", content: "Ringkasan timeline dari sumber data proyek." },
+      { title: "Next Action Plan", format: "document", status: "draft", content: "Langkah-langkah konkret periode berikutnya." },
+    ],
+  },
+  {
+    id: "client_update",
+    icon: "📬",
+    name: "Client Update Bundle",
+    desc: "Ringkasan + Pesan siap kirim — komunikasi klien profesional",
+    color: "text-purple-400 border-purple-400/20 bg-purple-400/5",
+    items: [
+      { title: "Ringkasan Jawaban Klien", format: "document", status: "draft", content: "Jawaban ringkas dengan poin-poin atau langkah terstruktur." },
+      { title: "Pesan Siap Kirim (WA/Email)", format: "document", status: "draft", content: "Pesan update klien via WhatsApp atau Email — singkat, sopan, CTA jelas." },
+    ],
+  },
+  {
+    id: "report_pack",
+    icon: "📊",
+    name: "Report Pack",
+    desc: "Laporan lengkap: KPI + Notulen + Ekspor Data",
+    color: "text-cyan-400 border-cyan-400/20 bg-cyan-400/5",
+    items: [
+      { title: "Laporan KPI & Kinerja", format: "report", status: "draft", content: "KPI dan kinerja tim dari data proyek — rekap capaian, gap target, dan rekomendasi." },
+      { title: "Notulen / Ringkasan Sesi", format: "document", status: "draft", content: "Ringkasan sesi meeting atau diskusi: poin penting, keputusan, dan tindak lanjut." },
+      { title: "Ekspor Data (CSV)", format: "data", status: "draft", content: "Ekspor terstruktur dari data proyek, hasil mini app, atau scoring." },
+    ],
+  },
+];
 
 interface Props { workroomId: number; stages: WorkroomStage[] }
 
@@ -41,6 +107,8 @@ export function DeliverablesTab({ workroomId, stages }: Props) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [form, setForm] = useState({ title: "", content: "", format: "document", status: "draft", stageId: "" });
+  const [showBundles, setShowBundles] = useState(items.length === 0);
+  const [loadingBundle, setLoadingBundle] = useState<string | null>(null);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: getListDeliverablesQueryKey(workroomId) });
   const stageMap: Record<number, string> = {};
@@ -73,8 +141,23 @@ export function DeliverablesTab({ workroomId, stages }: Props) {
     invalidate();
   };
 
+  const applyBundle = async (bundle: Bundle) => {
+    setLoadingBundle(bundle.id);
+    try {
+      for (const item of bundle.items) {
+        await createItem.mutateAsync({ workroomId, data: item as Parameters<typeof createItem.mutateAsync>[0]["data"] });
+      }
+      invalidate();
+      setShowBundles(false);
+      toast({ title: `${bundle.icon} Bundle "${bundle.name}" ditambahkan (${bundle.items.length} item)` });
+    } finally {
+      setLoadingBundle(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Toolbar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {Object.entries(STATUS_CONFIG).map(([k, v]) => {
@@ -87,16 +170,62 @@ export function DeliverablesTab({ workroomId, stages }: Props) {
             ) : null;
           })}
         </div>
-        <Button size="sm" className="gap-1.5" onClick={openNew}><Plus className="w-3.5 h-3.5" /> Tambah</Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5 h-7 text-xs" onClick={() => setShowBundles(v => !v)}>
+            <Layers className="w-3.5 h-3.5" /> Bundle
+          </Button>
+          <Button size="sm" className="gap-1.5 h-7" onClick={openNew}><Plus className="w-3.5 h-3.5" /> Tambah</Button>
+        </div>
       </div>
 
+      {/* Bundle picker */}
+      {showBundles && (
+        <div className="rounded-xl border border-border/60 bg-muted/10 p-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <Zap className="w-3.5 h-3.5 text-amber-400" />
+            <p className="text-xs font-semibold">Bundle Siap Pakai</p>
+            <p className="text-[10px] text-muted-foreground">— tambahkan beberapa deliverable sekaligus</p>
+          </div>
+          <div className="grid grid-cols-1 gap-2">
+            {BUNDLES.map(bundle => (
+              <div key={bundle.id} className={cn("flex items-center gap-3 p-2.5 rounded-lg border", bundle.color)}>
+                <span className="text-xl shrink-0">{bundle.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold">{bundle.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{bundle.desc}</p>
+                  <div className="flex gap-1 mt-1 flex-wrap">
+                    {bundle.items.map(i => (
+                      <span key={i.title} className="text-[9px] px-1.5 py-0.5 rounded bg-background/60 text-muted-foreground border border-border/40">{i.title}</span>
+                    ))}
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1 shrink-0"
+                  onClick={() => applyBundle(bundle)}
+                  disabled={loadingBundle === bundle.id}
+                >
+                  {loadingBundle === bundle.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                  Tambah
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Deliverable list */}
       {isLoading ? <div className="py-12 text-center text-muted-foreground text-sm">Memuat…</div>
         : items.length === 0 ? (
-          <div className="text-center py-16 border border-dashed rounded-lg text-muted-foreground">
+          <div className="text-center py-12 border border-dashed rounded-lg text-muted-foreground">
             <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p className="text-sm font-medium mb-1">Belum ada Deliverable</p>
-            <p className="text-xs opacity-60">Tambahkan artefak output dari setiap stage pipeline</p>
-            <Button size="sm" variant="outline" className="mt-4 gap-1.5" onClick={openNew}><Plus className="w-3.5 h-3.5" /> Tambah Pertama</Button>
+            <p className="text-xs opacity-60 mb-4">Tambahkan artefak output dari setiap stage, atau gunakan bundle siap pakai</p>
+            <div className="flex justify-center gap-2">
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowBundles(true)}><Layers className="w-3.5 h-3.5" /> Pilih Bundle</Button>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={openNew}><Plus className="w-3.5 h-3.5" /> Tambah Manual</Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-2">
@@ -118,7 +247,7 @@ export function DeliverablesTab({ workroomId, stages }: Props) {
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant="outline" className={cn("text-[9px] h-4 px-1.5", fmt.color)}>{fmt.label}</Badge>
-                        <button onClick={() => cycleStatus(item.id, item.status)} className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-medium", stat.color)}>
+                        <button onClick={() => cycleStatus(item.id, item.status)} className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-medium transition-colors hover:opacity-80", stat.color)}>
                           {stat.label} →
                         </button>
                       </div>

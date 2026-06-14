@@ -25,6 +25,9 @@ import { MulticlawPanel } from "@/components/multiclaw-panel";
 import { OpenclawChain } from "@/components/openclaw-chain";
 import { SummaryTab } from "@/components/summary-tab";
 import { MiniAppsTab } from "@/components/mini-apps-tab";
+import { BriefMarketingTab } from "@/components/brief-marketing-tab";
+import { WidgetTab } from "@/components/widget-tab";
+import { WorkroomHealth } from "@/components/workroom-health";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -424,6 +427,8 @@ export default function WorkroomDetail() {
         <span className="text-sm text-muted-foreground font-medium w-10 text-right">{workroom.progress}%</span>
       </div>
 
+      <WorkroomHealth workroomId={workroomId} stages={stages ?? []} />
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-1">
           <Card>
@@ -533,6 +538,12 @@ export default function WorkroomDetail() {
               </TabsTrigger>
               <TabsTrigger value="miniapps" className="gap-1.5">
                 <span>🛠️</span> Mini Apps
+              </TabsTrigger>
+              <TabsTrigger value="brief" className="gap-1.5">
+                <span>📣</span> Brief
+              </TabsTrigger>
+              <TabsTrigger value="widget" className="gap-1.5">
+                <span>🔗</span> Widget
               </TabsTrigger>
             </TabsList>
 
@@ -675,7 +686,7 @@ export default function WorkroomDetail() {
             </TabsContent>
 
             <TabsContent value="brain" className="mt-4">
-              <ProjectBrainTab workroomId={workroomId} />
+              <ProjectBrainTab workroomId={workroomId} workroomName={workroom?.name} objective={workroom?.objective ?? undefined} />
             </TabsContent>
 
             <TabsContent value="deliverables" className="mt-4">
@@ -711,6 +722,21 @@ export default function WorkroomDetail() {
                 workroomId={workroomId}
                 workroomName={workroom?.name}
                 objective={workroom?.objective ?? undefined}
+              />
+            </TabsContent>
+
+            <TabsContent value="brief" className="mt-4">
+              <BriefMarketingTab
+                workroomId={workroomId}
+                workroomName={workroom?.name}
+                objective={workroom?.objective ?? undefined}
+              />
+            </TabsContent>
+
+            <TabsContent value="widget" className="mt-4">
+              <WidgetTab
+                workroomId={workroomId}
+                workroomName={workroom?.name}
               />
             </TabsContent>
           </Tabs>
