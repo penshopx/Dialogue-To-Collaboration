@@ -273,3 +273,111 @@ export interface InsightsSummary {
   activeWorkrooms: number;
 }
 
+export interface KnowledgeItem {
+  id: number;
+  workroomId: number;
+  title: string;
+  content: string;
+  type: string;
+  /** @nullable */
+  tags?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KnowledgeItemInput {
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  content: string;
+  type?: string;
+  tags?: string;
+}
+
+export interface KnowledgeItemUpdate {
+  title?: string;
+  content?: string;
+  type?: string;
+  tags?: string;
+}
+
+export interface Deliverable {
+  id: number;
+  workroomId: number;
+  /** @nullable */
+  stageId?: number | null;
+  title: string;
+  /** @nullable */
+  content?: string | null;
+  format: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DeliverableInput {
+  /** @minLength 1 */
+  title: string;
+  stageId?: number;
+  content?: string;
+  format?: string;
+  status?: string;
+}
+
+export interface DeliverableUpdate {
+  title?: string;
+  stageId?: number;
+  content?: string;
+  format?: string;
+  status?: string;
+}
+
+export interface WorkroomBrain {
+  workroomId: number;
+  /** @nullable */
+  context?: string | null;
+  /** @nullable */
+  goals?: string | null;
+  /** @nullable */
+  constraints?: string | null;
+  /** @nullable */
+  stakeholders?: string | null;
+  /** @nullable */
+  decisions?: string | null;
+  updatedAt: string;
+}
+
+export interface WorkroomBrainUpdate {
+  context?: string;
+  goals?: string;
+  constraints?: string;
+  stakeholders?: string;
+  decisions?: string;
+}
+
+export interface WorkroomConfig {
+  workroomId: number;
+  /** @nullable */
+  personaName?: string | null;
+  /** @nullable */
+  personaDesc?: string | null;
+  /** @nullable */
+  personaTone?: string | null;
+  /** @nullable */
+  personaLanguage?: string | null;
+  /** @nullable */
+  personaEmoji?: string | null;
+  /** @nullable */
+  policies?: string | null;
+  updatedAt: string;
+}
+
+export interface WorkroomConfigUpdate {
+  personaName?: string;
+  personaDesc?: string;
+  personaTone?: string;
+  personaLanguage?: string;
+  personaEmoji?: string;
+  policies?: string;
+}
+

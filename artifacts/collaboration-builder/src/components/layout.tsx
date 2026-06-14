@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Library, Briefcase, Bot, Settings, Bell, Menu, X, AlertTriangle, Lightbulb, Search } from "lucide-react";
+import { LayoutDashboard, Library, Briefcase, Bot, Settings, Bell, Menu, X, AlertTriangle, Lightbulb, Search, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useListWorkrooms } from "@workspace/api-client-react";
 import { CommandPalette } from "@/components/command-palette";
+import { Separator } from "@/components/ui/separator";
 
 const GATE_STAGE_NAMES = new Set(["Skeptic Gate", "QA Gate"]);
 
@@ -23,6 +24,10 @@ function NavLinks({ location, gateCount, onNavigate }: { location: string; gateC
     { href: "/templates", label: "Templates", icon: Library, badge: 0 },
     { href: "/agents", label: "Agents", icon: Bot, badge: 0 },
     { href: "/insights", label: "Insights", icon: Lightbulb, badge: 0 },
+  ];
+
+  const aiItems = [
+    { href: "/chat-console", label: "Chat Console", icon: MessageSquare, badge: 0 },
   ];
 
   return (
@@ -50,6 +55,29 @@ function NavLinks({ location, gateCount, onNavigate }: { location: string; gateC
           </Link>
         );
       })}
+
+      <div className="pt-3">
+        <Separator className="mb-3" />
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-1.5">Sistem Agen AI</p>
+        {aiItems.map((item) => {
+          const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+          return (
+            <Link key={item.href} href={item.href} onClick={onNavigate}>
+              <div
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors cursor-pointer",
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                )}
+              >
+                <item.icon className="w-4 h-4 shrink-0" />
+                <span className="flex-1">{item.label}</span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

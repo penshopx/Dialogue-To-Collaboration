@@ -26,12 +26,22 @@ import type {
   AgentInput,
   AgentUpdate,
   DashboardSummary,
+  Deliverable,
+  DeliverableInput,
+  DeliverableUpdate,
   HealthStatus,
   InsightsSummary,
+  KnowledgeItem,
+  KnowledgeItemInput,
+  KnowledgeItemUpdate,
   WorkflowTemplate,
   WorkflowTemplateInput,
   WorkflowTemplateUpdate,
   Workroom,
+  WorkroomBrain,
+  WorkroomBrainUpdate,
+  WorkroomConfig,
+  WorkroomConfigUpdate,
   WorkroomDetail,
   WorkroomInput,
   WorkroomStage,
@@ -2053,4 +2063,884 @@ export function useGetInsights<TData = Awaited<ReturnType<typeof getInsights>>, 
 
 
 
+
+export const getListKnowledgeItemsUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/knowledge`
+}
+
+/**
+ * @summary List knowledge base items for a workroom
+ */
+export const listKnowledgeItems = async (workroomId: number, options?: RequestInit): Promise<KnowledgeItem[]> => {
+
+  return customFetch<KnowledgeItem[]>(getListKnowledgeItemsUrl(workroomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListKnowledgeItemsQueryKey = (workroomId: number,) => {
+    return [
+    `/api/workrooms/${workroomId}/knowledge`
+    ] as const;
+    }
+
+
+export const getListKnowledgeItemsQueryOptions = <TData = Awaited<ReturnType<typeof listKnowledgeItems>>, TError = ErrorType<unknown>>(workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKnowledgeItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListKnowledgeItemsQueryKey(workroomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listKnowledgeItems>>> = ({ signal }) => listKnowledgeItems(workroomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(workroomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listKnowledgeItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListKnowledgeItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listKnowledgeItems>>>
+export type ListKnowledgeItemsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List knowledge base items for a workroom
+ */
+
+export function useListKnowledgeItems<TData = Awaited<ReturnType<typeof listKnowledgeItems>>, TError = ErrorType<unknown>>(
+ workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKnowledgeItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListKnowledgeItemsQueryOptions(workroomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateKnowledgeItemUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/knowledge`
+}
+
+/**
+ * @summary Create a knowledge base item
+ */
+export const createKnowledgeItem = async (workroomId: number,
+    knowledgeItemInput: KnowledgeItemInput, options?: RequestInit): Promise<KnowledgeItem> => {
+
+  return customFetch<KnowledgeItem>(getCreateKnowledgeItemUrl(workroomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      knowledgeItemInput,)
+  }
+);}
+
+
+
+
+export const getCreateKnowledgeItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createKnowledgeItem>>, TError,{workroomId: number;data: BodyType<KnowledgeItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createKnowledgeItem>>, TError,{workroomId: number;data: BodyType<KnowledgeItemInput>}, TContext> => {
+
+const mutationKey = ['createKnowledgeItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createKnowledgeItem>>, {workroomId: number;data: BodyType<KnowledgeItemInput>}> = (props) => {
+          const {workroomId,data} = props ?? {};
+
+          return  createKnowledgeItem(workroomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateKnowledgeItemMutationResult = NonNullable<Awaited<ReturnType<typeof createKnowledgeItem>>>
+    export type CreateKnowledgeItemMutationBody = BodyType<KnowledgeItemInput>
+    export type CreateKnowledgeItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a knowledge base item
+ */
+export const useCreateKnowledgeItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createKnowledgeItem>>, TError,{workroomId: number;data: BodyType<KnowledgeItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createKnowledgeItem>>,
+        TError,
+        {workroomId: number;data: BodyType<KnowledgeItemInput>},
+        TContext
+      > => {
+      return useMutation(getCreateKnowledgeItemMutationOptions(options));
+    }
+
+export const getUpdateKnowledgeItemUrl = (id: number,) => {
+
+
+
+
+  return `/api/knowledge/${id}`
+}
+
+/**
+ * @summary Update a knowledge item
+ */
+export const updateKnowledgeItem = async (id: number,
+    knowledgeItemUpdate: KnowledgeItemUpdate, options?: RequestInit): Promise<KnowledgeItem> => {
+
+  return customFetch<KnowledgeItem>(getUpdateKnowledgeItemUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      knowledgeItemUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateKnowledgeItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateKnowledgeItem>>, TError,{id: number;data: BodyType<KnowledgeItemUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateKnowledgeItem>>, TError,{id: number;data: BodyType<KnowledgeItemUpdate>}, TContext> => {
+
+const mutationKey = ['updateKnowledgeItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateKnowledgeItem>>, {id: number;data: BodyType<KnowledgeItemUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateKnowledgeItem(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateKnowledgeItemMutationResult = NonNullable<Awaited<ReturnType<typeof updateKnowledgeItem>>>
+    export type UpdateKnowledgeItemMutationBody = BodyType<KnowledgeItemUpdate>
+    export type UpdateKnowledgeItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a knowledge item
+ */
+export const useUpdateKnowledgeItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateKnowledgeItem>>, TError,{id: number;data: BodyType<KnowledgeItemUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateKnowledgeItem>>,
+        TError,
+        {id: number;data: BodyType<KnowledgeItemUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateKnowledgeItemMutationOptions(options));
+    }
+
+export const getDeleteKnowledgeItemUrl = (id: number,) => {
+
+
+
+
+  return `/api/knowledge/${id}`
+}
+
+/**
+ * @summary Delete a knowledge item
+ */
+export const deleteKnowledgeItem = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteKnowledgeItemUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteKnowledgeItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteKnowledgeItem>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteKnowledgeItem>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteKnowledgeItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteKnowledgeItem>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteKnowledgeItem(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteKnowledgeItemMutationResult = NonNullable<Awaited<ReturnType<typeof deleteKnowledgeItem>>>
+
+    export type DeleteKnowledgeItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a knowledge item
+ */
+export const useDeleteKnowledgeItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteKnowledgeItem>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteKnowledgeItem>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteKnowledgeItemMutationOptions(options));
+    }
+
+export const getListDeliverablesUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/deliverables`
+}
+
+/**
+ * @summary List deliverables for a workroom
+ */
+export const listDeliverables = async (workroomId: number, options?: RequestInit): Promise<Deliverable[]> => {
+
+  return customFetch<Deliverable[]>(getListDeliverablesUrl(workroomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDeliverablesQueryKey = (workroomId: number,) => {
+    return [
+    `/api/workrooms/${workroomId}/deliverables`
+    ] as const;
+    }
+
+
+export const getListDeliverablesQueryOptions = <TData = Awaited<ReturnType<typeof listDeliverables>>, TError = ErrorType<unknown>>(workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeliverables>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDeliverablesQueryKey(workroomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDeliverables>>> = ({ signal }) => listDeliverables(workroomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(workroomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDeliverables>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDeliverablesQueryResult = NonNullable<Awaited<ReturnType<typeof listDeliverables>>>
+export type ListDeliverablesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List deliverables for a workroom
+ */
+
+export function useListDeliverables<TData = Awaited<ReturnType<typeof listDeliverables>>, TError = ErrorType<unknown>>(
+ workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeliverables>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDeliverablesQueryOptions(workroomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateDeliverableUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/deliverables`
+}
+
+/**
+ * @summary Create a deliverable
+ */
+export const createDeliverable = async (workroomId: number,
+    deliverableInput: DeliverableInput, options?: RequestInit): Promise<Deliverable> => {
+
+  return customFetch<Deliverable>(getCreateDeliverableUrl(workroomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      deliverableInput,)
+  }
+);}
+
+
+
+
+export const getCreateDeliverableMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDeliverable>>, TError,{workroomId: number;data: BodyType<DeliverableInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDeliverable>>, TError,{workroomId: number;data: BodyType<DeliverableInput>}, TContext> => {
+
+const mutationKey = ['createDeliverable'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDeliverable>>, {workroomId: number;data: BodyType<DeliverableInput>}> = (props) => {
+          const {workroomId,data} = props ?? {};
+
+          return  createDeliverable(workroomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDeliverableMutationResult = NonNullable<Awaited<ReturnType<typeof createDeliverable>>>
+    export type CreateDeliverableMutationBody = BodyType<DeliverableInput>
+    export type CreateDeliverableMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a deliverable
+ */
+export const useCreateDeliverable = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDeliverable>>, TError,{workroomId: number;data: BodyType<DeliverableInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDeliverable>>,
+        TError,
+        {workroomId: number;data: BodyType<DeliverableInput>},
+        TContext
+      > => {
+      return useMutation(getCreateDeliverableMutationOptions(options));
+    }
+
+export const getUpdateDeliverableUrl = (id: number,) => {
+
+
+
+
+  return `/api/deliverables/${id}`
+}
+
+/**
+ * @summary Update a deliverable
+ */
+export const updateDeliverable = async (id: number,
+    deliverableUpdate: DeliverableUpdate, options?: RequestInit): Promise<Deliverable> => {
+
+  return customFetch<Deliverable>(getUpdateDeliverableUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      deliverableUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateDeliverableMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDeliverable>>, TError,{id: number;data: BodyType<DeliverableUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDeliverable>>, TError,{id: number;data: BodyType<DeliverableUpdate>}, TContext> => {
+
+const mutationKey = ['updateDeliverable'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDeliverable>>, {id: number;data: BodyType<DeliverableUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateDeliverable(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDeliverableMutationResult = NonNullable<Awaited<ReturnType<typeof updateDeliverable>>>
+    export type UpdateDeliverableMutationBody = BodyType<DeliverableUpdate>
+    export type UpdateDeliverableMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a deliverable
+ */
+export const useUpdateDeliverable = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDeliverable>>, TError,{id: number;data: BodyType<DeliverableUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateDeliverable>>,
+        TError,
+        {id: number;data: BodyType<DeliverableUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateDeliverableMutationOptions(options));
+    }
+
+export const getDeleteDeliverableUrl = (id: number,) => {
+
+
+
+
+  return `/api/deliverables/${id}`
+}
+
+/**
+ * @summary Delete a deliverable
+ */
+export const deleteDeliverable = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteDeliverableUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteDeliverableMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDeliverable>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDeliverable>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteDeliverable'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDeliverable>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteDeliverable(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDeliverableMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDeliverable>>>
+
+    export type DeleteDeliverableMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a deliverable
+ */
+export const useDeleteDeliverable = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDeliverable>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDeliverable>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteDeliverableMutationOptions(options));
+    }
+
+export const getGetWorkroomBrainUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/brain`
+}
+
+/**
+ * @summary Get project brain for a workroom
+ */
+export const getWorkroomBrain = async (workroomId: number, options?: RequestInit): Promise<WorkroomBrain> => {
+
+  return customFetch<WorkroomBrain>(getGetWorkroomBrainUrl(workroomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWorkroomBrainQueryKey = (workroomId: number,) => {
+    return [
+    `/api/workrooms/${workroomId}/brain`
+    ] as const;
+    }
+
+
+export const getGetWorkroomBrainQueryOptions = <TData = Awaited<ReturnType<typeof getWorkroomBrain>>, TError = ErrorType<unknown>>(workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkroomBrain>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWorkroomBrainQueryKey(workroomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWorkroomBrain>>> = ({ signal }) => getWorkroomBrain(workroomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(workroomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWorkroomBrain>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWorkroomBrainQueryResult = NonNullable<Awaited<ReturnType<typeof getWorkroomBrain>>>
+export type GetWorkroomBrainQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get project brain for a workroom
+ */
+
+export function useGetWorkroomBrain<TData = Awaited<ReturnType<typeof getWorkroomBrain>>, TError = ErrorType<unknown>>(
+ workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkroomBrain>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWorkroomBrainQueryOptions(workroomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateWorkroomBrainUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/brain`
+}
+
+/**
+ * @summary Update project brain
+ */
+export const updateWorkroomBrain = async (workroomId: number,
+    workroomBrainUpdate: WorkroomBrainUpdate, options?: RequestInit): Promise<WorkroomBrain> => {
+
+  return customFetch<WorkroomBrain>(getUpdateWorkroomBrainUrl(workroomId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      workroomBrainUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateWorkroomBrainMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkroomBrain>>, TError,{workroomId: number;data: BodyType<WorkroomBrainUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWorkroomBrain>>, TError,{workroomId: number;data: BodyType<WorkroomBrainUpdate>}, TContext> => {
+
+const mutationKey = ['updateWorkroomBrain'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWorkroomBrain>>, {workroomId: number;data: BodyType<WorkroomBrainUpdate>}> = (props) => {
+          const {workroomId,data} = props ?? {};
+
+          return  updateWorkroomBrain(workroomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWorkroomBrainMutationResult = NonNullable<Awaited<ReturnType<typeof updateWorkroomBrain>>>
+    export type UpdateWorkroomBrainMutationBody = BodyType<WorkroomBrainUpdate>
+    export type UpdateWorkroomBrainMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update project brain
+ */
+export const useUpdateWorkroomBrain = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkroomBrain>>, TError,{workroomId: number;data: BodyType<WorkroomBrainUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWorkroomBrain>>,
+        TError,
+        {workroomId: number;data: BodyType<WorkroomBrainUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateWorkroomBrainMutationOptions(options));
+    }
+
+export const getGetWorkroomConfigUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/config`
+}
+
+/**
+ * @summary Get workroom AI configuration
+ */
+export const getWorkroomConfig = async (workroomId: number, options?: RequestInit): Promise<WorkroomConfig> => {
+
+  return customFetch<WorkroomConfig>(getGetWorkroomConfigUrl(workroomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWorkroomConfigQueryKey = (workroomId: number,) => {
+    return [
+    `/api/workrooms/${workroomId}/config`
+    ] as const;
+    }
+
+
+export const getGetWorkroomConfigQueryOptions = <TData = Awaited<ReturnType<typeof getWorkroomConfig>>, TError = ErrorType<unknown>>(workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkroomConfig>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWorkroomConfigQueryKey(workroomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWorkroomConfig>>> = ({ signal }) => getWorkroomConfig(workroomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(workroomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWorkroomConfig>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWorkroomConfigQueryResult = NonNullable<Awaited<ReturnType<typeof getWorkroomConfig>>>
+export type GetWorkroomConfigQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get workroom AI configuration
+ */
+
+export function useGetWorkroomConfig<TData = Awaited<ReturnType<typeof getWorkroomConfig>>, TError = ErrorType<unknown>>(
+ workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkroomConfig>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWorkroomConfigQueryOptions(workroomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateWorkroomConfigUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/config`
+}
+
+/**
+ * @summary Update workroom AI configuration
+ */
+export const updateWorkroomConfig = async (workroomId: number,
+    workroomConfigUpdate: WorkroomConfigUpdate, options?: RequestInit): Promise<WorkroomConfig> => {
+
+  return customFetch<WorkroomConfig>(getUpdateWorkroomConfigUrl(workroomId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      workroomConfigUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateWorkroomConfigMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkroomConfig>>, TError,{workroomId: number;data: BodyType<WorkroomConfigUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWorkroomConfig>>, TError,{workroomId: number;data: BodyType<WorkroomConfigUpdate>}, TContext> => {
+
+const mutationKey = ['updateWorkroomConfig'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWorkroomConfig>>, {workroomId: number;data: BodyType<WorkroomConfigUpdate>}> = (props) => {
+          const {workroomId,data} = props ?? {};
+
+          return  updateWorkroomConfig(workroomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWorkroomConfigMutationResult = NonNullable<Awaited<ReturnType<typeof updateWorkroomConfig>>>
+    export type UpdateWorkroomConfigMutationBody = BodyType<WorkroomConfigUpdate>
+    export type UpdateWorkroomConfigMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update workroom AI configuration
+ */
+export const useUpdateWorkroomConfig = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkroomConfig>>, TError,{workroomId: number;data: BodyType<WorkroomConfigUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWorkroomConfig>>,
+        TError,
+        {workroomId: number;data: BodyType<WorkroomConfigUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateWorkroomConfigMutationOptions(options));
+    }
 

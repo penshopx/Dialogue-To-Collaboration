@@ -17,6 +17,10 @@ import {
 } from "lucide-react";
 import { AgentChat } from "@/components/agent-chat";
 import { KanbanBoard } from "@/components/kanban-board";
+import { KnowledgeBaseTab } from "@/components/knowledge-base-tab";
+import { ProjectBrainTab } from "@/components/project-brain-tab";
+import { DeliverablesTab } from "@/components/deliverables-tab";
+import { PersonaConfigTab } from "@/components/persona-config-tab";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -502,6 +506,18 @@ export default function WorkroomDetail() {
                 Agent
               </TabsTrigger>
               <TabsTrigger value="activity">Activity</TabsTrigger>
+              <TabsTrigger value="knowledge" className="gap-1.5">
+                <span>📚</span> Knowledge
+              </TabsTrigger>
+              <TabsTrigger value="brain" className="gap-1.5">
+                <span>🧠</span> Otak
+              </TabsTrigger>
+              <TabsTrigger value="deliverables" className="gap-1.5">
+                <span>📦</span> Deliverables
+              </TabsTrigger>
+              <TabsTrigger value="persona" className="gap-1.5">
+                <span>🤖</span> Persona
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="tasks" className="mt-4 space-y-5">
@@ -637,6 +653,21 @@ export default function WorkroomDetail() {
                   ))}
                 </div>
               )}
+            </TabsContent>
+            <TabsContent value="knowledge" className="mt-4">
+              <KnowledgeBaseTab workroomId={workroomId} />
+            </TabsContent>
+
+            <TabsContent value="brain" className="mt-4">
+              <ProjectBrainTab workroomId={workroomId} />
+            </TabsContent>
+
+            <TabsContent value="deliverables" className="mt-4">
+              <DeliverablesTab workroomId={workroomId} stages={stages ?? []} />
+            </TabsContent>
+
+            <TabsContent value="persona" className="mt-4">
+              <PersonaConfigTab workroomId={workroomId} />
             </TabsContent>
           </Tabs>
         </div>

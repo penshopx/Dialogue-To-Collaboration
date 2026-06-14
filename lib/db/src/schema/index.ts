@@ -3,3 +3,7 @@ export * from "./agents";
 export * from "./workrooms";
 export * from "./conversations";
 export * from "./messages";
+export * from "./knowledge-base";
+export * from "./deliverables";
+export * from "./workroom-brain";
+export * from "./workroom-config";

@@ -567,3 +567,243 @@ export const GetInsightsResponse = zod.object({
 })
 
 
+/**
+ * @summary List knowledge base items for a workroom
+ */
+export const ListKnowledgeItemsParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const ListKnowledgeItemsResponseItem = zod.object({
+  "id": zod.number(),
+  "workroomId": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "type": zod.string(),
+  "tags": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListKnowledgeItemsResponse = zod.array(ListKnowledgeItemsResponseItem)
+
+
+/**
+ * @summary Create a knowledge base item
+ */
+export const CreateKnowledgeItemParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+
+
+
+
+export const CreateKnowledgeItemBody = zod.object({
+  "title": zod.string().min(1),
+  "content": zod.string().min(1),
+  "type": zod.string().optional(),
+  "tags": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a knowledge item
+ */
+export const UpdateKnowledgeItemParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateKnowledgeItemBody = zod.object({
+  "title": zod.string().optional(),
+  "content": zod.string().optional(),
+  "type": zod.string().optional(),
+  "tags": zod.string().optional()
+})
+
+export const UpdateKnowledgeItemResponse = zod.object({
+  "id": zod.number(),
+  "workroomId": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "type": zod.string(),
+  "tags": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a knowledge item
+ */
+export const DeleteKnowledgeItemParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List deliverables for a workroom
+ */
+export const ListDeliverablesParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const ListDeliverablesResponseItem = zod.object({
+  "id": zod.number(),
+  "workroomId": zod.number(),
+  "stageId": zod.number().nullish(),
+  "title": zod.string(),
+  "content": zod.string().nullish(),
+  "format": zod.string(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListDeliverablesResponse = zod.array(ListDeliverablesResponseItem)
+
+
+/**
+ * @summary Create a deliverable
+ */
+export const CreateDeliverableParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+
+
+
+export const CreateDeliverableBody = zod.object({
+  "title": zod.string().min(1),
+  "stageId": zod.number().optional(),
+  "content": zod.string().optional(),
+  "format": zod.string().optional(),
+  "status": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a deliverable
+ */
+export const UpdateDeliverableParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateDeliverableBody = zod.object({
+  "title": zod.string().optional(),
+  "stageId": zod.number().optional(),
+  "content": zod.string().optional(),
+  "format": zod.string().optional(),
+  "status": zod.string().optional()
+})
+
+export const UpdateDeliverableResponse = zod.object({
+  "id": zod.number(),
+  "workroomId": zod.number(),
+  "stageId": zod.number().nullish(),
+  "title": zod.string(),
+  "content": zod.string().nullish(),
+  "format": zod.string(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a deliverable
+ */
+export const DeleteDeliverableParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get project brain for a workroom
+ */
+export const GetWorkroomBrainParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const GetWorkroomBrainResponse = zod.object({
+  "workroomId": zod.number(),
+  "context": zod.string().nullish(),
+  "goals": zod.string().nullish(),
+  "constraints": zod.string().nullish(),
+  "stakeholders": zod.string().nullish(),
+  "decisions": zod.string().nullish(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update project brain
+ */
+export const UpdateWorkroomBrainParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const UpdateWorkroomBrainBody = zod.object({
+  "context": zod.string().optional(),
+  "goals": zod.string().optional(),
+  "constraints": zod.string().optional(),
+  "stakeholders": zod.string().optional(),
+  "decisions": zod.string().optional()
+})
+
+export const UpdateWorkroomBrainResponse = zod.object({
+  "workroomId": zod.number(),
+  "context": zod.string().nullish(),
+  "goals": zod.string().nullish(),
+  "constraints": zod.string().nullish(),
+  "stakeholders": zod.string().nullish(),
+  "decisions": zod.string().nullish(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get workroom AI configuration
+ */
+export const GetWorkroomConfigParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const GetWorkroomConfigResponse = zod.object({
+  "workroomId": zod.number(),
+  "personaName": zod.string().nullish(),
+  "personaDesc": zod.string().nullish(),
+  "personaTone": zod.string().nullish(),
+  "personaLanguage": zod.string().nullish(),
+  "personaEmoji": zod.string().nullish(),
+  "policies": zod.string().nullish(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update workroom AI configuration
+ */
+export const UpdateWorkroomConfigParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const UpdateWorkroomConfigBody = zod.object({
+  "personaName": zod.string().optional(),
+  "personaDesc": zod.string().optional(),
+  "personaTone": zod.string().optional(),
+  "personaLanguage": zod.string().optional(),
+  "personaEmoji": zod.string().optional(),
+  "policies": zod.string().optional()
+})
+
+export const UpdateWorkroomConfigResponse = zod.object({
+  "workroomId": zod.number(),
+  "personaName": zod.string().nullish(),
+  "personaDesc": zod.string().nullish(),
+  "personaTone": zod.string().nullish(),
+  "personaLanguage": zod.string().nullish(),
+  "personaEmoji": zod.string().nullish(),
+  "policies": zod.string().nullish(),
+  "updatedAt": zod.string()
+})
+
+

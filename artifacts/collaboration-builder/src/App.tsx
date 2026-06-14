@@ -13,6 +13,7 @@ import TemplatesList from "@/pages/templates-list";
 import AgentsList from "@/pages/agents-list";
 import Insights from "@/pages/insights";
 import WorkroomReport from "@/pages/workroom-report";
+import { ChatConsole } from "@/pages/chat-console";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ function Router() {
         <Route path="/workrooms/:id" component={WorkroomDetail} />
         <Route path="/workrooms" component={WorkroomsList} />
         <Route path="/agents" component={AgentsList} />
+        <Route path="/chat-console" component={() => <ChatConsole />} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
