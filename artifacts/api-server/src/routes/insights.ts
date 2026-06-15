@@ -6,6 +6,7 @@ import {
   workflowTemplatesTable,
   workroomStagesTable,
   workroomTasksTable,
+  decisionLogsTable,
 } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -101,6 +102,36 @@ router.get("/insights", async (_req, res): Promise<void> => {
     })
     .from(workroomsTable);
 
+  // 5. Gate analytics — approval/rejection rates from decision_logs
+  const gateRows = await db
+    .select({
+      tipeAksi: decisionLogsTable.tipeAksi,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(decisionLogsTable)
+    .where(sql`${decisionLogsTable.tipeAksi} in ('keputusan_gate', 'approve', 'reject', 'disetujui', 'ditolak')`)
+    .groupBy(decisionLogsTable.tipeAksi);
+
+  const totalGateDecisions = gateRows.reduce((s, r) => s + r.count, 0);
+  const approvedCount = gateRows
+    .filter(r => ["approve", "disetujui", "keputusan_gate"].includes(r.tipeAksi ?? ""))
+    .reduce((s, r) => s + r.count, 0);
+  const rejectedCount = gateRows
+    .filter(r => ["reject", "ditolak"].includes(r.tipeAksi ?? ""))
+    .reduce((s, r) => s + r.count, 0);
+
+  // 6. Risk level distribution
+  const riskRows = await db
+    .select({
+      riskLevel: workroomsTable.riskLevel,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(workroomsTable)
+    .where(sql`${workroomsTable.riskLevel} is not null`)
+    .groupBy(workroomsTable.riskLevel);
+
+  const riskDistribution = Object.fromEntries(riskRows.map(r => [r.riskLevel ?? "unknown", r.count]));
+
   res.json({
     tasksByRole,
     stageCompletionFunnel,
@@ -109,6 +140,13 @@ router.get("/insights", async (_req, res): Promise<void> => {
     totalTasksAll: taskTotals?.all ?? 0,
     completedWorkrooms: workroomCounts?.completed ?? 0,
     activeWorkrooms: workroomCounts?.active ?? 0,
+    gateStats: {
+      totalDecisions: totalGateDecisions,
+      approvedCount,
+      rejectedCount,
+      approvalRate: totalGateDecisions > 0 ? Math.round((approvedCount / totalGateDecisions) * 100) : null,
+    },
+    riskDistribution,
   });
 });
 

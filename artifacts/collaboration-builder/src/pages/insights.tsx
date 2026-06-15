@@ -226,6 +226,102 @@ export default function Insights() {
         </Card>
       </div>
 
+      {/* Gate Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Shield className="w-4 h-4 text-primary" />
+              Analitik Gate
+            </CardTitle>
+            <CardDescription>Tingkat persetujuan & penolakan dari semua gate decisions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-24 w-full" />
+            ) : (
+              (() => {
+                const gs = (insights as unknown as { gateStats?: { totalDecisions: number; approvedCount: number; rejectedCount: number; approvalRate: number | null } })?.gateStats;
+                if (!gs || gs.totalDecisions === 0) {
+                  return <p className="text-sm text-muted-foreground py-4 text-center">Belum ada gate decision tercatat.</p>;
+                }
+                const approvalPct = gs.approvalRate ?? 0;
+                const rejectedPct = gs.totalDecisions > 0 ? Math.round((gs.rejectedCount / gs.totalDecisions) * 100) : 0;
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="flex-1">
+                        <div className="flex justify-between mb-1 text-xs">
+                          <span className="text-green-400 font-medium">Disetujui</span>
+                          <span className="text-muted-foreground">{gs.approvedCount} ({approvalPct}%)</span>
+                        </div>
+                        <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="absolute left-0 top-0 h-full bg-green-500 rounded-full transition-all" style={{ width: `${approvalPct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="flex-1">
+                        <div className="flex justify-between mb-1 text-xs">
+                          <span className="text-red-400 font-medium">Ditolak</span>
+                          <span className="text-muted-foreground">{gs.rejectedCount} ({rejectedPct}%)</span>
+                        </div>
+                        <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="absolute left-0 top-0 h-full bg-red-500/70 rounded-full transition-all" style={{ width: `${rejectedPct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center pt-1">
+                      Total {gs.totalDecisions} gate decision tercatat
+                    </p>
+                  </div>
+                );
+              })()
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="w-4 h-4 text-primary" />
+              Distribusi Risk Level
+            </CardTitle>
+            <CardDescription>Komposisi tingkat risiko workroom yang ada</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-24 w-full" />
+            ) : (
+              (() => {
+                const rd = (insights as unknown as { riskDistribution?: Record<string, number> })?.riskDistribution ?? {};
+                const entries = Object.entries(rd);
+                if (entries.length === 0) {
+                  return <p className="text-sm text-muted-foreground py-4 text-center">Belum ada data risk level.</p>;
+                }
+                const RISK_COLOR: Record<string, string> = {
+                  low: "text-green-400 bg-green-500/10 border-green-500/30",
+                  medium: "text-amber-400 bg-amber-500/10 border-amber-500/30",
+                  high: "text-orange-400 bg-orange-500/10 border-orange-500/30",
+                  critical: "text-red-400 bg-red-500/10 border-red-500/30",
+                };
+                const total = entries.reduce((s, [, v]) => s + v, 0);
+                return (
+                  <div className="grid grid-cols-2 gap-2">
+                    {entries.map(([risk, count]) => (
+                      <div key={risk} className={cn("flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium", RISK_COLOR[risk] ?? "text-muted-foreground bg-muted border-border")}>
+                        <span className="capitalize">{risk}</span>
+                        <span className="font-bold">{count} <span className="font-normal opacity-60">({Math.round((count / total) * 100)}%)</span></span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">

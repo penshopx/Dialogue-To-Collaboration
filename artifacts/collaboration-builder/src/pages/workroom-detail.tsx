@@ -25,7 +25,7 @@ import {
   ChevronRight, AlertTriangle, FileText, MessageSquare, Bot,
   Shield, Wrench, Brain, Star, CheckSquare, ArrowRight,
   StickyNote, Save, ExternalLink, Kanban,
-  Users, Trash2, Package, ScrollText, User, ClipboardList,
+  Users, Trash2, Package, ScrollText, User, ClipboardList, BarChart3,
 } from "lucide-react";
 import { AgentChat } from "@/components/agent-chat";
 import { KanbanBoard } from "@/components/kanban-board";
@@ -43,6 +43,8 @@ import { BriefMarketingTab } from "@/components/brief-marketing-tab";
 import { WidgetTab } from "@/components/widget-tab";
 import { WorkroomHealth } from "@/components/workroom-health";
 import { RangkumanTab } from "@/components/rangkuman-tab";
+import { MetricsTab } from "@/components/metrics-tab";
+import { StageSummaryModal } from "@/components/stage-summary-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -279,6 +281,8 @@ export default function WorkroomDetail() {
   const [showLogForm, setShowLogForm] = useState(false);
   const [newCriteriaText, setNewCriteriaText] = useState("");
   const [showCriteriaForm, setShowCriteriaForm] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryStageId, setSummaryStageId] = useState<number | null>(null);
 
   const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
@@ -418,6 +422,15 @@ export default function WorkroomDetail() {
                   {STAGE_STATUS_CONFIG[displayStage.status]?.label ?? displayStage.status}
                 </p>
               </div>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-xs"
+                  onClick={() => { setSummaryStageId(displayStage.id); setSummaryOpen(true); }}
+                >
+                  <FileText className="w-3.5 h-3.5" /> Ringkasan
+                </Button>
               {displayStage.stageType !== "gate" && displayStage.status === "active" && (
                 <div className="flex items-center gap-2 shrink-0 flex-wrap">
                   <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAddTaskOpen(true)}>
@@ -458,6 +471,7 @@ export default function WorkroomDetail() {
                   </Button>
                 </div>
               )}
+              </div>
             </div>
           )}
 
@@ -544,6 +558,9 @@ export default function WorkroomDetail() {
                     {exitCriteria.filter(c => c.isMet).length}/{exitCriteria.length}
                   </Badge>
                 )}
+              </TabsTrigger>
+              <TabsTrigger value="metrics" className="gap-1.5">
+                <BarChart3 className="w-3.5 h-3.5" /> Metrik
               </TabsTrigger>
             </TabsList>
 
@@ -1108,6 +1125,10 @@ export default function WorkroomDetail() {
                 </div>
               )}
             </TabsContent>
+
+            <TabsContent value="metrics" className="mt-4">
+              <MetricsTab workroomId={workroomId} stages={stages ?? []} />
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -1120,6 +1141,14 @@ export default function WorkroomDetail() {
           onClose={() => setAddTaskOpen(false)}
         />
       )}
+
+      <StageSummaryModal
+        open={summaryOpen}
+        onClose={() => setSummaryOpen(false)}
+        workroomId={workroomId}
+        stageId={summaryStageId}
+        stageName={stages?.find(s => s.id === summaryStageId)?.name}
+      />
     </div>
   );
 }

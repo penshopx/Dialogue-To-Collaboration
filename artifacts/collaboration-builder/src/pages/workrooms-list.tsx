@@ -1,6 +1,6 @@
 import { useListWorkrooms } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Plus, Clock, ChevronRight, Search, AlertTriangle } from "lucide-react";
+import { Plus, Clock, ChevronRight, Search, AlertTriangle, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,13 @@ const STATUS_COLORS: Record<string, "default" | "secondary" | "outline" | "destr
   completed: "default",
   archived: "outline",
   draft: "outline",
+};
+
+const RISK_CONFIG: Record<string, { label: string; className: string }> = {
+  low: { label: "Low Risk", className: "border-green-500/40 text-green-400" },
+  medium: { label: "Medium Risk", className: "border-amber-500/40 text-amber-400" },
+  high: { label: "High Risk", className: "border-orange-500/40 text-orange-400" },
+  critical: { label: "Critical", className: "border-red-500/40 text-red-400" },
 };
 
 const GATE_STAGE_NAMES = new Set(["Skeptic Gate", "QA Gate"]);
@@ -167,12 +174,34 @@ export default function WorkroomsList() {
                               Gate Pending
                             </Badge>
                           )}
+                          {(() => {
+                            const risk = (room as unknown as { riskLevel?: string }).riskLevel;
+                            const cfg = risk ? RISK_CONFIG[risk] : null;
+                            return cfg ? (
+                              <Badge variant="outline" className={cn("text-[10px] gap-1", cfg.className)}>
+                                {cfg.label}
+                              </Badge>
+                            ) : null;
+                          })()}
                         </div>
-                        <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             Stage {stageNum}: {room.currentStageName ?? "Intake"}
                           </span>
+                          {(() => {
+                            const deadline = (room as unknown as { deadline?: string }).deadline;
+                            if (!deadline) return null;
+                            const date = new Date(deadline);
+                            const isOverdue = date < new Date() && room.status !== "completed";
+                            const formatted = date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+                            return (
+                              <span className={cn("flex items-center gap-1", isOverdue ? "text-red-400" : "")}>
+                                <CalendarClock className="w-3 h-3" />
+                                {isOverdue ? "Overdue: " : "Deadline: "}{formatted}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
 
