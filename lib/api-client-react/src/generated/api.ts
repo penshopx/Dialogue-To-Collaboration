@@ -25,15 +25,23 @@ import type {
   Agent,
   AgentInput,
   AgentUpdate,
+  CollaborationRole,
+  CollaborationRoleInput,
+  CompiledPack,
+  CompleteStageBody,
   DashboardSummary,
+  DecisionLog,
+  DecisionLogInput,
   Deliverable,
   DeliverableInput,
   DeliverableUpdate,
+  EarlyWarning,
   HealthStatus,
   InsightsSummary,
   KnowledgeItem,
   KnowledgeItemInput,
   KnowledgeItemUpdate,
+  StageCompletionResult,
   StageExitCriteria,
   StageExitCriteriaInput,
   StageExitCriteriaUpdate,
@@ -3778,6 +3786,597 @@ export function useListTemplateRoles<TData = Awaited<ReturnType<typeof listTempl
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListTemplateRolesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListCollaborationRolesUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/roles`
+}
+
+/**
+ * @summary List roles assigned to a workroom
+ */
+export const listCollaborationRoles = async (workroomId: number, options?: RequestInit): Promise<CollaborationRole[]> => {
+
+  return customFetch<CollaborationRole[]>(getListCollaborationRolesUrl(workroomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCollaborationRolesQueryKey = (workroomId: number,) => {
+    return [
+    `/api/workrooms/${workroomId}/roles`
+    ] as const;
+    }
+
+
+export const getListCollaborationRolesQueryOptions = <TData = Awaited<ReturnType<typeof listCollaborationRoles>>, TError = ErrorType<unknown>>(workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCollaborationRoles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCollaborationRolesQueryKey(workroomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCollaborationRoles>>> = ({ signal }) => listCollaborationRoles(workroomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(workroomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCollaborationRoles>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCollaborationRolesQueryResult = NonNullable<Awaited<ReturnType<typeof listCollaborationRoles>>>
+export type ListCollaborationRolesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List roles assigned to a workroom
+ */
+
+export function useListCollaborationRoles<TData = Awaited<ReturnType<typeof listCollaborationRoles>>, TError = ErrorType<unknown>>(
+ workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCollaborationRoles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCollaborationRolesQueryOptions(workroomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAddCollaborationRoleUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/roles`
+}
+
+/**
+ * @summary Add a role to a workroom
+ */
+export const addCollaborationRole = async (workroomId: number,
+    collaborationRoleInput: CollaborationRoleInput, options?: RequestInit): Promise<CollaborationRole> => {
+
+  return customFetch<CollaborationRole>(getAddCollaborationRoleUrl(workroomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      collaborationRoleInput,)
+  }
+);}
+
+
+
+
+export const getAddCollaborationRoleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addCollaborationRole>>, TError,{workroomId: number;data: BodyType<CollaborationRoleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addCollaborationRole>>, TError,{workroomId: number;data: BodyType<CollaborationRoleInput>}, TContext> => {
+
+const mutationKey = ['addCollaborationRole'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addCollaborationRole>>, {workroomId: number;data: BodyType<CollaborationRoleInput>}> = (props) => {
+          const {workroomId,data} = props ?? {};
+
+          return  addCollaborationRole(workroomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddCollaborationRoleMutationResult = NonNullable<Awaited<ReturnType<typeof addCollaborationRole>>>
+    export type AddCollaborationRoleMutationBody = BodyType<CollaborationRoleInput>
+    export type AddCollaborationRoleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a role to a workroom
+ */
+export const useAddCollaborationRole = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addCollaborationRole>>, TError,{workroomId: number;data: BodyType<CollaborationRoleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addCollaborationRole>>,
+        TError,
+        {workroomId: number;data: BodyType<CollaborationRoleInput>},
+        TContext
+      > => {
+      return useMutation(getAddCollaborationRoleMutationOptions(options));
+    }
+
+export const getRemoveCollaborationRoleUrl = (workroomId: number,
+    roleId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/roles/${roleId}`
+}
+
+/**
+ * @summary Remove a role from a workroom
+ */
+export const removeCollaborationRole = async (workroomId: number,
+    roleId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRemoveCollaborationRoleUrl(workroomId,roleId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRemoveCollaborationRoleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeCollaborationRole>>, TError,{workroomId: number;roleId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeCollaborationRole>>, TError,{workroomId: number;roleId: number}, TContext> => {
+
+const mutationKey = ['removeCollaborationRole'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeCollaborationRole>>, {workroomId: number;roleId: number}> = (props) => {
+          const {workroomId,roleId} = props ?? {};
+
+          return  removeCollaborationRole(workroomId,roleId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveCollaborationRoleMutationResult = NonNullable<Awaited<ReturnType<typeof removeCollaborationRole>>>
+
+    export type RemoveCollaborationRoleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a role from a workroom
+ */
+export const useRemoveCollaborationRole = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeCollaborationRole>>, TError,{workroomId: number;roleId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeCollaborationRole>>,
+        TError,
+        {workroomId: number;roleId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveCollaborationRoleMutationOptions(options));
+    }
+
+export const getListDecisionLogsUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/decision-logs`
+}
+
+/**
+ * @summary List decision logs for a workroom
+ */
+export const listDecisionLogs = async (workroomId: number, options?: RequestInit): Promise<DecisionLog[]> => {
+
+  return customFetch<DecisionLog[]>(getListDecisionLogsUrl(workroomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDecisionLogsQueryKey = (workroomId: number,) => {
+    return [
+    `/api/workrooms/${workroomId}/decision-logs`
+    ] as const;
+    }
+
+
+export const getListDecisionLogsQueryOptions = <TData = Awaited<ReturnType<typeof listDecisionLogs>>, TError = ErrorType<unknown>>(workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDecisionLogs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDecisionLogsQueryKey(workroomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDecisionLogs>>> = ({ signal }) => listDecisionLogs(workroomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(workroomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDecisionLogs>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDecisionLogsQueryResult = NonNullable<Awaited<ReturnType<typeof listDecisionLogs>>>
+export type ListDecisionLogsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List decision logs for a workroom
+ */
+
+export function useListDecisionLogs<TData = Awaited<ReturnType<typeof listDecisionLogs>>, TError = ErrorType<unknown>>(
+ workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDecisionLogs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDecisionLogsQueryOptions(workroomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAddDecisionLogUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/decision-logs`
+}
+
+/**
+ * @summary Add a decision log entry
+ */
+export const addDecisionLog = async (workroomId: number,
+    decisionLogInput: DecisionLogInput, options?: RequestInit): Promise<DecisionLog> => {
+
+  return customFetch<DecisionLog>(getAddDecisionLogUrl(workroomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      decisionLogInput,)
+  }
+);}
+
+
+
+
+export const getAddDecisionLogMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addDecisionLog>>, TError,{workroomId: number;data: BodyType<DecisionLogInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addDecisionLog>>, TError,{workroomId: number;data: BodyType<DecisionLogInput>}, TContext> => {
+
+const mutationKey = ['addDecisionLog'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addDecisionLog>>, {workroomId: number;data: BodyType<DecisionLogInput>}> = (props) => {
+          const {workroomId,data} = props ?? {};
+
+          return  addDecisionLog(workroomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddDecisionLogMutationResult = NonNullable<Awaited<ReturnType<typeof addDecisionLog>>>
+    export type AddDecisionLogMutationBody = BodyType<DecisionLogInput>
+    export type AddDecisionLogMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a decision log entry
+ */
+export const useAddDecisionLog = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addDecisionLog>>, TError,{workroomId: number;data: BodyType<DecisionLogInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addDecisionLog>>,
+        TError,
+        {workroomId: number;data: BodyType<DecisionLogInput>},
+        TContext
+      > => {
+      return useMutation(getAddDecisionLogMutationOptions(options));
+    }
+
+export const getCompleteStageUrl = (workroomId: number,
+    stageId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/stages/${stageId}/complete`
+}
+
+/**
+ * @summary Mark a stage as complete and advance to next
+ */
+export const completeStage = async (workroomId: number,
+    stageId: number,
+    completeStageBody?: CompleteStageBody, options?: RequestInit): Promise<StageCompletionResult> => {
+
+  return customFetch<StageCompletionResult>(getCompleteStageUrl(workroomId,stageId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      completeStageBody,)
+  }
+);}
+
+
+
+
+export const getCompleteStageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeStage>>, TError,{workroomId: number;stageId: number;data?: BodyType<CompleteStageBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeStage>>, TError,{workroomId: number;stageId: number;data?: BodyType<CompleteStageBody>}, TContext> => {
+
+const mutationKey = ['completeStage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeStage>>, {workroomId: number;stageId: number;data?: BodyType<CompleteStageBody>}> = (props) => {
+          const {workroomId,stageId,data} = props ?? {};
+
+          return  completeStage(workroomId,stageId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteStageMutationResult = NonNullable<Awaited<ReturnType<typeof completeStage>>>
+    export type CompleteStageMutationBody = BodyType<CompleteStageBody> | undefined
+    export type CompleteStageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Mark a stage as complete and advance to next
+ */
+export const useCompleteStage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeStage>>, TError,{workroomId: number;stageId: number;data?: BodyType<CompleteStageBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof completeStage>>,
+        TError,
+        {workroomId: number;stageId: number;data?: BodyType<CompleteStageBody>},
+        TContext
+      > => {
+      return useMutation(getCompleteStageMutationOptions(options));
+    }
+
+export const getCompileFinalPackUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/compile-pack`
+}
+
+/**
+ * @summary Compile all approved deliverables into a final pack
+ */
+export const compileFinalPack = async (workroomId: number, options?: RequestInit): Promise<CompiledPack> => {
+
+  return customFetch<CompiledPack>(getCompileFinalPackUrl(workroomId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCompileFinalPackMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof compileFinalPack>>, TError,{workroomId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof compileFinalPack>>, TError,{workroomId: number}, TContext> => {
+
+const mutationKey = ['compileFinalPack'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof compileFinalPack>>, {workroomId: number}> = (props) => {
+          const {workroomId} = props ?? {};
+
+          return  compileFinalPack(workroomId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompileFinalPackMutationResult = NonNullable<Awaited<ReturnType<typeof compileFinalPack>>>
+
+    export type CompileFinalPackMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Compile all approved deliverables into a final pack
+ */
+export const useCompileFinalPack = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof compileFinalPack>>, TError,{workroomId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof compileFinalPack>>,
+        TError,
+        {workroomId: number},
+        TContext
+      > => {
+      return useMutation(getCompileFinalPackMutationOptions(options));
+    }
+
+export const getGetEarlyWarningsUrl = () => {
+
+
+
+
+  return `/api/dashboard/early-warnings`
+}
+
+/**
+ * @summary Get early warnings — gates stuck or overdue workrooms
+ */
+export const getEarlyWarnings = async ( options?: RequestInit): Promise<EarlyWarning[]> => {
+
+  return customFetch<EarlyWarning[]>(getGetEarlyWarningsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEarlyWarningsQueryKey = () => {
+    return [
+    `/api/dashboard/early-warnings`
+    ] as const;
+    }
+
+
+export const getGetEarlyWarningsQueryOptions = <TData = Awaited<ReturnType<typeof getEarlyWarnings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEarlyWarnings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEarlyWarningsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEarlyWarnings>>> = ({ signal }) => getEarlyWarnings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEarlyWarnings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEarlyWarningsQueryResult = NonNullable<Awaited<ReturnType<typeof getEarlyWarnings>>>
+export type GetEarlyWarningsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get early warnings — gates stuck or overdue workrooms
+ */
+
+export function useGetEarlyWarnings<TData = Awaited<ReturnType<typeof getEarlyWarnings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEarlyWarnings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEarlyWarningsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

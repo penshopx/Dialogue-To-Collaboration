@@ -7,7 +7,6 @@
  */
 import * as zod from 'zod';
 
-
 /**
  * @summary Health check
  */
@@ -1130,3 +1129,141 @@ export const ListTemplateRolesResponseItem = zod.object({
 export const ListTemplateRolesResponse = zod.array(ListTemplateRolesResponseItem)
 
 
+/**
+ * @summary List roles assigned to a workroom
+ */
+export const ListCollaborationRolesParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const ListCollaborationRolesResponseItem = zod.object({
+  "id": zod.number(),
+  "workroomId": zod.number(),
+  "namaPeran": zod.string(),
+  "fungsiPeran": zod.string(),
+  "agentId": zod.number().nullish(),
+  "humanPic": zod.string().nullish(),
+  "isPic": zod.boolean(),
+  "urutan": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListCollaborationRolesResponse = zod.array(ListCollaborationRolesResponseItem)
+
+
+/**
+ * @summary Add a role to a workroom
+ */
+export const AddCollaborationRoleParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const AddCollaborationRoleBody = zod.object({
+  "namaPeran": zod.string(),
+  "fungsiPeran": zod.string(),
+  "agentId": zod.number().optional(),
+  "humanPic": zod.string().optional(),
+  "isPic": zod.boolean().optional(),
+  "urutan": zod.number().optional()
+})
+
+
+/**
+ * @summary Remove a role from a workroom
+ */
+export const RemoveCollaborationRoleParams = zod.object({
+  "workroomId": zod.coerce.number(),
+  "roleId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List decision logs for a workroom
+ */
+export const ListDecisionLogsParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const ListDecisionLogsResponseItem = zod.object({
+  "id": zod.number(),
+  "workroomId": zod.number(),
+  "stageId": zod.number().nullish(),
+  "aktor": zod.string(),
+  "tipeAksi": zod.string().describe('usulan | tantangan_skeptis | keputusan_gate | revisi | rilis | stage_complete'),
+  "ringkasan": zod.string(),
+  "detail": zod.object({
+
+}).passthrough().optional(),
+  "createdAt": zod.string()
+})
+export const ListDecisionLogsResponse = zod.array(ListDecisionLogsResponseItem)
+
+
+/**
+ * @summary Add a decision log entry
+ */
+export const AddDecisionLogParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const AddDecisionLogBody = zod.object({
+  "stageId": zod.number().optional(),
+  "aktor": zod.string(),
+  "tipeAksi": zod.string(),
+  "ringkasan": zod.string(),
+  "detail": zod.object({
+
+}).passthrough().optional()
+})
+
+
+/**
+ * @summary Mark a stage as complete and advance to next
+ */
+export const CompleteStageParams = zod.object({
+  "workroomId": zod.coerce.number(),
+  "stageId": zod.coerce.number()
+})
+
+export const CompleteStageBody = zod.object({
+  "note": zod.string().optional(),
+  "aktor": zod.string().optional()
+})
+
+export const CompleteStageResponse = zod.object({
+  "completedStageId": zod.number(),
+  "nextStageId": zod.number().nullable(),
+  "isGate": zod.boolean(),
+  "workroomStatus": zod.string(),
+  "message": zod.string().optional()
+})
+
+
+/**
+ * @summary Compile all approved deliverables into a final pack
+ */
+export const CompileFinalPackParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+export const CompileFinalPackResponse = zod.object({
+  "workroomId": zod.number(),
+  "deliverableCount": zod.number(),
+  "packId": zod.number(),
+  "message": zod.string().optional()
+})
+
+
+/**
+ * @summary Get early warnings — gates stuck or overdue workrooms
+ */
+export const GetEarlyWarningsResponseItem = zod.object({
+  "workroomId": zod.number(),
+  "workroomName": zod.string(),
+  "stageId": zod.number().nullish(),
+  "stageName": zod.string().nullish(),
+  "warningType": zod.string().describe('gate_stuck | overdue | no_activity'),
+  "message": zod.string(),
+  "severity": zod.string().describe('critical | warning | info'),
+  "hoursElapsed": zod.number().nullish()
+})
+export const GetEarlyWarningsResponse = zod.array(GetEarlyWarningsResponseItem)

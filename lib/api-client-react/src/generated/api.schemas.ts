@@ -587,3 +587,88 @@ export interface TemplateRole {
   createdAt: string;
 }
 
+export interface CollaborationRole {
+  id: number;
+  workroomId: number;
+  namaPeran: string;
+  fungsiPeran: string;
+  /** @nullable */
+  agentId?: number | null;
+  /** @nullable */
+  humanPic?: string | null;
+  isPic: boolean;
+  urutan: number;
+  createdAt: string;
+}
+
+export interface CollaborationRoleInput {
+  namaPeran: string;
+  fungsiPeran: string;
+  agentId?: number;
+  humanPic?: string;
+  isPic?: boolean;
+  urutan?: number;
+}
+
+export type DecisionLogDetail = { [key: string]: unknown };
+
+export interface DecisionLog {
+  id: number;
+  workroomId: number;
+  /** @nullable */
+  stageId?: number | null;
+  aktor: string;
+  /** usulan | tantangan_skeptis | keputusan_gate | revisi | rilis | stage_complete */
+  tipeAksi: string;
+  ringkasan: string;
+  detail?: DecisionLogDetail;
+  createdAt: string;
+}
+
+export type DecisionLogInputDetail = { [key: string]: unknown };
+
+export interface DecisionLogInput {
+  stageId?: number;
+  aktor: string;
+  tipeAksi: string;
+  ringkasan: string;
+  detail?: DecisionLogInputDetail;
+}
+
+export interface StageCompletionResult {
+  completedStageId: number;
+  /** @nullable */
+  nextStageId: number | null;
+  isGate: boolean;
+  workroomStatus: string;
+  message?: string;
+}
+
+export interface CompiledPack {
+  workroomId: number;
+  deliverableCount: number;
+  packId: number;
+  message?: string;
+}
+
+export interface EarlyWarning {
+  workroomId: number;
+  workroomName: string;
+  /** @nullable */
+  stageId?: number | null;
+  /** @nullable */
+  stageName?: string | null;
+  /** gate_stuck | overdue | no_activity */
+  warningType: string;
+  message: string;
+  /** critical | warning | info */
+  severity: string;
+  /** @nullable */
+  hoursElapsed?: number | null;
+}
+
+export type CompleteStageBody = {
+  note?: string;
+  aktor?: string;
+};
+

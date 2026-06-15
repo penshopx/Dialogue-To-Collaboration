@@ -14,6 +14,8 @@ import {
   workroomBrainTable,
   workroomConfigTable,
   stageExitCriteriaTable,
+  collaborationRolesTable,
+  decisionLogsTable,
 } from "@workspace/db";
 import {
   GetWorkroomParams,
@@ -897,6 +899,249 @@ router.get("/dashboard/recent-workrooms", async (_req, res): Promise<void> => {
   );
 
   res.json(result);
+});
+
+// ── Collaboration Roles ────────────────────────────────────────────────────────
+
+router.get("/workrooms/:workroomId/roles", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  if (isNaN(workroomId)) { res.status(400).json({ error: "Invalid workroomId" }); return; }
+  const roles = await db.select().from(collaborationRolesTable)
+    .where(eq(collaborationRolesTable.workroomId, workroomId))
+    .orderBy(collaborationRolesTable.urutan);
+  res.json(roles);
+});
+
+router.post("/workrooms/:workroomId/roles", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  if (isNaN(workroomId)) { res.status(400).json({ error: "Invalid workroomId" }); return; }
+  const { namaPeran, fungsiPeran, agentId, humanPic, isPic, urutan } = req.body as {
+    namaPeran?: string; fungsiPeran?: string; agentId?: number;
+    humanPic?: string; isPic?: boolean; urutan?: number;
+  };
+  if (!namaPeran?.trim() || !fungsiPeran?.trim()) {
+    res.status(400).json({ error: "namaPeran and fungsiPeran required" }); return;
+  }
+  const [created] = await db.insert(collaborationRolesTable).values({
+    workroomId, namaPeran: namaPeran.trim(), fungsiPeran: fungsiPeran.trim(),
+    agentId: agentId ?? null, humanPic: humanPic ?? null,
+    isPic: isPic ?? false, urutan: urutan ?? 0,
+  }).returning();
+  res.status(201).json(created);
+});
+
+router.delete("/workrooms/:workroomId/roles/:roleId", async (req, res): Promise<void> => {
+  const roleId = parseInt(req.params.roleId);
+  if (isNaN(roleId)) { res.status(400).json({ error: "Invalid roleId" }); return; }
+  await db.delete(collaborationRolesTable).where(eq(collaborationRolesTable.id, roleId));
+  res.sendStatus(204);
+});
+
+// ── Decision Logs ──────────────────────────────────────────────────────────────
+
+router.get("/workrooms/:workroomId/decision-logs", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  if (isNaN(workroomId)) { res.status(400).json({ error: "Invalid workroomId" }); return; }
+  const logs = await db.select().from(decisionLogsTable)
+    .where(eq(decisionLogsTable.workroomId, workroomId))
+    .orderBy(desc(decisionLogsTable.createdAt));
+  res.json(logs);
+});
+
+router.post("/workrooms/:workroomId/decision-logs", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  if (isNaN(workroomId)) { res.status(400).json({ error: "Invalid workroomId" }); return; }
+  const { stageId, aktor, tipeAksi, ringkasan, detail } = req.body as {
+    stageId?: number; aktor?: string; tipeAksi?: string;
+    ringkasan?: string; detail?: Record<string, unknown>;
+  };
+  if (!aktor?.trim() || !tipeAksi?.trim() || !ringkasan?.trim()) {
+    res.status(400).json({ error: "aktor, tipeAksi, ringkasan required" }); return;
+  }
+  const [created] = await db.insert(decisionLogsTable).values({
+    workroomId, stageId: stageId ?? null,
+    aktor: aktor.trim(), tipeAksi: tipeAksi.trim(),
+    ringkasan: ringkasan.trim(), detail: detail ?? null,
+  }).returning();
+  res.status(201).json(created);
+});
+
+// ── Stage Completion (processStageCompletion) ──────────────────────────────────
+
+router.post("/workrooms/:workroomId/stages/:stageId/complete", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  const stageId = parseInt(req.params.stageId);
+  if (isNaN(workroomId) || isNaN(stageId)) { res.status(400).json({ error: "Invalid IDs" }); return; }
+  const { note, aktor } = req.body as { note?: string; aktor?: string };
+
+  const [stage] = await db.select().from(workroomStagesTable)
+    .where(and(eq(workroomStagesTable.workroomId, workroomId), eq(workroomStagesTable.id, stageId)));
+  if (!stage) { res.status(404).json({ error: "Stage not found" }); return; }
+
+  const isGate = stage.stageType === "gate";
+
+  await db.update(workroomStagesTable)
+    .set({ status: "completed", completedAt: new Date() })
+    .where(eq(workroomStagesTable.id, stageId));
+
+  const allStages = await db.select().from(workroomStagesTable)
+    .where(eq(workroomStagesTable.workroomId, workroomId))
+    .orderBy(workroomStagesTable.order);
+
+  const nextStage = allStages.find(s => s.order === stage.order + 1);
+
+  if (nextStage) {
+    await db.update(workroomStagesTable)
+      .set({ status: "active" })
+      .where(eq(workroomStagesTable.id, nextStage.id));
+    await db.update(workroomsTable)
+      .set({ currentStageName: nextStage.name, updatedAt: new Date() })
+      .where(eq(workroomsTable.id, workroomId));
+  } else {
+    await db.update(workroomsTable)
+      .set({ status: "completed", progress: 100, updatedAt: new Date() })
+      .where(eq(workroomsTable.id, workroomId));
+  }
+
+  const completedCount = allStages.filter(s => s.status === "completed").length + 1;
+  const progress = Math.round((completedCount / allStages.length) * 100);
+  await db.update(workroomsTable).set({ progress }).where(eq(workroomsTable.id, workroomId));
+
+  await db.insert(decisionLogsTable).values({
+    workroomId, stageId,
+    aktor: aktor ?? "System",
+    tipeAksi: isGate ? "keputusan_gate" : "stage_complete",
+    ringkasan: note ?? `Stage "${stage.name}" selesai`,
+  });
+
+  await db.insert(activityLogsTable).values({
+    workroomId,
+    actor: aktor ?? "System",
+    eventType: isGate ? "gate_approved" : "stage_completed",
+    description: note ?? `Stage "${stage.name}" marked complete`,
+  });
+
+  const [updatedWorkroom] = await db.select().from(workroomsTable).where(eq(workroomsTable.id, workroomId));
+
+  res.json({
+    completedStageId: stageId,
+    nextStageId: nextStage?.id ?? null,
+    isGate,
+    workroomStatus: updatedWorkroom?.status ?? "active",
+    message: nextStage ? `Lanjut ke "${nextStage.name}"` : "Workroom selesai!",
+  });
+});
+
+// ── Pack Compiler ──────────────────────────────────────────────────────────────
+
+router.post("/workrooms/:workroomId/compile-pack", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  if (isNaN(workroomId)) { res.status(400).json({ error: "Invalid workroomId" }); return; }
+
+  const deliverables = await db.select().from(deliverablesTable)
+    .where(eq(deliverablesTable.workroomId, workroomId));
+
+  const approvedCount = deliverables.filter(d => d.status === "approved" || d.status === "final").length;
+  const totalCount = deliverables.length;
+
+  const [packEntry] = await db.insert(decisionLogsTable).values({
+    workroomId,
+    aktor: "Pack Compiler",
+    tipeAksi: "rilis",
+    ringkasan: `Pack dikompilasi: ${approvedCount} dari ${totalCount} deliverable dimasukkan`,
+    detail: {
+      approvedCount,
+      totalCount,
+      compiledAt: new Date().toISOString(),
+      deliverableIds: deliverables.filter(d => d.status === "approved" || d.status === "final").map(d => d.id),
+    },
+  }).returning();
+
+  res.json({
+    workroomId,
+    deliverableCount: approvedCount,
+    packId: packEntry?.id ?? 0,
+    message: `${approvedCount} deliverable dikompilasi ke dalam Final Pack`,
+  });
+});
+
+// ── Dashboard Early Warnings ───────────────────────────────────────────────────
+
+router.get("/dashboard/early-warnings", async (_req, res): Promise<void> => {
+  const warnings: Array<{
+    workroomId: number; workroomName: string; stageId: number | null;
+    stageName: string | null; warningType: string; message: string;
+    severity: string; hoursElapsed: number | null;
+  }> = [];
+
+  const activeWorkrooms = await db.select().from(workroomsTable)
+    .where(eq(workroomsTable.status, "active"));
+
+  for (const workroom of activeWorkrooms) {
+    const stages = await db.select().from(workroomStagesTable)
+      .where(eq(workroomStagesTable.workroomId, workroom.id));
+
+    const activeGate = stages.find(s => s.status === "awaiting_gate" || (s.stageType === "gate" && s.status === "active"));
+    if (activeGate) {
+      const hoursElapsed = (Date.now() - new Date(activeGate.createdAt).getTime()) / (1000 * 60 * 60);
+      if (hoursElapsed > 24) {
+        warnings.push({
+          workroomId: workroom.id,
+          workroomName: workroom.name,
+          stageId: activeGate.id,
+          stageName: activeGate.name,
+          warningType: "gate_stuck",
+          message: `Gate "${activeGate.name}" sudah ${Math.round(hoursElapsed)} jam menunggu keputusan`,
+          severity: hoursElapsed > 72 ? "critical" : "warning",
+          hoursElapsed: Math.round(hoursElapsed),
+        });
+      }
+    }
+
+    if (workroom.deadline) {
+      const hoursToDeadline = (new Date(workroom.deadline).getTime() - Date.now()) / (1000 * 60 * 60);
+      if (hoursToDeadline < 48 && hoursToDeadline > 0) {
+        warnings.push({
+          workroomId: workroom.id,
+          workroomName: workroom.name,
+          stageId: null,
+          stageName: null,
+          warningType: "overdue",
+          message: `Deadline dalam ${Math.round(hoursToDeadline)} jam — workroom masih di stage "${workroom.currentStageName}"`,
+          severity: hoursToDeadline < 24 ? "critical" : "warning",
+          hoursElapsed: null,
+        });
+      }
+    }
+
+    const lastActivity = await db.select().from(activityLogsTable)
+      .where(eq(activityLogsTable.workroomId, workroom.id))
+      .orderBy(desc(activityLogsTable.createdAt))
+      .limit(1);
+
+    if (lastActivity.length > 0) {
+      const hoursSinceActivity = (Date.now() - new Date(lastActivity[0].createdAt).getTime()) / (1000 * 60 * 60);
+      if (hoursSinceActivity > 48) {
+        warnings.push({
+          workroomId: workroom.id,
+          workroomName: workroom.name,
+          stageId: null,
+          stageName: null,
+          warningType: "no_activity",
+          message: `Tidak ada aktivitas selama ${Math.round(hoursSinceActivity)} jam`,
+          severity: hoursSinceActivity > 96 ? "critical" : "info",
+          hoursElapsed: Math.round(hoursSinceActivity),
+        });
+      }
+    }
+  }
+
+  warnings.sort((a, b) => {
+    const order: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+    return (order[a.severity] ?? 3) - (order[b.severity] ?? 3);
+  });
+
+  res.json(warnings);
 });
 
 export default router;

@@ -1,3 +1,6 @@
 - [Orval mutation body shape](orval-mutation-shape.md) — generated mutations wrap request body as `{ data: InputType }`, not the raw type directly.
 - [Orval query hook enabled pattern](orval-enabled-pattern.md) — Orval hooks using `UseQueryOptions` directly require `queryKey`; omit `enabled` from options, call unconditionally and guard in effects.
 - [Import order in Express routers](express-import-order.md) — Never append `import` statements after `export default router`; always move imports to top of file or TS/runtime will error.
+- [Orval codegen duplicate types fix](orval-codegen-fix.md) — remove schemas:{path,type} from Zod output in orval.config.ts to prevent TS2308; api-zod/src/index.ts must only export from ./generated/api.
+- [Activity log schema fields](activity-log-schema.md) — activityLogsTable columns: workroomId, eventType, description, actor (no stageId/action/detail); workroomStagesTable has no updatedAt.
+- [Routes before export default](routes-export-order.md) — Express routes added AFTER `export default router` are silently ignored; always insert new routes before that line.

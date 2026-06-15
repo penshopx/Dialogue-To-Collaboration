@@ -1038,6 +1038,179 @@ paths:
                 items:
                   $ref: "#/components/schemas/TemplateRole"
 
+  # ── Collaboration Roles ───────────────────────────────────────────────────
+  /workrooms/{workroomId}/roles:
+    get:
+      operationId: listCollaborationRoles
+      tags: [workrooms]
+      summary: List roles assigned to a workroom
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of collaboration roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CollaborationRole"
+    post:
+      operationId: addCollaborationRole
+      tags: [workrooms]
+      summary: Add a role to a workroom
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollaborationRoleInput"
+      responses:
+        "201":
+          description: Created role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaborationRole"
+
+  /workrooms/{workroomId}/roles/{roleId}:
+    delete:
+      operationId: removeCollaborationRole
+      tags: [workrooms]
+      summary: Remove a role from a workroom
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: roleId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Decision Logs ─────────────────────────────────────────────────────────
+  /workrooms/{workroomId}/decision-logs:
+    get:
+      operationId: listDecisionLogs
+      tags: [workrooms]
+      summary: List decision logs for a workroom
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of decision logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DecisionLog"
+    post:
+      operationId: addDecisionLog
+      tags: [workrooms]
+      summary: Add a decision log entry
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DecisionLogInput"
+      responses:
+        "201":
+          description: Created log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionLog"
+
+  # ── Stage Completion (processStageCompletion) ─────────────────────────────
+  /workrooms/{workroomId}/stages/{stageId}/complete:
+    post:
+      operationId: completeStage
+      tags: [stages]
+      summary: Mark a stage as complete and advance to next
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: stageId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: string
+                aktor:
+                  type: string
+      responses:
+        "200":
+          description: Stage completion result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StageCompletionResult"
+
+  # ── Pack Compiler ─────────────────────────────────────────────────────────
+  /workrooms/{workroomId}/compile-pack:
+    post:
+      operationId: compileFinalPack
+      tags: [deliverables]
+      summary: Compile all approved deliverables into a final pack
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Compiled pack info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompiledPack"
+
+  # ── Dashboard Early Warnings ──────────────────────────────────────────────
+  /dashboard/early-warnings:
+    get:
+      operationId: getEarlyWarnings
+      tags: [dashboard]
+      summary: Get early warnings — gates stuck or overdue workrooms
+      responses:
+        "200":
+          description: Early warnings list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EarlyWarning"
+
 # ── Schemas ──────────────────────────────────────────────────────────────────
 components:
   schemas:
@@ -1978,3 +2151,136 @@ components:
           type: integer
         createdAt:
           type: string
+
+    # ── Collaboration Role ────────────────────────────────────────────────────
+    CollaborationRole:
+      type: object
+      required: [id, workroomId, namaPeran, fungsiPeran, isPic, urutan, createdAt]
+      properties:
+        id:
+          type: integer
+        workroomId:
+          type: integer
+        namaPeran:
+          type: string
+        fungsiPeran:
+          type: string
+        agentId:
+          type: ["integer", "null"]
+        humanPic:
+          type: ["string", "null"]
+        isPic:
+          type: boolean
+        urutan:
+          type: integer
+        createdAt:
+          type: string
+
+    CollaborationRoleInput:
+      type: object
+      required: [namaPeran, fungsiPeran]
+      properties:
+        namaPeran:
+          type: string
+        fungsiPeran:
+          type: string
+        agentId:
+          type: integer
+        humanPic:
+          type: string
+        isPic:
+          type: boolean
+        urutan:
+          type: integer
+
+    # ── Decision Log ──────────────────────────────────────────────────────────
+    DecisionLog:
+      type: object
+      required: [id, workroomId, aktor, tipeAksi, ringkasan, createdAt]
+      properties:
+        id:
+          type: integer
+        workroomId:
+          type: integer
+        stageId:
+          type: ["integer", "null"]
+        aktor:
+          type: string
+        tipeAksi:
+          type: string
+          description: "usulan | tantangan_skeptis | keputusan_gate | revisi | rilis | stage_complete"
+        ringkasan:
+          type: string
+        detail:
+          type: object
+        createdAt:
+          type: string
+
+    DecisionLogInput:
+      type: object
+      required: [aktor, tipeAksi, ringkasan]
+      properties:
+        stageId:
+          type: integer
+        aktor:
+          type: string
+        tipeAksi:
+          type: string
+        ringkasan:
+          type: string
+        detail:
+          type: object
+
+    # ── Stage Completion Result ───────────────────────────────────────────────
+    StageCompletionResult:
+      type: object
+      required: [completedStageId, nextStageId, isGate, workroomStatus]
+      properties:
+        completedStageId:
+          type: integer
+        nextStageId:
+          type: ["integer", "null"]
+        isGate:
+          type: boolean
+        workroomStatus:
+          type: string
+        message:
+          type: string
+
+    # ── Compiled Pack ─────────────────────────────────────────────────────────
+    CompiledPack:
+      type: object
+      required: [workroomId, deliverableCount, packId]
+      properties:
+        workroomId:
+          type: integer
+        deliverableCount:
+          type: integer
+        packId:
+          type: integer
+        message:
+          type: string
+
+    # ── Early Warning ─────────────────────────────────────────────────────────
+    EarlyWarning:
+      type: object
+      required: [workroomId, workroomName, warningType, message, severity]
+      properties:
+        workroomId:
+          type: integer
+        workroomName:
+          type: string
+        stageId:
+          type: ["integer", "null"]
+        stageName:
+          type: ["string", "null"]
+        warningType:
+          type: string
+          description: "gate_stuck | overdue | no_activity"
+        message:
+          type: string
+        severity:
+          type: string
+          description: "critical | warning | info"
+        hoursElapsed:
+          type: ["number", "null"]

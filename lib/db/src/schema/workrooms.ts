@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, jsonb, boolean, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -113,6 +113,29 @@ export const deliverableTemplatesTable = pgTable("deliverable_templates", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const collaborationRolesTable = pgTable("collaboration_roles", {
+  id: serial("id").primaryKey(),
+  workroomId: integer("workroom_id").notNull(),
+  namaPeran: text("nama_peran").notNull(),
+  fungsiPeran: text("fungsi_peran").notNull(),
+  agentId: integer("agent_id"),
+  humanPic: text("human_pic"),
+  isPic: boolean("is_pic").notNull().default(false),
+  urutan: integer("urutan").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const decisionLogsTable = pgTable("decision_logs", {
+  id: serial("id").primaryKey(),
+  workroomId: integer("workroom_id").notNull(),
+  stageId: integer("stage_id"),
+  aktor: text("aktor").notNull(),
+  tipeAksi: text("tipe_aksi").notNull(),
+  ringkasan: text("ringkasan").notNull(),
+  detail: jsonb("detail"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const insertWorkroomSchema = createInsertSchema(workroomsTable).omit({
   id: true,
   createdAt: true,
@@ -159,3 +182,8 @@ export type StageSummary = typeof stageSummariesTable.$inferSelect;
 export type WorkroomMetrics = typeof workroomMetricsTable.$inferSelect;
 export type StageExitCriteria = typeof stageExitCriteriaTable.$inferSelect;
 export type DeliverableTemplate = typeof deliverableTemplatesTable.$inferSelect;
+
+export const insertCollaborationRoleSchema = createInsertSchema(collaborationRolesTable).omit({ id: true, createdAt: true });
+export const insertDecisionLogSchema = createInsertSchema(decisionLogsTable).omit({ id: true, createdAt: true });
+export type CollaborationRole = typeof collaborationRolesTable.$inferSelect;
+export type DecisionLog = typeof decisionLogsTable.$inferSelect;

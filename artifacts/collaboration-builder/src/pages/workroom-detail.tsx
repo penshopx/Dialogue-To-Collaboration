@@ -6,6 +6,12 @@ import {
   useUpdateWorkroomStage,
   useUpdateTask,
   useCreateWorkroomTask,
+  useListCollaborationRoles,
+  useAddCollaborationRole,
+  useRemoveCollaborationRole,
+  useListDecisionLogs,
+  useAddDecisionLog,
+  useCompileFinalPack,
 } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { useState } from "react";
@@ -14,6 +20,7 @@ import {
   ChevronRight, AlertTriangle, FileText, MessageSquare, Bot,
   Shield, Wrench, Brain, Star, CheckSquare, ArrowRight,
   StickyNote, Save, ExternalLink, Kanban,
+  Users, Trash2, Package, ScrollText, User,
 } from "lucide-react";
 import { AgentChat } from "@/components/agent-chat";
 import { KanbanBoard } from "@/components/kanban-board";
@@ -45,7 +52,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { getListWorkroomTasksQueryKey, getListWorkroomStagesQueryKey, getGetWorkroomQueryKey, getListWorkroomActivityQueryKey } from "@workspace/api-client-react";
+import {
+  getListWorkroomTasksQueryKey,
+  getListWorkroomStagesQueryKey,
+  getGetWorkroomQueryKey,
+  getListWorkroomActivityQueryKey,
+  getListCollaborationRolesQueryKey,
+  getListDecisionLogsQueryKey,
+} from "@workspace/api-client-react";
 
 const STAGE_STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: "Pending", color: "text-muted-foreground", icon: Circle },
@@ -239,10 +253,20 @@ export default function WorkroomDetail() {
   const { data: stages } = useListWorkroomStages(workroomId);
   const { data: tasks } = useListWorkroomTasks(workroomId);
   const { data: activity } = useListWorkroomActivity(workroomId);
+  const { data: roles } = useListCollaborationRoles(workroomId);
+  const { data: decisionLogs } = useListDecisionLogs(workroomId);
   const updateTask = useUpdateTask();
   const advanceStage = useUpdateWorkroomStage();
+  const addRole = useAddCollaborationRole();
+  const removeRole = useRemoveCollaborationRole();
+  const addDecisionLog = useAddDecisionLog();
+  const compilePack = useCompileFinalPack();
   const qc = useQueryClient();
   const { toast } = useToast();
+
+  const [newRoleForm, setNewRoleForm] = useState({ namaPeran: "", fungsiPeran: "eksekutor", humanPic: "" });
+  const [logForm, setLogForm] = useState({ aktor: "", tipeAksi: "keputusan_gate", ringkasan: "" });
+  const [showLogForm, setShowLogForm] = useState(false);
 
   const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
@@ -380,11 +404,30 @@ export default function WorkroomDetail() {
                 </p>
               </div>
               {displayStage.stageType !== "gate" && displayStage.status === "active" && (
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
                   <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAddTaskOpen(true)}>
                     <Plus className="w-3.5 h-3.5" />
                     Add Task
                   </Button>
+                  {(displayStage.name.toLowerCase().includes("pack") || displayStage.name.toLowerCase().includes("release") || displayStage.name.toLowerCase().includes("rilis")) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 border-purple-500/40 text-purple-400 hover:bg-purple-500/10"
+                      disabled={compilePack.isPending}
+                      onClick={async () => {
+                        const result = await compilePack.mutateAsync({ workroomId });
+                        toast({
+                          title: "Pack Compiled! 📦",
+                          description: result.message ?? `${result.deliverableCount} deliverable dikompilasi`,
+                        });
+                        qc.invalidateQueries({ queryKey: getListDecisionLogsQueryKey(workroomId) });
+                      }}
+                    >
+                      {compilePack.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Package className="w-3.5 h-3.5" />}
+                      Compile Pack
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     className="gap-1.5 bg-green-600 hover:bg-green-700 text-white"
@@ -466,6 +509,18 @@ export default function WorkroomDetail() {
               </TabsTrigger>
               <TabsTrigger value="rangkuman" className="gap-1.5">
                 <span>✨</span> AI Rangkuman
+              </TabsTrigger>
+              <TabsTrigger value="roles" className="gap-1.5">
+                <Users className="w-3.5 h-3.5" /> Tim
+                {roles && roles.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">{roles.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="decision-log" className="gap-1.5">
+                <ScrollText className="w-3.5 h-3.5" /> Log Keputusan
+                {decisionLogs && decisionLogs.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">{decisionLogs.length}</Badge>
+                )}
               </TabsTrigger>
             </TabsList>
 
@@ -681,6 +736,213 @@ export default function WorkroomDetail() {
 
             <TabsContent value="rangkuman" className="mt-4">
               <RangkumanTab workroomId={workroomId} workroomName={workroom?.name} />
+            </TabsContent>
+
+            {/* ── Collaboration Roles Tab ─────────────────────────────────── */}
+            <TabsContent value="roles" className="mt-4 space-y-4">
+              <div>
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Users className="w-4 h-4" /> Tim Kolaborasi
+                </h3>
+                {roles && roles.length > 0 ? (
+                  <div className="space-y-2">
+                    {roles.map((role) => (
+                      <div key={role.id} className="flex items-center justify-between p-3 border rounded-lg bg-card">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{role.namaPeran}</p>
+                            <p className="text-xs text-muted-foreground">{role.fungsiPeran}</p>
+                            {role.humanPic && (
+                              <p className="text-xs text-primary mt-0.5">PIC: {role.humanPic}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {role.isPic && (
+                            <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">PIC</Badge>
+                          )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-red-400"
+                            onClick={async () => {
+                              await removeRole.mutateAsync({ workroomId, roleId: role.id });
+                              qc.invalidateQueries({ queryKey: getListCollaborationRolesQueryKey(workroomId) });
+                              toast({ title: "Peran dihapus" });
+                            }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground text-sm">
+                    Belum ada peran yang ditambahkan.
+                  </div>
+                )}
+              </div>
+              <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">Tambah Peran</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Nama Peran</Label>
+                    <Input
+                      placeholder="mis. Lead Tender"
+                      value={newRoleForm.namaPeran}
+                      onChange={(e) => setNewRoleForm(f => ({ ...f, namaPeran: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Fungsi</Label>
+                    <Select value={newRoleForm.fungsiPeran} onValueChange={(v) => setNewRoleForm(f => ({ ...f, fungsiPeran: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="strategis">Strategis</SelectItem>
+                        <SelectItem value="skeptis">Skeptis</SelectItem>
+                        <SelectItem value="eksekutor">Eksekutor</SelectItem>
+                        <SelectItem value="narasumber">Narasumber</SelectItem>
+                        <SelectItem value="pack_compiler">Pack Compiler</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">PIC (opsional)</Label>
+                  <Input
+                    placeholder="Nama orang yang bertanggung jawab"
+                    value={newRoleForm.humanPic}
+                    onChange={(e) => setNewRoleForm(f => ({ ...f, humanPic: e.target.value }))}
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  disabled={!newRoleForm.namaPeran.trim() || addRole.isPending}
+                  className="gap-1.5"
+                  onClick={async () => {
+                    await addRole.mutateAsync({
+                      workroomId,
+                      data: {
+                        namaPeran: newRoleForm.namaPeran.trim(),
+                        fungsiPeran: newRoleForm.fungsiPeran,
+                        humanPic: newRoleForm.humanPic.trim() || undefined,
+                      },
+                    });
+                    qc.invalidateQueries({ queryKey: getListCollaborationRolesQueryKey(workroomId) });
+                    setNewRoleForm({ namaPeran: "", fungsiPeran: "eksekutor", humanPic: "" });
+                    toast({ title: "Peran ditambahkan" });
+                  }}
+                >
+                  {addRole.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                  Tambah
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* ── Decision Log Tab ────────────────────────────────────────── */}
+            <TabsContent value="decision-log" className="mt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <ScrollText className="w-4 h-4" /> Log Keputusan
+                </h3>
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowLogForm(f => !f)}>
+                  <Plus className="w-3.5 h-3.5" />
+                  Tambah Log
+                </Button>
+              </div>
+
+              {showLogForm && (
+                <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Aktor</Label>
+                      <Input
+                        placeholder="Nama / peran"
+                        value={logForm.aktor}
+                        onChange={(e) => setLogForm(f => ({ ...f, aktor: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Tipe Aksi</Label>
+                      <Select value={logForm.tipeAksi} onValueChange={(v) => setLogForm(f => ({ ...f, tipeAksi: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="usulan">Usulan</SelectItem>
+                          <SelectItem value="tantangan_skeptis">Tantangan Skeptis</SelectItem>
+                          <SelectItem value="keputusan_gate">Keputusan Gate</SelectItem>
+                          <SelectItem value="revisi">Revisi</SelectItem>
+                          <SelectItem value="rilis">Rilis</SelectItem>
+                          <SelectItem value="stage_complete">Stage Selesai</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Ringkasan Keputusan</Label>
+                    <Textarea
+                      placeholder="Apa yang diputuskan atau dicatat?"
+                      rows={3}
+                      value={logForm.ringkasan}
+                      onChange={(e) => setLogForm(f => ({ ...f, ringkasan: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      disabled={!logForm.aktor.trim() || !logForm.ringkasan.trim() || addDecisionLog.isPending}
+                      className="gap-1.5"
+                      onClick={async () => {
+                        await addDecisionLog.mutateAsync({
+                          workroomId,
+                          data: {
+                            aktor: logForm.aktor.trim(),
+                            tipeAksi: logForm.tipeAksi,
+                            ringkasan: logForm.ringkasan.trim(),
+                            stageId: displayStageId ?? undefined,
+                          },
+                        });
+                        qc.invalidateQueries({ queryKey: getListDecisionLogsQueryKey(workroomId) });
+                        setLogForm({ aktor: "", tipeAksi: "keputusan_gate", ringkasan: "" });
+                        setShowLogForm(false);
+                        toast({ title: "Log keputusan disimpan" });
+                      }}
+                    >
+                      {addDecisionLog.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                      Simpan
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setShowLogForm(false)}>Batal</Button>
+                  </div>
+                </div>
+              )}
+
+              {!decisionLogs || decisionLogs.length === 0 ? (
+                <div className="text-center py-12 border border-dashed rounded-lg text-muted-foreground text-sm">
+                  <ScrollText className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                  Belum ada log keputusan tercatat.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {decisionLogs.map((log) => (
+                    <div key={log.id} className="flex items-start gap-3 p-3 border rounded-lg bg-card">
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <ScrollText className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-sm">{log.aktor}</span>
+                          <Badge variant="outline" className="text-[10px] py-0 h-4">{log.tipeAksi.replace(/_/g, " ")}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-0.5">{log.ringkasan}</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1">{new Date(log.createdAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
