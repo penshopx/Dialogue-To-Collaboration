@@ -12,6 +12,10 @@ import {
   useListDecisionLogs,
   useAddDecisionLog,
   useCompileFinalPack,
+  useListStageExitCriteria,
+  useCreateStageExitCriteria,
+  useUpdateStageExitCriteria,
+  useDeleteStageExitCriteria,
 } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { useState } from "react";
@@ -20,7 +24,7 @@ import {
   ChevronRight, AlertTriangle, FileText, MessageSquare, Bot,
   Shield, Wrench, Brain, Star, CheckSquare, ArrowRight,
   StickyNote, Save, ExternalLink, Kanban,
-  Users, Trash2, Package, ScrollText, User,
+  Users, Trash2, Package, ScrollText, User, ClipboardList,
 } from "lucide-react";
 import { AgentChat } from "@/components/agent-chat";
 import { KanbanBoard } from "@/components/kanban-board";
@@ -59,6 +63,7 @@ import {
   getListWorkroomActivityQueryKey,
   getListCollaborationRolesQueryKey,
   getListDecisionLogsQueryKey,
+  getListStageExitCriteriaQueryKey,
 } from "@workspace/api-client-react";
 
 const STAGE_STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
@@ -261,12 +266,17 @@ export default function WorkroomDetail() {
   const removeRole = useRemoveCollaborationRole();
   const addDecisionLog = useAddDecisionLog();
   const compilePack = useCompileFinalPack();
+  const createCriteria = useCreateStageExitCriteria();
+  const updateCriteria = useUpdateStageExitCriteria();
+  const deleteCriteria = useDeleteStageExitCriteria();
   const qc = useQueryClient();
   const { toast } = useToast();
 
   const [newRoleForm, setNewRoleForm] = useState({ namaPeran: "", fungsiPeran: "eksekutor", humanPic: "" });
   const [logForm, setLogForm] = useState({ aktor: "", tipeAksi: "keputusan_gate", ringkasan: "" });
   const [showLogForm, setShowLogForm] = useState(false);
+  const [newCriteriaText, setNewCriteriaText] = useState("");
+  const [showCriteriaForm, setShowCriteriaForm] = useState(false);
 
   const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
@@ -294,6 +304,8 @@ export default function WorkroomDetail() {
     stages?.[0];
   const displayStageId = selectedStageId ?? activeStage?.id ?? null;
   const displayStage = stages?.find((s) => s.id === displayStageId) ?? activeStage;
+
+  const { data: exitCriteria } = useListStageExitCriteria(workroomId, displayStageId ?? 0);
 
   const stageTasks = tasks?.filter((t) => t.stageId === displayStageId) ?? [];
   const todoTasks = stageTasks.filter((t) => t.status === "todo");
@@ -520,6 +532,14 @@ export default function WorkroomDetail() {
                 <ScrollText className="w-3.5 h-3.5" /> Log Keputusan
                 {decisionLogs && decisionLogs.length > 0 && (
                   <Badge variant="secondary" className="ml-1 text-[10px] h-4 px-1">{decisionLogs.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="exit-criteria" className="gap-1.5">
+                <ClipboardList className="w-3.5 h-3.5" /> Exit Criteria
+                {exitCriteria && exitCriteria.length > 0 && (
+                  <Badge variant="secondary" className={cn("ml-1 text-[10px] h-4 px-1", exitCriteria.every(c => c.isMet) ? "bg-green-500/20 text-green-400" : "")}>
+                    {exitCriteria.filter(c => c.isMet).length}/{exitCriteria.length}
+                  </Badge>
                 )}
               </TabsTrigger>
             </TabsList>
@@ -941,6 +961,147 @@ export default function WorkroomDetail() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* ── Exit Criteria Tab ── */}
+            <TabsContent value="exit-criteria" className="mt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-sm">Stage Exit Criteria</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Kriteria yang harus terpenuhi sebelum stage ini bisa diselesaikan.
+                    {exitCriteria && exitCriteria.length > 0 && (
+                      <span className={cn("ml-2 font-medium", exitCriteria.every(c => c.isMet) ? "text-green-400" : "text-amber-400")}>
+                        {exitCriteria.filter(c => c.isMet).length}/{exitCriteria.length} terpenuhi
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-xs"
+                  onClick={() => setShowCriteriaForm(v => !v)}
+                >
+                  <Plus className="w-3.5 h-3.5" /> Tambah Kriteria
+                </Button>
+              </div>
+
+              {showCriteriaForm && (
+                <div className="rounded-lg border bg-card/50 p-3 space-y-3">
+                  <Label className="text-xs">Kriteria Baru</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="cth: Semua dokumen persyaratan telah diverifikasi"
+                      value={newCriteriaText}
+                      onChange={e => setNewCriteriaText(e.target.value)}
+                      className="text-sm flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      disabled={!newCriteriaText.trim() || createCriteria.isPending || !displayStageId}
+                      onClick={async () => {
+                        if (!displayStageId) return;
+                        await createCriteria.mutateAsync({
+                          workroomId,
+                          stageId: displayStageId,
+                          data: { criteriaText: newCriteriaText.trim() },
+                        });
+                        qc.invalidateQueries({ queryKey: getListStageExitCriteriaQueryKey(workroomId, displayStageId) });
+                        setNewCriteriaText("");
+                        setShowCriteriaForm(false);
+                        toast({ title: "Kriteria ditambahkan ✓" });
+                      }}
+                    >
+                      {createCriteria.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setShowCriteriaForm(false)}>Batal</Button>
+                  </div>
+                </div>
+              )}
+
+              {!exitCriteria || exitCriteria.length === 0 ? (
+                <div className="text-center py-12 border border-dashed rounded-lg text-muted-foreground text-sm">
+                  <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                  Belum ada exit criteria untuk stage ini.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Progress bar */}
+                  {exitCriteria.length > 0 && (
+                    <div className="flex items-center gap-3 mb-3 p-3 rounded-lg border bg-card/30">
+                      <div className="flex-1">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-muted-foreground">Progres Kriteria</span>
+                          <span className={exitCriteria.every(c => c.isMet) ? "text-green-400 font-medium" : "text-amber-400"}>
+                            {Math.round((exitCriteria.filter(c => c.isMet).length / exitCriteria.length) * 100)}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={cn("h-full rounded-full transition-all", exitCriteria.every(c => c.isMet) ? "bg-green-500" : "bg-amber-500")}
+                            style={{ width: `${(exitCriteria.filter(c => c.isMet).length / exitCriteria.length) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {exitCriteria.map(criterion => (
+                    <div
+                      key={criterion.id}
+                      className={cn(
+                        "flex items-start gap-3 p-3 rounded-lg border transition-colors",
+                        criterion.isMet ? "bg-green-500/5 border-green-500/20" : "bg-card/30 border-border"
+                      )}
+                    >
+                      <button
+                        onClick={async () => {
+                          if (!displayStageId) return;
+                          await updateCriteria.mutateAsync({
+                            workroomId,
+                            stageId: displayStageId,
+                            criteriaId: criterion.id,
+                            data: { isMet: !criterion.isMet, verifiedBy: "Human Gate" },
+                          });
+                          qc.invalidateQueries({ queryKey: getListStageExitCriteriaQueryKey(workroomId, displayStageId) });
+                        }}
+                        className={cn(
+                          "mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                          criterion.isMet ? "bg-green-500 border-green-500 text-white" : "border-border hover:border-green-500/50"
+                        )}
+                      >
+                        {criterion.isMet && <CheckSquare className="w-3 h-3" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className={cn("text-sm", criterion.isMet ? "line-through text-muted-foreground" : "")}>
+                          {criterion.criteriaText}
+                        </p>
+                        {criterion.isMet && criterion.verifiedBy && (
+                          <p className="text-[10px] text-green-400/70 mt-0.5">✓ Diverifikasi oleh {criterion.verifiedBy}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!displayStageId) return;
+                          await deleteCriteria.mutateAsync({ workroomId, stageId: displayStageId, criteriaId: criterion.id });
+                          qc.invalidateQueries({ queryKey: getListStageExitCriteriaQueryKey(workroomId, displayStageId) });
+                        }}
+                        className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {exitCriteria.every(c => c.isMet) && (
+                    <div className="flex items-center gap-2 text-xs text-green-400 bg-green-400/5 border border-green-400/20 rounded-lg px-3 py-2 mt-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      Semua kriteria terpenuhi — stage siap untuk diselesaikan.
+                    </div>
+                  )}
                 </div>
               )}
             </TabsContent>
