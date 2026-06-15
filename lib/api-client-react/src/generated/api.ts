@@ -34,6 +34,8 @@ import type {
   KnowledgeItem,
   KnowledgeItemInput,
   KnowledgeItemUpdate,
+  StageSummary,
+  StageSummaryInput,
   WorkflowTemplate,
   WorkflowTemplateInput,
   WorkflowTemplateUpdate,
@@ -44,6 +46,8 @@ import type {
   WorkroomConfigUpdate,
   WorkroomDetail,
   WorkroomInput,
+  WorkroomMetrics,
+  WorkroomMetricsInput,
   WorkroomStage,
   WorkroomStageUpdate,
   WorkroomTask,
@@ -1684,6 +1688,311 @@ export const useDeleteTask = <TError = ErrorType<unknown>,
       return useMutation(getDeleteTaskMutationOptions(options));
     }
 
+export const getGetStageSummaryUrl = (workroomId: number,
+    stageId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/stages/${stageId}/summary`
+}
+
+/**
+ * @summary Get structured summary for a stage
+ */
+export const getStageSummary = async (workroomId: number,
+    stageId: number, options?: RequestInit): Promise<StageSummary> => {
+
+  return customFetch<StageSummary>(getGetStageSummaryUrl(workroomId,stageId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStageSummaryQueryKey = (workroomId: number,
+    stageId: number,) => {
+    return [
+    `/api/workrooms/${workroomId}/stages/${stageId}/summary`
+    ] as const;
+    }
+
+
+export const getGetStageSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getStageSummary>>, TError = ErrorType<void>>(workroomId: number,
+    stageId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStageSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStageSummaryQueryKey(workroomId,stageId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStageSummary>>> = ({ signal }) => getStageSummary(workroomId,stageId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(workroomId && stageId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStageSummary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStageSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getStageSummary>>>
+export type GetStageSummaryQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get structured summary for a stage
+ */
+
+export function useGetStageSummary<TData = Awaited<ReturnType<typeof getStageSummary>>, TError = ErrorType<void>>(
+ workroomId: number,
+    stageId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStageSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStageSummaryQueryOptions(workroomId,stageId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpsertStageSummaryUrl = (workroomId: number,
+    stageId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/stages/${stageId}/summary`
+}
+
+/**
+ * @summary Create or update stage summary
+ */
+export const upsertStageSummary = async (workroomId: number,
+    stageId: number,
+    stageSummaryInput: StageSummaryInput, options?: RequestInit): Promise<StageSummary> => {
+
+  return customFetch<StageSummary>(getUpsertStageSummaryUrl(workroomId,stageId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      stageSummaryInput,)
+  }
+);}
+
+
+
+
+export const getUpsertStageSummaryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertStageSummary>>, TError,{workroomId: number;stageId: number;data: BodyType<StageSummaryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof upsertStageSummary>>, TError,{workroomId: number;stageId: number;data: BodyType<StageSummaryInput>}, TContext> => {
+
+const mutationKey = ['upsertStageSummary'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertStageSummary>>, {workroomId: number;stageId: number;data: BodyType<StageSummaryInput>}> = (props) => {
+          const {workroomId,stageId,data} = props ?? {};
+
+          return  upsertStageSummary(workroomId,stageId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpsertStageSummaryMutationResult = NonNullable<Awaited<ReturnType<typeof upsertStageSummary>>>
+    export type UpsertStageSummaryMutationBody = BodyType<StageSummaryInput>
+    export type UpsertStageSummaryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create or update stage summary
+ */
+export const useUpsertStageSummary = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertStageSummary>>, TError,{workroomId: number;stageId: number;data: BodyType<StageSummaryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof upsertStageSummary>>,
+        TError,
+        {workroomId: number;stageId: number;data: BodyType<StageSummaryInput>},
+        TContext
+      > => {
+      return useMutation(getUpsertStageSummaryMutationOptions(options));
+    }
+
+export const getListWorkroomMetricsUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/metrics`
+}
+
+/**
+ * @summary Get metrics for all stages of a workroom
+ */
+export const listWorkroomMetrics = async (workroomId: number, options?: RequestInit): Promise<WorkroomMetrics[]> => {
+
+  return customFetch<WorkroomMetrics[]>(getListWorkroomMetricsUrl(workroomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWorkroomMetricsQueryKey = (workroomId: number,) => {
+    return [
+    `/api/workrooms/${workroomId}/metrics`
+    ] as const;
+    }
+
+
+export const getListWorkroomMetricsQueryOptions = <TData = Awaited<ReturnType<typeof listWorkroomMetrics>>, TError = ErrorType<unknown>>(workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkroomMetrics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorkroomMetricsQueryKey(workroomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkroomMetrics>>> = ({ signal }) => listWorkroomMetrics(workroomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(workroomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkroomMetrics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWorkroomMetricsQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkroomMetrics>>>
+export type ListWorkroomMetricsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get metrics for all stages of a workroom
+ */
+
+export function useListWorkroomMetrics<TData = Awaited<ReturnType<typeof listWorkroomMetrics>>, TError = ErrorType<unknown>>(
+ workroomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkroomMetrics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWorkroomMetricsQueryOptions(workroomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpsertWorkroomMetricsUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/metrics`
+}
+
+/**
+ * @summary Create or update metrics for a stage
+ */
+export const upsertWorkroomMetrics = async (workroomId: number,
+    workroomMetricsInput: WorkroomMetricsInput, options?: RequestInit): Promise<WorkroomMetrics> => {
+
+  return customFetch<WorkroomMetrics>(getUpsertWorkroomMetricsUrl(workroomId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      workroomMetricsInput,)
+  }
+);}
+
+
+
+
+export const getUpsertWorkroomMetricsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertWorkroomMetrics>>, TError,{workroomId: number;data: BodyType<WorkroomMetricsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof upsertWorkroomMetrics>>, TError,{workroomId: number;data: BodyType<WorkroomMetricsInput>}, TContext> => {
+
+const mutationKey = ['upsertWorkroomMetrics'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertWorkroomMetrics>>, {workroomId: number;data: BodyType<WorkroomMetricsInput>}> = (props) => {
+          const {workroomId,data} = props ?? {};
+
+          return  upsertWorkroomMetrics(workroomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpsertWorkroomMetricsMutationResult = NonNullable<Awaited<ReturnType<typeof upsertWorkroomMetrics>>>
+    export type UpsertWorkroomMetricsMutationBody = BodyType<WorkroomMetricsInput>
+    export type UpsertWorkroomMetricsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create or update metrics for a stage
+ */
+export const useUpsertWorkroomMetrics = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertWorkroomMetrics>>, TError,{workroomId: number;data: BodyType<WorkroomMetricsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof upsertWorkroomMetrics>>,
+        TError,
+        {workroomId: number;data: BodyType<WorkroomMetricsInput>},
+        TContext
+      > => {
+      return useMutation(getUpsertWorkroomMetricsMutationOptions(options));
+    }
+
 export const getListWorkroomActivityUrl = (workroomId: number,) => {
 
 
@@ -2793,6 +3102,78 @@ export const useUpdateWorkroomBrain = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateWorkroomBrainMutationOptions(options));
+    }
+
+export const getSummarizeWorkroomUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/summarize`
+}
+
+/**
+ * Streams an AI-generated executive summary (progress, decisions, next steps) as Server-Sent Events. Each event is `data: {"content":"..."}` and the final event is `data: {"done":true}`.
+
+ * @summary Generate an AI executive summary for a workroom (SSE streaming)
+ */
+export const summarizeWorkroom = async (workroomId: number, options?: RequestInit): Promise<string> => {
+
+  return customFetch<string>(getSummarizeWorkroomUrl(workroomId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSummarizeWorkroomMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof summarizeWorkroom>>, TError,{workroomId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof summarizeWorkroom>>, TError,{workroomId: number}, TContext> => {
+
+const mutationKey = ['summarizeWorkroom'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof summarizeWorkroom>>, {workroomId: number}> = (props) => {
+          const {workroomId} = props ?? {};
+
+          return  summarizeWorkroom(workroomId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SummarizeWorkroomMutationResult = NonNullable<Awaited<ReturnType<typeof summarizeWorkroom>>>
+
+    export type SummarizeWorkroomMutationError = ErrorType<void>
+
+    /**
+ * @summary Generate an AI executive summary for a workroom (SSE streaming)
+ */
+export const useSummarizeWorkroom = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof summarizeWorkroom>>, TError,{workroomId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof summarizeWorkroom>>,
+        TError,
+        {workroomId: number},
+        TContext
+      > => {
+      return useMutation(getSummarizeWorkroomMutationOptions(options));
     }
 
 export const getGetWorkroomConfigUrl = (workroomId: number,) => {

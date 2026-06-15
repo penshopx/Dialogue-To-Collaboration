@@ -16,4 +16,6 @@ export interface WorkroomTaskInput {
   priority?: string;
   status?: string;
   output?: string;
+  confidenceScore?: number;
+  escalationReason?: string;
 }

@@ -1,0 +1,66 @@
+Lanjutkan aplikasi "Gustafta Collaboration Builder". Kita akan membangun LAPISAN ORKESTRASI KOLABORASI (Fase Kolaborasi). 
+Konteks: Aplikasi sudah punya engine generik (App_Types, Workrooms, Tasks, Documents) dan modul Konstruksi (Tender/Proyek). Sekarang kita tambahkan lapisan di mana user bisa merakit "Tim Agen + Workflow + Human Gate" melalui Wizard 6 Form.
+
+JANGAN hapus tabel/fungsi lama. Tambahkan skema dan fitur baru berikut:
+
+=== 1. SKEMA DATABASE BARU (Tambahkan persis seperti ini) ===
+Buat tabel-tabel berikut di PostgreSQL:
+- agents_registry (id, nama_agen, slug, kategori, tipe, fungsi_peran, domain, is_core_team, aktif)
+- workroom_templates (id, nama_template, sektor, deskripsi, output_akhir, mode, complexity_score, aktif)
+- template_roles (id, template_id, nama_peran, fungsi_peran, agent_id, urutan)
+- workflow_stages (id, template_id, urutan, nama_tahap, tipe_tahap [kerja/gate], pola_operan, gate_criteria, exit_criteria)
+- collaborations (id, judul, template_id, branch_id, company_id, pemilik_user_id, status, tahap_aktif_id, mode, risk_level, human_touch_points, created_at)
+- collaboration_roles (id, collaboration_id, nama_peran, fungsi_peran, agent_id, human_user_id, is_pic)
+- gates (id, collaboration_id, stage_id, nama_gate, gate_type, status, keputusan_oleh_user_id, catatan_keputusan, waktu_keputusan, resolution_rule, auto_reject_conditions, required_evidence)
+- decision_logs (id, collaboration_id, gate_id, aktor, tipe_aksi, ringkasan, timestamp)
+- stage_summaries (id, collaboration_id, stage_id, ringkasan_eksekutif, keputusan_utama, asumsi_kunci, risiko_diterima, created_at)
+- deliverables (id, collaboration_id, nama_artefak, tipe, isi_atau_link, versi, disetujui, created_at)
+- collaboration_metrics (id, collaboration_id, stage_id, started_at, completed_at, decision_latency_hours, rework_count, time_saved_hours)
+
+Tambahkan field baru di tabel `tasks` yang sudah ada: `confidence_score` (int), `escalation_reason` (text), `dependencies` (array of UUID).
+
+=== 2. WIZARD 6 FORM (UI Builder) ===
+Buat halaman baru "/collaboration-wizard" dengan navigasi sidebar 6 langkah (non-linear, bisa bolak-balik):
+1. Spec: Input judul, tujuan, KPI, deadline, risiko.
+2. Team: Tampilkan Role Library (dari agents_registry). User bisa pilih Template atau drag-and-drop peran manual. Validasi: wajib ada Strategis, Skeptis, Eksekutor.
+3. Workflow: Tampilkan pipeline visual. User pilih pola_operan per tahap.
+4. Gates: Checklist untuk menentukan tahap mana yang jadi 'tipe_tahap=gate'. Pilih PIC.
+5. Logging: Toggle switch untuk Decision Log dan Evidence.
+6. Deliverables: Pilih format output akhir.
+Di setiap langkah, simpan state ke local storage/Redux. Di langkah terakhir, tombol "Generate Workroom" akan memanggil fungsi di bawah.
+
+=== 3. ENGINE INTI (Backend Logic) ===
+Buat fungsi `createCollaborationFromTemplate(template_id, form_data)`:
+1. Buat record di `collaborations`.
+2. Clone `template_roles` ke `collaboration_roles`.
+3. Clone `workflow_stages` ke state workroom.
+4. Set status = 'intake', tahap_aktif_id = tahap pertama.
+5. Buat Decision Log awal: "Workroom dibuat oleh [User]".
+
+Buat fungsi `processStageCompletion(collaboration_id, stage_id)`:
+1. Cek semua tasks di stage_id. Jika semua 'selesai', pindah ke tahap berikutnya.
+2. Jika tahap berikutnya adalah `tipe_tahap=gate`:
+   - Set status collaboration = 'menunggu_gate'.
+   - Buat record di `gates` (status='terbuka').
+   - Kunci progress (tasks di tahap setelahnya tidak bisa diedit).
+3. Jika user (PIC) menekan tombol "Setujui" di Gate:
+   - Update `gates` status = 'disetujui'.
+   - Tulis `decision_logs`.
+   - Buat `stage_summaries` (ringkasan otomatis).
+   - Set status collaboration = 'berjalan', lanjut ke tahap berikutnya.
+
+=== 4. HALAMAN WORKROOM KOLABORASI (UI) ===
+Buat halaman detail "/collaboration/:id" dengan tab:
+- Overview: Status, Progress Pipeline, Risk Level.
+- Board: Kanban tasks (filter by stage).
+- Gates (◆): Panel khusus yang hanya muncul jika status='menunggu_gate'. Tampilkan tombol Setujui/Tolak/Revisi HANYA untuk user yang is_pic=true. Tampilkan required_evidence.
+- Decision Log: Timeline read-only yang mencatat semua aksi.
+- Deliverables: Pack Compiler. Kumpulkan output tasks yang disetujui.
+
+=== 5. SEED DATA (Wajib) ===
+Jalankan script seed untuk mengisi:
+1. `agents_registry`: Masukkan ~20 agen inti (Strategis, Skeptis, Eksekutor, QSClaw, KontrakClaw, OSSClaw, K3ManClaw, ISOClaw, ASKOM AI, dll). Set `is_core_team = true`.
+2. `workroom_templates`: Masukkan 5 template starter (Tender Sipil, Verifikasi LSBU, Audit ISO, Pengadaan Vendor, Rekrutmen SKK).
+3. `template_roles` & `workflow_stages`: Isi lengkap untuk ke-5 template tersebut sesuai blueprint.
+
+Pastikan semua tabel terhubung dengan foreign key yang benar. Gunakan Row Level Security (RLS) di Supabase/PostgreSQL untuk membatasi akses data per branch_id dan user role seperti fase sebelumnya.

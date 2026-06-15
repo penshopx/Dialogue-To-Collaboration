@@ -14,4 +14,6 @@ export interface WorkroomTaskUpdate {
   priority?: string;
   status?: string;
   output?: string;
+  confidenceScore?: number;
+  escalationReason?: string;
 }

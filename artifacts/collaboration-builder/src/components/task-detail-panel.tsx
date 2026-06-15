@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import {
   Brain, Shield, Wrench, Star, FileText, CheckSquare, Bot,
-  Loader2, Save, Trash2, X, Sparkles, Copy, Check,
+  Loader2, Save, Trash2, X, Sparkles, Copy, Check, AlertTriangle, TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,6 +39,8 @@ interface Task {
   status: string;
   output?: string | null;
   stageId: number;
+  confidenceScore?: number | null;
+  escalationReason?: string | null;
 }
 
 interface Props {
@@ -57,10 +59,18 @@ export function TaskDetailPanel({ task, workroomId, workroomName, stageName, obj
   const [role, setRole] = useState(task.assigneeRole ?? "eksekutor");
   const [priority, setPriority] = useState(task.priority);
   const [output, setOutput] = useState(task.output ?? "");
+  const [confidenceScore, setConfidenceScore] = useState<number | null>(task.confidenceScore ?? null);
+  const [escalationReason, setEscalationReason] = useState(task.escalationReason ?? "");
   const [streaming, setStreaming] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  const isEscalated = confidenceScore !== null && confidenceScore < 70;
+  const confidenceColor = confidenceScore === null ? "text-muted-foreground"
+    : confidenceScore >= 80 ? "text-green-400"
+    : confidenceScore >= 70 ? "text-amber-400"
+    : "text-red-400";
 
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -81,6 +91,8 @@ export function TaskDetailPanel({ task, workroomId, workroomName, stageName, obj
           assigneeRole: role,
           priority,
           output: output || undefined,
+          confidenceScore: confidenceScore ?? undefined,
+          escalationReason: escalationReason.trim() || undefined,
         } as Parameters<typeof updateTask.mutateAsync>[0]["data"],
       },
       {
@@ -266,7 +278,45 @@ export function TaskDetailPanel({ task, workroomId, workroomName, stageName, obj
             </SelectContent>
           </Select>
         </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs flex items-center gap-1">
+            <TrendingUp className="w-3 h-3" /> Confidence Score
+          </Label>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={confidenceScore ?? ""}
+              onChange={e => setConfidenceScore(e.target.value === "" ? null : Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+              className={cn("h-8 text-xs w-24 font-mono", confidenceColor)}
+              placeholder="0–100"
+            />
+            {confidenceScore !== null && (
+              <span className={cn("text-xs font-semibold tabular-nums", confidenceColor)}>
+                {confidenceScore}%
+              </span>
+            )}
+          </div>
+        </div>
       </div>
+
+      {isEscalated && (
+        <div className="rounded-md border border-red-500/30 bg-red-500/5 p-3 space-y-1.5">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-red-400">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Eskalasi Aktif — Confidence &lt; 70%
+          </div>
+          <Textarea
+            rows={2}
+            value={escalationReason}
+            onChange={e => setEscalationReason(e.target.value)}
+            className="text-xs resize-none border-red-500/20"
+            placeholder="Jelaskan alasan eskalasi (opsional)…"
+          />
+        </div>
+      )}
 
       <div className="flex justify-end">
         <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" disabled={saving} onClick={saveAll}>

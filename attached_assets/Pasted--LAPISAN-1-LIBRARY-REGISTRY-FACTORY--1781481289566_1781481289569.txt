@@ -1,0 +1,160 @@
+-- ==========================================
+-- LAPISAN 1: LIBRARY & REGISTRY (FACTORY)
+-- ==========================================
+
+-- 1. Agents_Registry (Kartu Peran / Role Library)
+CREATE TABLE agents_registry (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nama_agen TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  kategori TEXT NOT NULL, -- 'Tender', 'Teknik', 'K3', 'Sertifikasi', 'Manajerial'
+  tipe TEXT NOT NULL, -- 'dialog', 'spesialis', 'multi_agen'
+  fungsi_peran TEXT NOT NULL, -- 'strategis', 'skeptis', 'eksekutor', 'narasumber', 'pack_compiler'
+  domain TEXT, -- 'Konstruksi Sipil', 'ISO 9001', 'LSP'
+  input_dibutuhkan TEXT,
+  output_dihasilkan TEXT,
+  is_core_team BOOLEAN DEFAULT FALSE, -- TRUE = gratis, FALSE = premium/add-on
+  aktif BOOLEAN DEFAULT TRUE
+);
+
+-- 2. Workroom_Templates (Cetakan Aplikasi)
+CREATE TABLE workroom_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nama_template TEXT NOT NULL,
+  sektor TEXT NOT NULL,
+  deskripsi TEXT,
+  output_akhir TEXT,
+  mode TEXT NOT NULL, -- 'profesional', 'organisasi'
+  complexity_score INT DEFAULT 3, -- 1-5
+  aktif BOOLEAN DEFAULT TRUE
+);
+
+-- 3. Template_Roles (Komposisi Tim per Template)
+CREATE TABLE template_roles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id UUID REFERENCES workroom_templates(id),
+  nama_peran TEXT NOT NULL,
+  fungsi_peran TEXT NOT NULL,
+  agent_id UUID REFERENCES agents_registry(id),
+  urutan INT
+);
+
+-- 4. Workflow_Stages (Pipeline Baku)
+CREATE TABLE workflow_stages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id UUID REFERENCES workroom_templates(id),
+  urutan INT NOT NULL,
+  nama_tahap TEXT NOT NULL, -- 'Intake', 'Framing', 'Skeptic Gate', 'Delivery', 'QA Gate'
+  tipe_tahap TEXT NOT NULL, -- 'kerja', 'gate'
+  pola_operan TEXT NOT NULL, -- 'ai_first_review', 'human_first_assist', 'paralel', 'agen_ke_agen_gate'
+  gate_criteria TEXT, -- Kriteria kapan gate wajib muncul
+  exit_criteria TEXT -- Definition of Done untuk tahap ini
+);
+
+-- ==========================================
+-- LAPISAN 2: ORKESTRASI & EKSEKUSI (RUNTIME)
+-- ==========================================
+
+-- 5. Collaborations (Instance Workroom Aktif)
+CREATE TABLE collaborations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  judul TEXT NOT NULL,
+  template_id UUID REFERENCES workroom_templates(id),
+  branch_id UUID REFERENCES branches(id),
+  company_id UUID REFERENCES companies(id),
+  pemilik_user_id UUID REFERENCES users(id),
+  status TEXT NOT NULL, -- 'intake', 'berjalan', 'menunggu_gate', 'selesai', 'dibatalkan'
+  tahap_aktif_id UUID REFERENCES workflow_stages(id),
+  mode TEXT NOT NULL,
+  risk_level TEXT DEFAULT 'medium', -- 'low', 'medium', 'high'
+  human_touch_points INT DEFAULT 0, -- Berapa kali manusia intervene
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 6. Collaboration_Roles (Tim Aktif di Workroom)
+CREATE TABLE collaboration_roles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  collaboration_id UUID REFERENCES collaborations(id),
+  nama_peran TEXT NOT NULL,
+  fungsi_peran TEXT NOT NULL,
+  agent_id UUID REFERENCES agents_registry(id),
+  human_user_id UUID REFERENCES users(id),
+  is_pic BOOLEAN DEFAULT FALSE
+);
+
+-- 7. Tasks (Diperluas untuk Kolaborasi)
+CREATE TABLE tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  collaboration_id UUID REFERENCES collaborations(id),
+  stage_id UUID REFERENCES workflow_stages(id),
+  judul TEXT NOT NULL,
+  penanggung_jawab_role_id UUID REFERENCES collaboration_roles(id),
+  status TEXT NOT NULL, -- 'to_do', 'berjalan', 'menunggu_review', 'selesai', 'diblokir'
+  input_brief TEXT,
+  output_hasil TEXT,
+  confidence_score INT, -- 0-100 (Auto-generated oleh agen)
+  escalation_reason TEXT, -- Jika confidence < 70%
+  dependencies UUID[], -- ID task lain yang harus selesai dulu
+  urutan INT
+);
+
+-- 8. Gates (Gerbang Manusia ◆ - Inti Governance)
+CREATE TABLE gates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  collaboration_id UUID REFERENCES collaborations(id),
+  stage_id UUID REFERENCES workflow_stages(id),
+  nama_gate TEXT NOT NULL, -- 'Skeptic Gate', 'QA Gate', 'Approval Gate'
+  gate_type TEXT NOT NULL, -- 'skeptic', 'qa', 'approval', 'compliance'
+  status TEXT NOT NULL, -- 'terbuka', 'disetujui', 'ditolak', 'revisi'
+  keputusan_oleh_user_id UUID REFERENCES users(id),
+  catatan_keputusan TEXT,
+  waktu_keputusan TIMESTAMP,
+  resolution_rule TEXT DEFAULT 'human_override', -- Aturan jika agen konflik
+  auto_reject_conditions TEXT[], -- Kondisi yang otomatis menolak
+  required_evidence TEXT[] -- Bukti yang wajib ada sebelum gate
+);
+
+-- 9. Decision_Log & Stage_Summaries (Jejak & Ringkasan)
+CREATE TABLE decision_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  collaboration_id UUID REFERENCES collaborations(id),
+  gate_id UUID REFERENCES gates(id),
+  aktor TEXT NOT NULL, -- Nama user atau agen
+  tipe_aksi TEXT NOT NULL, -- 'usulan', 'tantangan_skeptis', 'keputusan_gate', 'revisi', 'rilis'
+  ringkasan TEXT NOT NULL,
+  timestamp TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE stage_summaries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  collaboration_id UUID REFERENCES collaborations(id),
+  stage_id UUID REFERENCES workflow_stages(id),
+  ringkasan_eksekutif TEXT,
+  keputusan_utama TEXT,
+  asumsi_kunci TEXT,
+  risiko_diterima TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 10. Deliverables & Metrics (Pack Compiler & KPI)
+CREATE TABLE deliverables (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  collaboration_id UUID REFERENCES collaborations(id),
+  nama_artefak TEXT NOT NULL,
+  tipe TEXT NOT NULL, -- 'dokumen', 'risk_register', 'laporan', 'checklist'
+  isi_atau_link TEXT,
+  versi INT DEFAULT 1,
+  disetujui BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE collaboration_metrics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  collaboration_id UUID REFERENCES collaborations(id),
+  stage_id UUID REFERENCES workflow_stages(id),
+  started_at TIMESTAMP,
+  completed_at TIMESTAMP,
+  decision_latency_hours INT, -- Waktu dari masalah ke keputusan
+  rework_count INT DEFAULT 0, -- Berapa kali revisi di gate
+  time_saved_hours INT -- Estimasi waktu dihemat vs cara manual
+);

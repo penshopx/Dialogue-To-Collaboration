@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import {
   db,
   workroomsTable,
@@ -7,6 +7,12 @@ import {
   workroomStagesTable,
   workroomTasksTable,
   activityLogsTable,
+  stageSummariesTable,
+  workroomMetricsTable,
+  knowledgeBaseItems,
+  deliverablesTable,
+  workroomBrainTable,
+  workroomConfigTable,
 } from "@workspace/db";
 import {
   GetWorkroomParams,
@@ -26,6 +32,31 @@ import {
   ListWorkroomActivityParams,
   AddWorkroomActivityParams,
   AddWorkroomActivityBody,
+  GetStageSummaryParams,
+  UpsertStageSummaryParams,
+  UpsertStageSummaryBody,
+  ListWorkroomMetricsParams,
+  UpsertWorkroomMetricsParams,
+  UpsertWorkroomMetricsBody,
+  ListKnowledgeItemsParams,
+  CreateKnowledgeItemParams,
+  CreateKnowledgeItemBody,
+  UpdateKnowledgeItemParams,
+  UpdateKnowledgeItemBody,
+  DeleteKnowledgeItemParams,
+  ListDeliverablesParams,
+  CreateDeliverableParams,
+  CreateDeliverableBody,
+  UpdateDeliverableParams,
+  UpdateDeliverableBody,
+  DeleteDeliverableParams,
+  GetWorkroomBrainParams,
+  UpdateWorkroomBrainParams,
+  UpdateWorkroomBrainBody,
+  SummarizeWorkroomParams,
+  GetWorkroomConfigParams,
+  UpdateWorkroomConfigParams,
+  UpdateWorkroomConfigBody,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -450,6 +481,342 @@ router.post("/workrooms/:workroomId/activity", async (req, res): Promise<void> =
     .returning();
 
   res.status(201).json(log);
+});
+
+// ── Stage Summary ─────────────────────────────────────────────────────────────
+
+router.get("/workrooms/:workroomId/stages/:stageId/summary", async (req, res): Promise<void> => {
+  const params = GetStageSummaryParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [summary] = await db
+    .select()
+    .from(stageSummariesTable)
+    .where(and(
+      eq(stageSummariesTable.workroomId, params.data.workroomId),
+      eq(stageSummariesTable.stageId, params.data.stageId)
+    ));
+
+  if (!summary) {
+    res.status(404).json({ error: "Summary not found" });
+    return;
+  }
+
+  res.json(summary);
+});
+
+router.put("/workrooms/:workroomId/stages/:stageId/summary", async (req, res): Promise<void> => {
+  const params = UpsertStageSummaryParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const parsed = UpsertStageSummaryBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(stageSummariesTable)
+    .where(and(
+      eq(stageSummariesTable.workroomId, params.data.workroomId),
+      eq(stageSummariesTable.stageId, params.data.stageId)
+    ));
+
+  let summary;
+  if (existing) {
+    [summary] = await db
+      .update(stageSummariesTable)
+      .set({ ...parsed.data, updatedAt: new Date() })
+      .where(eq(stageSummariesTable.id, existing.id))
+      .returning();
+  } else {
+    [summary] = await db
+      .insert(stageSummariesTable)
+      .values({
+        workroomId: params.data.workroomId,
+        stageId: params.data.stageId,
+        ...parsed.data,
+      })
+      .returning();
+  }
+
+  res.json(summary);
+});
+
+// ── Workroom Metrics ──────────────────────────────────────────────────────────
+
+router.get("/workrooms/:workroomId/metrics", async (req, res): Promise<void> => {
+  const params = ListWorkroomMetricsParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const metrics = await db
+    .select()
+    .from(workroomMetricsTable)
+    .where(eq(workroomMetricsTable.workroomId, params.data.workroomId))
+    .orderBy(workroomMetricsTable.stageId);
+
+  res.json(metrics);
+});
+
+router.put("/workrooms/:workroomId/metrics", async (req, res): Promise<void> => {
+  const params = UpsertWorkroomMetricsParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const parsed = UpsertWorkroomMetricsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const stageId = (parsed.data as Record<string, unknown>).stageId as number | undefined;
+  if (!stageId) {
+    res.status(400).json({ error: "stageId required" });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(workroomMetricsTable)
+    .where(and(
+      eq(workroomMetricsTable.workroomId, params.data.workroomId),
+      eq(workroomMetricsTable.stageId, stageId)
+    ));
+
+  const metricsData = {
+    ...parsed.data,
+    startedAt: parsed.data.startedAt ? new Date(parsed.data.startedAt) : undefined,
+    completedAt: parsed.data.completedAt ? new Date(parsed.data.completedAt) : undefined,
+  };
+
+  let metrics;
+  if (existing) {
+    [metrics] = await db
+      .update(workroomMetricsTable)
+      .set({ ...metricsData, updatedAt: new Date() })
+      .where(eq(workroomMetricsTable.id, existing.id))
+      .returning();
+  } else {
+    [metrics] = await db
+      .insert(workroomMetricsTable)
+      .values({
+        workroomId: params.data.workroomId,
+        stageId,
+        ...metricsData,
+      })
+      .returning();
+  }
+
+  res.json(metrics);
+});
+
+// ── Knowledge Base ────────────────────────────────────────────────────────────
+
+router.get("/workrooms/:workroomId/knowledge", async (req, res): Promise<void> => {
+  const params = ListKnowledgeItemsParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const items = await db.select().from(knowledgeBaseItems)
+    .where(eq(knowledgeBaseItems.workroomId, params.data.workroomId))
+    .orderBy(desc(knowledgeBaseItems.createdAt));
+  res.json(items);
+});
+
+router.post("/workrooms/:workroomId/knowledge", async (req, res): Promise<void> => {
+  const pathParams = CreateKnowledgeItemParams.safeParse(req.params);
+  if (!pathParams.success) { res.status(400).json({ error: pathParams.error.message }); return; }
+  const parsed = CreateKnowledgeItemBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const [item] = await db.insert(knowledgeBaseItems)
+    .values({ ...parsed.data, workroomId: pathParams.data.workroomId })
+    .returning();
+  res.status(201).json(item);
+});
+
+router.patch("/knowledge/:id", async (req, res): Promise<void> => {
+  const params = UpdateKnowledgeItemParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const parsed = UpdateKnowledgeItemBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const [item] = await db.update(knowledgeBaseItems).set(parsed.data)
+    .where(eq(knowledgeBaseItems.id, params.data.id)).returning();
+  if (!item) { res.status(404).json({ error: "Item not found" }); return; }
+  res.json(item);
+});
+
+router.delete("/knowledge/:id", async (req, res): Promise<void> => {
+  const params = DeleteKnowledgeItemParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  await db.delete(knowledgeBaseItems).where(eq(knowledgeBaseItems.id, params.data.id));
+  res.sendStatus(204);
+});
+
+// ── Deliverables ──────────────────────────────────────────────────────────────
+
+router.get("/workrooms/:workroomId/deliverables", async (req, res): Promise<void> => {
+  const params = ListDeliverablesParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const items = await db.select().from(deliverablesTable)
+    .where(eq(deliverablesTable.workroomId, params.data.workroomId))
+    .orderBy(desc(deliverablesTable.createdAt));
+  res.json(items);
+});
+
+router.post("/workrooms/:workroomId/deliverables", async (req, res): Promise<void> => {
+  const pathParams = CreateDeliverableParams.safeParse(req.params);
+  if (!pathParams.success) { res.status(400).json({ error: pathParams.error.message }); return; }
+  const parsed = CreateDeliverableBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const [item] = await db.insert(deliverablesTable)
+    .values({ ...parsed.data, workroomId: pathParams.data.workroomId })
+    .returning();
+  res.status(201).json(item);
+});
+
+router.patch("/deliverables/:id", async (req, res): Promise<void> => {
+  const params = UpdateDeliverableParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const parsed = UpdateDeliverableBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const [item] = await db.update(deliverablesTable).set({ ...parsed.data, updatedAt: new Date() })
+    .where(eq(deliverablesTable.id, params.data.id)).returning();
+  if (!item) { res.status(404).json({ error: "Deliverable not found" }); return; }
+  res.json(item);
+});
+
+router.delete("/deliverables/:id", async (req, res): Promise<void> => {
+  const params = DeleteDeliverableParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  await db.delete(deliverablesTable).where(eq(deliverablesTable.id, params.data.id));
+  res.sendStatus(204);
+});
+
+// ── Project Brain ─────────────────────────────────────────────────────────────
+
+router.get("/workrooms/:workroomId/brain", async (req, res): Promise<void> => {
+  const params = GetWorkroomBrainParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const [brain] = await db.select().from(workroomBrainTable)
+    .where(eq(workroomBrainTable.workroomId, params.data.workroomId));
+  if (!brain) {
+    const [created] = await db.insert(workroomBrainTable)
+      .values({ workroomId: params.data.workroomId }).returning();
+    res.json(created);
+    return;
+  }
+  res.json(brain);
+});
+
+router.patch("/workrooms/:workroomId/brain", async (req, res): Promise<void> => {
+  const params = UpdateWorkroomBrainParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const parsed = UpdateWorkroomBrainBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const [existing] = await db.select().from(workroomBrainTable)
+    .where(eq(workroomBrainTable.workroomId, params.data.workroomId));
+  let brain;
+  if (existing) {
+    [brain] = await db.update(workroomBrainTable).set({ ...parsed.data, updatedAt: new Date() })
+      .where(eq(workroomBrainTable.workroomId, params.data.workroomId)).returning();
+  } else {
+    [brain] = await db.insert(workroomBrainTable)
+      .values({ workroomId: params.data.workroomId, ...parsed.data }).returning();
+  }
+  res.json(brain);
+});
+
+// ── Workroom AI Summary (SSE) ─────────────────────────────────────────────────
+
+router.post("/workrooms/:workroomId/summarize", async (req, res): Promise<void> => {
+  const params = SummarizeWorkroomParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+
+  const [workroom] = await db.select().from(workroomsTable)
+    .where(eq(workroomsTable.id, params.data.workroomId));
+  if (!workroom) { res.status(404).json({ error: "Workroom not found" }); return; }
+
+  const stages = await db.select().from(workroomStagesTable)
+    .where(eq(workroomStagesTable.workroomId, params.data.workroomId))
+    .orderBy(workroomStagesTable.order);
+
+  const tasks = await db.select().from(workroomTasksTable)
+    .where(eq(workroomTasksTable.workroomId, params.data.workroomId));
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const stagesSummary = stages.map((s) => `${s.order}. ${s.name} [${s.status}]`).join(", ");
+  const doneTasks = tasks.filter((t) => t.status === "done").length;
+  const totalTasks = tasks.length;
+  const escalated = tasks.filter((t) => t.escalationReason).length;
+
+  const summaryLines = [
+    `## Ringkasan Eksekutif: ${workroom.name}\n`,
+    `**Tujuan:** ${workroom.objective ?? "Belum ditetapkan"}\n\n`,
+    `**Status Pipeline:** ${workroom.currentStageName} (${workroom.progress}% selesai)\n`,
+    `**Tahapan:** ${stagesSummary}\n\n`,
+    `**Progres Tugas:** ${doneTasks}/${totalTasks} tugas selesai`,
+    escalated > 0 ? ` · ${escalated} eskalasi aktif` : "",
+    `\n\n`,
+    `**Keputusan Utama:**\n`,
+    stages.filter((s) => s.gateDecision).map((s) => `- ${s.name}: ${s.gateDecision}${s.gateNote ? ` — ${s.gateNote}` : ""}`).join("\n") || "- Belum ada keputusan gate\n",
+    `\n\n**Langkah Berikutnya:** Lanjutkan ke ${workroom.currentStageName} dan selesaikan semua tugas yang pending.\n`,
+  ];
+
+  for (const chunk of summaryLines) {
+    if (chunk) {
+      res.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
+      await new Promise((r) => setTimeout(r, 40));
+    }
+  }
+  res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+  res.end();
+});
+
+// ── Workroom Config ───────────────────────────────────────────────────────────
+
+router.get("/workrooms/:workroomId/config", async (req, res): Promise<void> => {
+  const params = GetWorkroomConfigParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const [config] = await db.select().from(workroomConfigTable)
+    .where(eq(workroomConfigTable.workroomId, params.data.workroomId));
+  if (!config) {
+    const [created] = await db.insert(workroomConfigTable)
+      .values({ workroomId: params.data.workroomId }).returning();
+    res.json(created);
+    return;
+  }
+  res.json(config);
+});
+
+router.patch("/workrooms/:workroomId/config", async (req, res): Promise<void> => {
+  const params = UpdateWorkroomConfigParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const parsed = UpdateWorkroomConfigBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const [existing] = await db.select().from(workroomConfigTable)
+    .where(eq(workroomConfigTable.workroomId, params.data.workroomId));
+  let config;
+  if (existing) {
+    [config] = await db.update(workroomConfigTable).set({ ...parsed.data, updatedAt: new Date() })
+      .where(eq(workroomConfigTable.workroomId, params.data.workroomId)).returning();
+  } else {
+    [config] = await db.insert(workroomConfigTable)
+      .values({ workroomId: params.data.workroomId, ...parsed.data }).returning();
+  }
+  res.json(config);
 });
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────

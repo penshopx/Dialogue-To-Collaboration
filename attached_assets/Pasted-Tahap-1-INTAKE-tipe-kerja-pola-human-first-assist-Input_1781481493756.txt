@@ -1,0 +1,78 @@
+Tahap 1: INTAKE (tipe: kerja, pola: human_first_assist)
+- Input: Dokumen tender (RKS, Gambar, BOQ)
+- Tasks: 
+  * Upload & kategorisasi dokumen
+  * Ekstrak informasi kunci (deadline, nilai, syarat kualifikasi)
+- Output: Tender Brief 1 halaman
+
+Tahap 2: FRAMING (tipe: kerja, pola: ai_first_review)
+- Agen: TenderaClaw (Strategis)
+- Tasks:
+  * Analisis win-rate
+  * 3 opsi strategi (agresif/moderat/konservatif)
+  * Identifikasi cost driver utama
+- Output: Bid Strategy Memo
+
+Tahap 3: ◆ SKEPTIC GATE (tipe: gate)
+- Agen: SkeptisClaw
+- Checklist gate:
+  ✓ Apakah kualifikasi kita memenuhi?
+  ✓ Apakah margin realistis?
+  ✓ Apakah risiko sudah teridentifikasi?
+  ✓ Apakah timeline feasible?
+- Keputusan: Lanjut / Revisi / No-Go
+- Output: Risk Register v1 + Go/No-Go Decision
+
+Tahap 4: ESTIMASI & RAB (tipe: kerja, pola: multiclaw)
+- Agen: QSClaw + Kalkulator RAB
+- Tasks (paralel):
+  * Take-off volume
+  * Analisa harga satuan
+  * Indirect cost
+  * Contingency calculation
+- Output: RAB draft + Cost Driver Sheet + Assumption Sheet
+
+Tahap 5: DOKUMEN TEKNIS & ADMIN (tipe: kerja, pola: multiclaw)
+- Agen: 
+  * KontrakClaw (metode pelaksanaan)
+  * K3ManClaw (K3 plan)
+  * ISOClaw 9001 (mutu plan)
+  * OSSClaw (cek perizinan)
+- Tasks (paralel):
+  * Method statement
+  * Jadwal & kurva-S
+  * Dokumen kualifikasi
+  * K3 & mutu plan
+- Output: Dokumen Teknis draft + Admin checklist
+
+Tahap 6: ◆ QA GATE (tipe: gate)
+- Agen: SkeptisClaw + Human (Branch Manager)
+- Checklist gate:
+  ✓ Compliance matrix 100%
+  ✓ RAB konsisten dengan metode
+  ✓ Jadwal feasible dengan resource
+  ✓ Semua dokumen lengkap
+- Output: Final review notes
+
+Tahap 7: FINALISASI (tipe: kerja, pola: human_first_assist)
+- Agen: DocuGen (Pack Compiler)
+- Tasks:
+  * Kompilasi semua dokumen
+  * Format sesuai instruksi tender
+  * Generate submission pack
+- Output: Tender Submission Pack (PDF)
+
+Tahap 8: ◆ SUBMIT DECISION (tipe: gate)
+- Human: PJBU + Branch Manager
+- Checklist:
+  ✓ Harga final disetujui
+  ✓ Risk acceptance ditandatangani
+  ✓ Submission pack final
+- Output: Decision Log + Submit timestamp
+
+Tahap 9: RETRO (tipe: kerja)
+- Agen: SkeptisClaw
+- Tasks:
+  * Lesson learned
+  * Update template
+  * Archive as-submitted
