@@ -18,4 +18,5 @@ export interface WorkroomTaskInput {
   output?: string;
   confidenceScore?: number;
   escalationReason?: string;
+  dependencies?: number[];
 }

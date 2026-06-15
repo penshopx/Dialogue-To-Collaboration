@@ -5,10 +5,15 @@
  * Collaboration Builder API
  * OpenAPI spec version: 0.1.0
  */
+import type { WorkroomInputKpiTargets } from './workroomInputKpiTargets';
 
 export interface WorkroomInput {
   /** @minLength 1 */
   name: string;
   templateId: number;
   objective?: string;
+  /** low | medium | high */
+  riskLevel?: string;
+  deadline?: string;
+  kpiTargets?: WorkroomInputKpiTargets;
 }

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
-import { db, workflowTemplatesTable, workroomsTable, workroomStagesTable } from "@workspace/db";
+import { db, workflowTemplatesTable, workroomsTable, workroomStagesTable, templateStagesTable, templateRolesTable } from "@workspace/db";
 import {
   GetTemplateParams,
   UpdateTemplateParams,
@@ -123,6 +123,24 @@ router.delete("/templates/:id", async (req, res): Promise<void> => {
   }
 
   res.sendStatus(204);
+});
+
+router.get("/templates/:id/stages", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
+  const stages = await db.select().from(templateStagesTable)
+    .where(eq(templateStagesTable.templateId, id))
+    .orderBy(templateStagesTable.urutan);
+  res.json(stages);
+});
+
+router.get("/templates/:id/roles", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
+  const roles = await db.select().from(templateRolesTable)
+    .where(eq(templateRolesTable.templateId, id))
+    .orderBy(templateRolesTable.urutan);
+  res.json(roles);
 });
 
 export default router;

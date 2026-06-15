@@ -22,6 +22,19 @@ export interface WorkroomStage {
   /** @nullable */
   gateNote?: string | null;
   /**
+     * skeptic | qa | approval | compliance
+     * @nullable
+     */
+  gateType?: string | null;
+  /** @nullable */
+  autoRejectConditions?: string[] | null;
+  /** @nullable */
+  requiredEvidence?: string[] | null;
+  /** @nullable */
+  picName?: string | null;
+  /** @nullable */
+  responseDeadlineHours?: number | null;
+  /**
      * Stage-level notes and context captured by users
      * @nullable
      */

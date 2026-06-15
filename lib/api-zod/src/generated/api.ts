@@ -116,9 +116,23 @@ export const ListAgentsResponseItem = zod.object({
   "name": zod.string(),
   "slugUrl": zod.string(),
   "category": zod.string(),
-  "agentType": zod.string().describe('dialog | specialist | multi_agent'),
+  "agentType": zod.string().describe('dialog | spesialis | multi_agen'),
   "functionRole": zod.string().describe('strategis | skeptis | eksekutor | narasumber | pack_compiler'),
   "systemPrompt": zod.string().nullish(),
+  "domainSpesifik": zod.string().nullish(),
+  "kepribadian": zod.string().nullish(),
+  "bahasaDefault": zod.string().optional(),
+  "levelOtonomi": zod.string().optional().describe('draft_only | suggest | semi_auto'),
+  "inputDibutuhkan": zod.object({
+
+}).passthrough().nullish(),
+  "outputDihasilkan": zod.object({
+
+}).passthrough().nullish(),
+  "isCoreTeam": zod.boolean().optional(),
+  "hargaPerUse": zod.string().nullish(),
+  "ratingAkurasi": zod.string().nullish(),
+  "totalPenggunaan": zod.number().optional(),
   "active": zod.boolean(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -140,6 +154,11 @@ export const CreateAgentBody = zod.object({
   "agentType": zod.string(),
   "functionRole": zod.string(),
   "systemPrompt": zod.string().optional(),
+  "domainSpesifik": zod.string().optional(),
+  "kepribadian": zod.string().optional(),
+  "bahasaDefault": zod.string().optional(),
+  "levelOtonomi": zod.string().optional(),
+  "isCoreTeam": zod.boolean().optional(),
   "active": zod.boolean().optional()
 })
 
@@ -156,9 +175,23 @@ export const GetAgentResponse = zod.object({
   "name": zod.string(),
   "slugUrl": zod.string(),
   "category": zod.string(),
-  "agentType": zod.string().describe('dialog | specialist | multi_agent'),
+  "agentType": zod.string().describe('dialog | spesialis | multi_agen'),
   "functionRole": zod.string().describe('strategis | skeptis | eksekutor | narasumber | pack_compiler'),
   "systemPrompt": zod.string().nullish(),
+  "domainSpesifik": zod.string().nullish(),
+  "kepribadian": zod.string().nullish(),
+  "bahasaDefault": zod.string().optional(),
+  "levelOtonomi": zod.string().optional().describe('draft_only | suggest | semi_auto'),
+  "inputDibutuhkan": zod.object({
+
+}).passthrough().nullish(),
+  "outputDihasilkan": zod.object({
+
+}).passthrough().nullish(),
+  "isCoreTeam": zod.boolean().optional(),
+  "hargaPerUse": zod.string().nullish(),
+  "ratingAkurasi": zod.string().nullish(),
+  "totalPenggunaan": zod.number().optional(),
   "active": zod.boolean(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -179,6 +212,11 @@ export const UpdateAgentBody = zod.object({
   "agentType": zod.string().optional(),
   "functionRole": zod.string().optional(),
   "systemPrompt": zod.string().optional(),
+  "domainSpesifik": zod.string().optional(),
+  "kepribadian": zod.string().optional(),
+  "bahasaDefault": zod.string().optional(),
+  "levelOtonomi": zod.string().optional(),
+  "isCoreTeam": zod.boolean().optional(),
   "active": zod.boolean().optional()
 })
 
@@ -187,9 +225,23 @@ export const UpdateAgentResponse = zod.object({
   "name": zod.string(),
   "slugUrl": zod.string(),
   "category": zod.string(),
-  "agentType": zod.string().describe('dialog | specialist | multi_agent'),
+  "agentType": zod.string().describe('dialog | spesialis | multi_agen'),
   "functionRole": zod.string().describe('strategis | skeptis | eksekutor | narasumber | pack_compiler'),
   "systemPrompt": zod.string().nullish(),
+  "domainSpesifik": zod.string().nullish(),
+  "kepribadian": zod.string().nullish(),
+  "bahasaDefault": zod.string().optional(),
+  "levelOtonomi": zod.string().optional().describe('draft_only | suggest | semi_auto'),
+  "inputDibutuhkan": zod.object({
+
+}).passthrough().nullish(),
+  "outputDihasilkan": zod.object({
+
+}).passthrough().nullish(),
+  "isCoreTeam": zod.boolean().optional(),
+  "hargaPerUse": zod.string().nullish(),
+  "ratingAkurasi": zod.string().nullish(),
+  "totalPenggunaan": zod.number().optional(),
   "active": zod.boolean(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -232,7 +284,12 @@ export const ListWorkroomsResponse = zod.array(ListWorkroomsResponseItem)
 export const CreateWorkroomBody = zod.object({
   "name": zod.string().min(1),
   "templateId": zod.number(),
-  "objective": zod.string().optional()
+  "objective": zod.string().optional(),
+  "riskLevel": zod.string().optional().describe('low | medium | high'),
+  "deadline": zod.string().optional(),
+  "kpiTargets": zod.object({
+
+}).passthrough().optional()
 })
 
 
@@ -263,6 +320,11 @@ export const GetWorkroomResponse = zod.object({
   "status": zod.string().describe('pending | active | awaiting_gate | approved | rejected | completed'),
   "gateDecision": zod.string().nullish(),
   "gateNote": zod.string().nullish(),
+  "gateType": zod.string().nullish().describe('skeptic | qa | approval | compliance'),
+  "autoRejectConditions": zod.array(zod.string()).nullish(),
+  "requiredEvidence": zod.array(zod.string()).nullish(),
+  "picName": zod.string().nullish(),
+  "responseDeadlineHours": zod.number().nullish(),
   "notes": zod.string().nullish().describe('Stage-level notes and context captured by users'),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
@@ -280,6 +342,7 @@ export const GetWorkroomResponse = zod.object({
   "output": zod.string().nullish(),
   "confidenceScore": zod.number().nullish().describe('0-100, auto-generated by agent. <70 triggers escalation.'),
   "escalationReason": zod.string().nullish().describe('Reason for escalation when confidenceScore < 70'),
+  "dependencies": zod.array(zod.number()).nullish().describe('IDs of tasks that must complete before this one'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })),
@@ -298,7 +361,9 @@ export const UpdateWorkroomParams = zod.object({
 export const UpdateWorkroomBody = zod.object({
   "name": zod.string().optional(),
   "status": zod.string().optional(),
-  "objective": zod.string().optional()
+  "objective": zod.string().optional(),
+  "riskLevel": zod.string().optional(),
+  "humanTouchPoints": zod.number().optional()
 })
 
 export const UpdateWorkroomResponse = zod.object({
@@ -341,6 +406,11 @@ export const ListWorkroomStagesResponseItem = zod.object({
   "status": zod.string().describe('pending | active | awaiting_gate | approved | rejected | completed'),
   "gateDecision": zod.string().nullish(),
   "gateNote": zod.string().nullish(),
+  "gateType": zod.string().nullish().describe('skeptic | qa | approval | compliance'),
+  "autoRejectConditions": zod.array(zod.string()).nullish(),
+  "requiredEvidence": zod.array(zod.string()).nullish(),
+  "picName": zod.string().nullish(),
+  "responseDeadlineHours": zod.number().nullish(),
   "notes": zod.string().nullish().describe('Stage-level notes and context captured by users'),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
@@ -360,6 +430,11 @@ export const UpdateWorkroomStageBody = zod.object({
   "status": zod.string().optional(),
   "gateDecision": zod.string().optional(),
   "gateNote": zod.string().optional(),
+  "gateType": zod.string().optional(),
+  "autoRejectConditions": zod.array(zod.string()).optional(),
+  "requiredEvidence": zod.array(zod.string()).optional(),
+  "picName": zod.string().optional(),
+  "responseDeadlineHours": zod.number().optional(),
   "notes": zod.string().optional()
 })
 
@@ -373,6 +448,11 @@ export const UpdateWorkroomStageResponse = zod.object({
   "status": zod.string().describe('pending | active | awaiting_gate | approved | rejected | completed'),
   "gateDecision": zod.string().nullish(),
   "gateNote": zod.string().nullish(),
+  "gateType": zod.string().nullish().describe('skeptic | qa | approval | compliance'),
+  "autoRejectConditions": zod.array(zod.string()).nullish(),
+  "requiredEvidence": zod.array(zod.string()).nullish(),
+  "picName": zod.string().nullish(),
+  "responseDeadlineHours": zod.number().nullish(),
   "notes": zod.string().nullish().describe('Stage-level notes and context captured by users'),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
@@ -399,6 +479,7 @@ export const ListWorkroomTasksResponseItem = zod.object({
   "output": zod.string().nullish(),
   "confidenceScore": zod.number().nullish().describe('0-100, auto-generated by agent. <70 triggers escalation.'),
   "escalationReason": zod.string().nullish().describe('Reason for escalation when confidenceScore < 70'),
+  "dependencies": zod.array(zod.number()).nullish().describe('IDs of tasks that must complete before this one'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -425,7 +506,8 @@ export const CreateWorkroomTaskBody = zod.object({
   "status": zod.string().optional(),
   "output": zod.string().optional(),
   "confidenceScore": zod.number().optional(),
-  "escalationReason": zod.string().optional()
+  "escalationReason": zod.string().optional(),
+  "dependencies": zod.array(zod.number()).optional()
 })
 
 
@@ -445,7 +527,8 @@ export const UpdateTaskBody = zod.object({
   "status": zod.string().optional(),
   "output": zod.string().optional(),
   "confidenceScore": zod.number().optional(),
-  "escalationReason": zod.string().optional()
+  "escalationReason": zod.string().optional(),
+  "dependencies": zod.array(zod.number()).optional()
 })
 
 export const UpdateTaskResponse = zod.object({
@@ -461,6 +544,7 @@ export const UpdateTaskResponse = zod.object({
   "output": zod.string().nullish(),
   "confidenceScore": zod.number().nullish().describe('0-100, auto-generated by agent. <70 triggers escalation.'),
   "escalationReason": zod.string().nullish().describe('Reason for escalation when confidenceScore < 70'),
+  "dependencies": zod.array(zod.number()).nullish().describe('IDs of tasks that must complete before this one'),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -929,5 +1013,120 @@ export const UpdateWorkroomConfigResponse = zod.object({
   "policies": zod.string().nullish(),
   "updatedAt": zod.string()
 })
+
+
+/**
+ * @summary List exit criteria for a stage
+ */
+export const ListStageExitCriteriaParams = zod.object({
+  "workroomId": zod.coerce.number(),
+  "stageId": zod.coerce.number()
+})
+
+export const ListStageExitCriteriaResponseItem = zod.object({
+  "id": zod.number(),
+  "stageId": zod.number(),
+  "workroomId": zod.number(),
+  "criteriaText": zod.string(),
+  "isMet": zod.boolean(),
+  "verifiedBy": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListStageExitCriteriaResponse = zod.array(ListStageExitCriteriaResponseItem)
+
+
+/**
+ * @summary Create an exit criterion for a stage
+ */
+export const CreateStageExitCriteriaParams = zod.object({
+  "workroomId": zod.coerce.number(),
+  "stageId": zod.coerce.number()
+})
+
+
+
+
+export const CreateStageExitCriteriaBody = zod.object({
+  "criteriaText": zod.string().min(1)
+})
+
+
+/**
+ * @summary Update (toggle) an exit criterion
+ */
+export const UpdateStageExitCriteriaParams = zod.object({
+  "workroomId": zod.coerce.number(),
+  "stageId": zod.coerce.number(),
+  "criteriaId": zod.coerce.number()
+})
+
+export const UpdateStageExitCriteriaBody = zod.object({
+  "criteriaText": zod.string().optional(),
+  "isMet": zod.boolean().optional(),
+  "verifiedBy": zod.string().optional()
+})
+
+export const UpdateStageExitCriteriaResponse = zod.object({
+  "id": zod.number(),
+  "stageId": zod.number(),
+  "workroomId": zod.number(),
+  "criteriaText": zod.string(),
+  "isMet": zod.boolean(),
+  "verifiedBy": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete an exit criterion
+ */
+export const DeleteStageExitCriteriaParams = zod.object({
+  "workroomId": zod.coerce.number(),
+  "stageId": zod.coerce.number(),
+  "criteriaId": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get stages defined for a template
+ */
+export const ListTemplateStagesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListTemplateStagesResponseItem = zod.object({
+  "id": zod.number(),
+  "templateId": zod.number(),
+  "urutan": zod.number(),
+  "namaTahap": zod.string(),
+  "tipeTahap": zod.string().describe('kerja | gate'),
+  "polaOperan": zod.string(),
+  "gateCriteria": zod.string().nullish(),
+  "exitCriteria": zod.string().nullish(),
+  "gateType": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListTemplateStagesResponse = zod.array(ListTemplateStagesResponseItem)
+
+
+/**
+ * @summary Get roles defined for a template
+ */
+export const ListTemplateRolesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListTemplateRolesResponseItem = zod.object({
+  "id": zod.number(),
+  "templateId": zod.number(),
+  "namaPeran": zod.string(),
+  "fungsiPeran": zod.string(),
+  "agentId": zod.number().nullish(),
+  "urutan": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListTemplateRolesResponse = zod.array(ListTemplateRolesResponseItem)
 
 

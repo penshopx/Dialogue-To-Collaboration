@@ -10,5 +10,10 @@ export interface WorkroomStageUpdate {
   status?: string;
   gateDecision?: string;
   gateNote?: string;
+  gateType?: string;
+  autoRejectConditions?: string[];
+  requiredEvidence?: string[];
+  picName?: string;
+  responseDeadlineHours?: number;
   notes?: string;
 }

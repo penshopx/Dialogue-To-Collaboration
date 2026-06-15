@@ -13,6 +13,7 @@ import {
   deliverablesTable,
   workroomBrainTable,
   workroomConfigTable,
+  stageExitCriteriaTable,
 } from "@workspace/db";
 import {
   GetWorkroomParams,
@@ -899,3 +900,48 @@ router.get("/dashboard/recent-workrooms", async (_req, res): Promise<void> => {
 });
 
 export default router;
+
+// ── Stage Exit Criteria ────────────────────────────────────────────────────────
+
+router.get("/workrooms/:workroomId/stages/:stageId/exit-criteria", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  const stageId = parseInt(req.params.stageId);
+  if (isNaN(workroomId) || isNaN(stageId)) { res.status(400).json({ error: "Invalid IDs" }); return; }
+  const criteria = await db.select().from(stageExitCriteriaTable)
+    .where(and(eq(stageExitCriteriaTable.workroomId, workroomId), eq(stageExitCriteriaTable.stageId, stageId)))
+    .orderBy(stageExitCriteriaTable.createdAt);
+  res.json(criteria);
+});
+
+router.post("/workrooms/:workroomId/stages/:stageId/exit-criteria", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  const stageId = parseInt(req.params.stageId);
+  if (isNaN(workroomId) || isNaN(stageId)) { res.status(400).json({ error: "Invalid IDs" }); return; }
+  const { criteriaText } = req.body as { criteriaText?: string };
+  if (!criteriaText?.trim()) { res.status(400).json({ error: "criteriaText required" }); return; }
+  const [created] = await db.insert(stageExitCriteriaTable)
+    .values({ workroomId, stageId, criteriaText: criteriaText.trim() }).returning();
+  res.status(201).json(created);
+});
+
+router.patch("/workrooms/:workroomId/stages/:stageId/exit-criteria/:criteriaId", async (req, res): Promise<void> => {
+  const criteriaId = parseInt(req.params.criteriaId);
+  if (isNaN(criteriaId)) { res.status(400).json({ error: "Invalid ID" }); return; }
+  const { isMet, criteriaText, verifiedBy } = req.body as { isMet?: boolean; criteriaText?: string; verifiedBy?: string };
+  const [updated] = await db.update(stageExitCriteriaTable)
+    .set({
+      ...(isMet !== undefined ? { isMet, verifiedAt: isMet ? new Date() : null } : {}),
+      ...(criteriaText ? { criteriaText } : {}),
+      ...(verifiedBy ? { verifiedBy } : {}),
+    })
+    .where(eq(stageExitCriteriaTable.id, criteriaId)).returning();
+  if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(updated);
+});
+
+router.delete("/workrooms/:workroomId/stages/:stageId/exit-criteria/:criteriaId", async (req, res): Promise<void> => {
+  const criteriaId = parseInt(req.params.criteriaId);
+  if (isNaN(criteriaId)) { res.status(400).json({ error: "Invalid ID" }); return; }
+  await db.delete(stageExitCriteriaTable).where(eq(stageExitCriteriaTable.id, criteriaId));
+  res.sendStatus(204);
+});

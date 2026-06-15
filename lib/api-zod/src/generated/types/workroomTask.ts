@@ -33,6 +33,11 @@ export interface WorkroomTask {
      * @nullable
      */
   escalationReason?: string | null;
+  /**
+     * IDs of tasks that must complete before this one
+     * @nullable
+     */
+  dependencies?: number[] | null;
   createdAt: string;
   updatedAt: string;
 }

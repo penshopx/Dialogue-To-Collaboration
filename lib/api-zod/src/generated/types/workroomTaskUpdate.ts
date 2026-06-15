@@ -16,4 +16,5 @@ export interface WorkroomTaskUpdate {
   output?: string;
   confidenceScore?: number;
   escalationReason?: string;
+  dependencies?: number[];
 }

@@ -54,7 +54,15 @@ function getRecommendation(total: number): { label: string; action: "approved" |
 }
 
 interface GateRubricPanelProps {
-  stage: { id: number; name: string; gateDecision?: string | null; gateNote?: string | null };
+  stage: {
+    id: number;
+    name: string;
+    gateDecision?: string | null;
+    gateNote?: string | null;
+    gateType?: string | null;
+    autoRejectConditions?: string[] | null;
+    requiredEvidence?: string[] | null;
+  };
   workroomId: number;
   workroomName?: string;
   objective?: string;
@@ -257,6 +265,36 @@ Format: JSON valid seperti ini:
       </CardHeader>
 
       <CardContent className="space-y-5">
+        {/* Gate metadata — auto-reject + required evidence */}
+        {((stage.requiredEvidence && stage.requiredEvidence.length > 0) || (stage.autoRejectConditions && stage.autoRejectConditions.length > 0)) && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {stage.requiredEvidence && stage.requiredEvidence.length > 0 && (
+              <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3 space-y-2">
+                <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-wider">Bukti Wajib</p>
+                <ul className="space-y-1">
+                  {stage.requiredEvidence.map((ev, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                      <span className="text-blue-400 mt-0.5">•</span> {ev}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {stage.autoRejectConditions && stage.autoRejectConditions.length > 0 && (
+              <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3 space-y-2">
+                <p className="text-[10px] font-semibold text-red-400 uppercase tracking-wider">Auto-Reject Conditions</p>
+                <ul className="space-y-1">
+                  {stage.autoRejectConditions.map((cond, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                      <span className="text-red-400 mt-0.5">✕</span> {cond}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Score grid */}
         <div className="space-y-3">
           {CRITERIA.map(c => {

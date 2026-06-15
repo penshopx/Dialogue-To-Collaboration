@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Library, Briefcase, Bot, Settings, Bell, Menu, X, AlertTriangle, Lightbulb, Search, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Library, Briefcase, Bot, Settings, Bell, Menu, X, AlertTriangle, Lightbulb, Search, MessageSquare, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -27,6 +27,7 @@ function NavLinks({ location, gateCount, onNavigate }: { location: string; gateC
   ];
 
   const aiItems = [
+    { href: "/collaboration-wizard", label: "Collaboration Wizard", icon: Wand2, badge: 0 },
     { href: "/chat-console", label: "Chat Console", icon: MessageSquare, badge: 0 },
   ];
 

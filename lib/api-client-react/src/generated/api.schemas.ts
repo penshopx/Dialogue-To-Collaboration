@@ -43,17 +43,44 @@ export interface WorkflowTemplateUpdate {
   mode?: string;
 }
 
+/**
+ * @nullable
+ */
+export type AgentInputDibutuhkan = { [key: string]: unknown } | null;
+
+/**
+ * @nullable
+ */
+export type AgentOutputDihasilkan = { [key: string]: unknown } | null;
+
 export interface Agent {
   id: number;
   name: string;
   slugUrl: string;
   category: string;
-  /** dialog | specialist | multi_agent */
+  /** dialog | spesialis | multi_agen */
   agentType: string;
   /** strategis | skeptis | eksekutor | narasumber | pack_compiler */
   functionRole: string;
   /** @nullable */
   systemPrompt?: string | null;
+  /** @nullable */
+  domainSpesifik?: string | null;
+  /** @nullable */
+  kepribadian?: string | null;
+  bahasaDefault?: string;
+  /** draft_only | suggest | semi_auto */
+  levelOtonomi?: string;
+  /** @nullable */
+  inputDibutuhkan?: AgentInputDibutuhkan;
+  /** @nullable */
+  outputDihasilkan?: AgentOutputDihasilkan;
+  isCoreTeam?: boolean;
+  /** @nullable */
+  hargaPerUse?: string | null;
+  /** @nullable */
+  ratingAkurasi?: string | null;
+  totalPenggunaan?: number;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -68,6 +95,11 @@ export interface AgentInput {
   agentType: string;
   functionRole: string;
   systemPrompt?: string;
+  domainSpesifik?: string;
+  kepribadian?: string;
+  bahasaDefault?: string;
+  levelOtonomi?: string;
+  isCoreTeam?: boolean;
   active?: boolean;
 }
 
@@ -78,6 +110,11 @@ export interface AgentUpdate {
   agentType?: string;
   functionRole?: string;
   systemPrompt?: string;
+  domainSpesifik?: string;
+  kepribadian?: string;
+  bahasaDefault?: string;
+  levelOtonomi?: string;
+  isCoreTeam?: boolean;
   active?: boolean;
 }
 
@@ -113,6 +150,19 @@ export interface WorkroomStage {
   gateDecision?: string | null;
   /** @nullable */
   gateNote?: string | null;
+  /**
+     * skeptic | qa | approval | compliance
+     * @nullable
+     */
+  gateType?: string | null;
+  /** @nullable */
+  autoRejectConditions?: string[] | null;
+  /** @nullable */
+  requiredEvidence?: string[] | null;
+  /** @nullable */
+  picName?: string | null;
+  /** @nullable */
+  responseDeadlineHours?: number | null;
   /**
      * Stage-level notes and context captured by users
      * @nullable
@@ -150,6 +200,11 @@ export interface WorkroomTask {
      * @nullable
      */
   escalationReason?: string | null;
+  /**
+     * IDs of tasks that must complete before this one
+     * @nullable
+     */
+  dependencies?: number[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -171,23 +226,36 @@ export interface WorkroomDetail {
   updatedAt: string;
 }
 
+export type WorkroomInputKpiTargets = { [key: string]: unknown };
+
 export interface WorkroomInput {
   /** @minLength 1 */
   name: string;
   templateId: number;
   objective?: string;
+  /** low | medium | high */
+  riskLevel?: string;
+  deadline?: string;
+  kpiTargets?: WorkroomInputKpiTargets;
 }
 
 export interface WorkroomUpdate {
   name?: string;
   status?: string;
   objective?: string;
+  riskLevel?: string;
+  humanTouchPoints?: number;
 }
 
 export interface WorkroomStageUpdate {
   status?: string;
   gateDecision?: string;
   gateNote?: string;
+  gateType?: string;
+  autoRejectConditions?: string[];
+  requiredEvidence?: string[];
+  picName?: string;
+  responseDeadlineHours?: number;
   notes?: string;
 }
 
@@ -203,6 +271,7 @@ export interface WorkroomTaskInput {
   output?: string;
   confidenceScore?: number;
   escalationReason?: string;
+  dependencies?: number[];
 }
 
 export interface WorkroomTaskUpdate {
@@ -215,6 +284,7 @@ export interface WorkroomTaskUpdate {
   output?: string;
   confidenceScore?: number;
   escalationReason?: string;
+  dependencies?: number[];
 }
 
 export interface StageSummary {
@@ -463,5 +533,57 @@ export interface WorkroomConfigUpdate {
   personaLanguage?: string;
   personaEmoji?: string;
   policies?: string;
+}
+
+export interface StageExitCriteria {
+  id: number;
+  stageId: number;
+  workroomId: number;
+  criteriaText: string;
+  isMet: boolean;
+  /** @nullable */
+  verifiedBy?: string | null;
+  /** @nullable */
+  verifiedAt?: string | null;
+  createdAt: string;
+}
+
+export interface StageExitCriteriaInput {
+  /** @minLength 1 */
+  criteriaText: string;
+}
+
+export interface StageExitCriteriaUpdate {
+  criteriaText?: string;
+  isMet?: boolean;
+  verifiedBy?: string;
+}
+
+export interface TemplateStage {
+  id: number;
+  templateId: number;
+  urutan: number;
+  namaTahap: string;
+  /** kerja | gate */
+  tipeTahap: string;
+  polaOperan: string;
+  /** @nullable */
+  gateCriteria?: string | null;
+  /** @nullable */
+  exitCriteria?: string | null;
+  /** @nullable */
+  gateType?: string | null;
+  createdAt: string;
+}
+
+export interface TemplateRole {
+  id: number;
+  templateId: number;
+  namaPeran: string;
+  fungsiPeran: string;
+  /** @nullable */
+  agentId?: number | null;
+  urutan: number;
+  createdAt: string;
 }
 

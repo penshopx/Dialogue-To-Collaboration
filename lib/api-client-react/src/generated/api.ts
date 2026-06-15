@@ -34,8 +34,13 @@ import type {
   KnowledgeItem,
   KnowledgeItemInput,
   KnowledgeItemUpdate,
+  StageExitCriteria,
+  StageExitCriteriaInput,
+  StageExitCriteriaUpdate,
   StageSummary,
   StageSummaryInput,
+  TemplateRole,
+  TemplateStage,
   WorkflowTemplate,
   WorkflowTemplateInput,
   WorkflowTemplateUpdate,
@@ -3324,4 +3329,464 @@ export const useUpdateWorkroomConfig = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUpdateWorkroomConfigMutationOptions(options));
     }
+
+export const getListStageExitCriteriaUrl = (workroomId: number,
+    stageId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/stages/${stageId}/exit-criteria`
+}
+
+/**
+ * @summary List exit criteria for a stage
+ */
+export const listStageExitCriteria = async (workroomId: number,
+    stageId: number, options?: RequestInit): Promise<StageExitCriteria[]> => {
+
+  return customFetch<StageExitCriteria[]>(getListStageExitCriteriaUrl(workroomId,stageId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListStageExitCriteriaQueryKey = (workroomId: number,
+    stageId: number,) => {
+    return [
+    `/api/workrooms/${workroomId}/stages/${stageId}/exit-criteria`
+    ] as const;
+    }
+
+
+export const getListStageExitCriteriaQueryOptions = <TData = Awaited<ReturnType<typeof listStageExitCriteria>>, TError = ErrorType<unknown>>(workroomId: number,
+    stageId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStageExitCriteria>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStageExitCriteriaQueryKey(workroomId,stageId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStageExitCriteria>>> = ({ signal }) => listStageExitCriteria(workroomId,stageId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(workroomId && stageId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStageExitCriteria>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListStageExitCriteriaQueryResult = NonNullable<Awaited<ReturnType<typeof listStageExitCriteria>>>
+export type ListStageExitCriteriaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List exit criteria for a stage
+ */
+
+export function useListStageExitCriteria<TData = Awaited<ReturnType<typeof listStageExitCriteria>>, TError = ErrorType<unknown>>(
+ workroomId: number,
+    stageId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStageExitCriteria>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListStageExitCriteriaQueryOptions(workroomId,stageId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateStageExitCriteriaUrl = (workroomId: number,
+    stageId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/stages/${stageId}/exit-criteria`
+}
+
+/**
+ * @summary Create an exit criterion for a stage
+ */
+export const createStageExitCriteria = async (workroomId: number,
+    stageId: number,
+    stageExitCriteriaInput: StageExitCriteriaInput, options?: RequestInit): Promise<StageExitCriteria> => {
+
+  return customFetch<StageExitCriteria>(getCreateStageExitCriteriaUrl(workroomId,stageId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      stageExitCriteriaInput,)
+  }
+);}
+
+
+
+
+export const getCreateStageExitCriteriaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStageExitCriteria>>, TError,{workroomId: number;stageId: number;data: BodyType<StageExitCriteriaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createStageExitCriteria>>, TError,{workroomId: number;stageId: number;data: BodyType<StageExitCriteriaInput>}, TContext> => {
+
+const mutationKey = ['createStageExitCriteria'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createStageExitCriteria>>, {workroomId: number;stageId: number;data: BodyType<StageExitCriteriaInput>}> = (props) => {
+          const {workroomId,stageId,data} = props ?? {};
+
+          return  createStageExitCriteria(workroomId,stageId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateStageExitCriteriaMutationResult = NonNullable<Awaited<ReturnType<typeof createStageExitCriteria>>>
+    export type CreateStageExitCriteriaMutationBody = BodyType<StageExitCriteriaInput>
+    export type CreateStageExitCriteriaMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create an exit criterion for a stage
+ */
+export const useCreateStageExitCriteria = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStageExitCriteria>>, TError,{workroomId: number;stageId: number;data: BodyType<StageExitCriteriaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createStageExitCriteria>>,
+        TError,
+        {workroomId: number;stageId: number;data: BodyType<StageExitCriteriaInput>},
+        TContext
+      > => {
+      return useMutation(getCreateStageExitCriteriaMutationOptions(options));
+    }
+
+export const getUpdateStageExitCriteriaUrl = (workroomId: number,
+    stageId: number,
+    criteriaId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/stages/${stageId}/exit-criteria/${criteriaId}`
+}
+
+/**
+ * @summary Update (toggle) an exit criterion
+ */
+export const updateStageExitCriteria = async (workroomId: number,
+    stageId: number,
+    criteriaId: number,
+    stageExitCriteriaUpdate: StageExitCriteriaUpdate, options?: RequestInit): Promise<StageExitCriteria> => {
+
+  return customFetch<StageExitCriteria>(getUpdateStageExitCriteriaUrl(workroomId,stageId,criteriaId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      stageExitCriteriaUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateStageExitCriteriaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStageExitCriteria>>, TError,{workroomId: number;stageId: number;criteriaId: number;data: BodyType<StageExitCriteriaUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateStageExitCriteria>>, TError,{workroomId: number;stageId: number;criteriaId: number;data: BodyType<StageExitCriteriaUpdate>}, TContext> => {
+
+const mutationKey = ['updateStageExitCriteria'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateStageExitCriteria>>, {workroomId: number;stageId: number;criteriaId: number;data: BodyType<StageExitCriteriaUpdate>}> = (props) => {
+          const {workroomId,stageId,criteriaId,data} = props ?? {};
+
+          return  updateStageExitCriteria(workroomId,stageId,criteriaId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateStageExitCriteriaMutationResult = NonNullable<Awaited<ReturnType<typeof updateStageExitCriteria>>>
+    export type UpdateStageExitCriteriaMutationBody = BodyType<StageExitCriteriaUpdate>
+    export type UpdateStageExitCriteriaMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update (toggle) an exit criterion
+ */
+export const useUpdateStageExitCriteria = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStageExitCriteria>>, TError,{workroomId: number;stageId: number;criteriaId: number;data: BodyType<StageExitCriteriaUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateStageExitCriteria>>,
+        TError,
+        {workroomId: number;stageId: number;criteriaId: number;data: BodyType<StageExitCriteriaUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateStageExitCriteriaMutationOptions(options));
+    }
+
+export const getDeleteStageExitCriteriaUrl = (workroomId: number,
+    stageId: number,
+    criteriaId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/stages/${stageId}/exit-criteria/${criteriaId}`
+}
+
+/**
+ * @summary Delete an exit criterion
+ */
+export const deleteStageExitCriteria = async (workroomId: number,
+    stageId: number,
+    criteriaId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteStageExitCriteriaUrl(workroomId,stageId,criteriaId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteStageExitCriteriaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStageExitCriteria>>, TError,{workroomId: number;stageId: number;criteriaId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteStageExitCriteria>>, TError,{workroomId: number;stageId: number;criteriaId: number}, TContext> => {
+
+const mutationKey = ['deleteStageExitCriteria'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteStageExitCriteria>>, {workroomId: number;stageId: number;criteriaId: number}> = (props) => {
+          const {workroomId,stageId,criteriaId} = props ?? {};
+
+          return  deleteStageExitCriteria(workroomId,stageId,criteriaId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteStageExitCriteriaMutationResult = NonNullable<Awaited<ReturnType<typeof deleteStageExitCriteria>>>
+
+    export type DeleteStageExitCriteriaMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete an exit criterion
+ */
+export const useDeleteStageExitCriteria = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStageExitCriteria>>, TError,{workroomId: number;stageId: number;criteriaId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteStageExitCriteria>>,
+        TError,
+        {workroomId: number;stageId: number;criteriaId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteStageExitCriteriaMutationOptions(options));
+    }
+
+export const getListTemplateStagesUrl = (id: number,) => {
+
+
+
+
+  return `/api/templates/${id}/stages`
+}
+
+/**
+ * @summary Get stages defined for a template
+ */
+export const listTemplateStages = async (id: number, options?: RequestInit): Promise<TemplateStage[]> => {
+
+  return customFetch<TemplateStage[]>(getListTemplateStagesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTemplateStagesQueryKey = (id: number,) => {
+    return [
+    `/api/templates/${id}/stages`
+    ] as const;
+    }
+
+
+export const getListTemplateStagesQueryOptions = <TData = Awaited<ReturnType<typeof listTemplateStages>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTemplateStages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTemplateStagesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTemplateStages>>> = ({ signal }) => listTemplateStages(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTemplateStages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTemplateStagesQueryResult = NonNullable<Awaited<ReturnType<typeof listTemplateStages>>>
+export type ListTemplateStagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get stages defined for a template
+ */
+
+export function useListTemplateStages<TData = Awaited<ReturnType<typeof listTemplateStages>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTemplateStages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTemplateStagesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListTemplateRolesUrl = (id: number,) => {
+
+
+
+
+  return `/api/templates/${id}/roles`
+}
+
+/**
+ * @summary Get roles defined for a template
+ */
+export const listTemplateRoles = async (id: number, options?: RequestInit): Promise<TemplateRole[]> => {
+
+  return customFetch<TemplateRole[]>(getListTemplateRolesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTemplateRolesQueryKey = (id: number,) => {
+    return [
+    `/api/templates/${id}/roles`
+    ] as const;
+    }
+
+
+export const getListTemplateRolesQueryOptions = <TData = Awaited<ReturnType<typeof listTemplateRoles>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTemplateRoles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTemplateRolesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTemplateRoles>>> = ({ signal }) => listTemplateRoles(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTemplateRoles>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTemplateRolesQueryResult = NonNullable<Awaited<ReturnType<typeof listTemplateRoles>>>
+export type ListTemplateRolesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get roles defined for a template
+ */
+
+export function useListTemplateRoles<TData = Awaited<ReturnType<typeof listTemplateRoles>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTemplateRoles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTemplateRolesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 

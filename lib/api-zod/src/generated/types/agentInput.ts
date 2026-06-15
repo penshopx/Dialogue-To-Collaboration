@@ -15,5 +15,10 @@ export interface AgentInput {
   agentType: string;
   functionRole: string;
   systemPrompt?: string;
+  domainSpesifik?: string;
+  kepribadian?: string;
+  bahasaDefault?: string;
+  levelOtonomi?: string;
+  isCoreTeam?: boolean;
   active?: boolean;
 }

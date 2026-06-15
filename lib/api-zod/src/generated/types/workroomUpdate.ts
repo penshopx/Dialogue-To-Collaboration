@@ -10,4 +10,6 @@ export interface WorkroomUpdate {
   name?: string;
   status?: string;
   objective?: string;
+  riskLevel?: string;
+  humanTouchPoints?: number;
 }

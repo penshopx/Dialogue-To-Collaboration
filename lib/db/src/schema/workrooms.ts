@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, jsonb, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -10,6 +10,10 @@ export const workroomsTable = pgTable("workrooms", {
   currentStageName: text("current_stage_name").notNull().default("Intake"),
   progress: integer("progress").notNull().default(0),
   objective: text("objective"),
+  riskLevel: text("risk_level").notNull().default("medium"),
+  humanTouchPoints: integer("human_touch_points").notNull().default(0),
+  deadline: timestamp("deadline", { withTimezone: true }),
+  kpiTargets: jsonb("kpi_targets"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
@@ -24,6 +28,11 @@ export const workroomStagesTable = pgTable("workroom_stages", {
   status: text("status").notNull().default("pending"),
   gateDecision: text("gate_decision"),
   gateNote: text("gate_note"),
+  gateType: text("gate_type"),
+  autoRejectConditions: jsonb("auto_reject_conditions"),
+  requiredEvidence: jsonb("required_evidence"),
+  picName: text("pic_name"),
+  responseDeadlineHours: integer("response_deadline_hours"),
   notes: text("notes"),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -42,6 +51,9 @@ export const workroomTasksTable = pgTable("workroom_tasks", {
   output: text("output"),
   confidenceScore: integer("confidence_score"),
   escalationReason: text("escalation_reason"),
+  dependencies: jsonb("dependencies"),
+  startedAt: timestamp("started_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
@@ -80,6 +92,27 @@ export const workroomMetricsTable = pgTable("workroom_metrics", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
+export const stageExitCriteriaTable = pgTable("stage_exit_criteria", {
+  id: serial("id").primaryKey(),
+  stageId: integer("stage_id").notNull(),
+  workroomId: integer("workroom_id").notNull(),
+  criteriaText: text("criteria_text").notNull(),
+  isMet: boolean("is_met").notNull().default(false),
+  verifiedBy: text("verified_by"),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const deliverableTemplatesTable = pgTable("deliverable_templates", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull(),
+  templateName: text("template_name").notNull(),
+  deliverableType: text("deliverable_type").notNull(),
+  structureJson: jsonb("structure_json"),
+  requiredAgents: jsonb("required_agents"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const insertWorkroomSchema = createInsertSchema(workroomsTable).omit({
   id: true,
   createdAt: true,
@@ -108,6 +141,14 @@ export const insertWorkroomMetricsSchema = createInsertSchema(workroomMetricsTab
   createdAt: true,
   updatedAt: true,
 });
+export const insertStageExitCriteriaSchema = createInsertSchema(stageExitCriteriaTable).omit({
+  id: true,
+  createdAt: true,
+});
+export const insertDeliverableTemplateSchema = createInsertSchema(deliverableTemplatesTable).omit({
+  id: true,
+  createdAt: true,
+});
 
 export type InsertWorkroom = z.infer<typeof insertWorkroomSchema>;
 export type Workroom = typeof workroomsTable.$inferSelect;
@@ -116,3 +157,5 @@ export type WorkroomTask = typeof workroomTasksTable.$inferSelect;
 export type ActivityLog = typeof activityLogsTable.$inferSelect;
 export type StageSummary = typeof stageSummariesTable.$inferSelect;
 export type WorkroomMetrics = typeof workroomMetricsTable.$inferSelect;
+export type StageExitCriteria = typeof stageExitCriteriaTable.$inferSelect;
+export type DeliverableTemplate = typeof deliverableTemplatesTable.$inferSelect;

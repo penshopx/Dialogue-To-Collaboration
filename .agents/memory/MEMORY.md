@@ -1,1 +1,3 @@
 - [Orval mutation body shape](orval-mutation-shape.md) — generated mutations wrap request body as `{ data: InputType }`, not the raw type directly.
+- [Orval query hook enabled pattern](orval-enabled-pattern.md) — Orval hooks using `UseQueryOptions` directly require `queryKey`; omit `enabled` from options, call unconditionally and guard in effects.
+- [Import order in Express routers](express-import-order.md) — Never append `import` statements after `export default router`; always move imports to top of file or TS/runtime will error.

@@ -896,6 +896,148 @@ paths:
               schema:
                 $ref: "#/components/schemas/WorkroomConfig"
 
+  /workrooms/{workroomId}/stages/{stageId}/exit-criteria:
+    get:
+      operationId: listStageExitCriteria
+      tags: [exit-criteria]
+      summary: List exit criteria for a stage
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: stageId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of exit criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StageExitCriteria"
+    post:
+      operationId: createStageExitCriteria
+      tags: [exit-criteria]
+      summary: Create an exit criterion for a stage
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: stageId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StageExitCriteriaInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StageExitCriteria"
+
+  /workrooms/{workroomId}/stages/{stageId}/exit-criteria/{criteriaId}:
+    patch:
+      operationId: updateStageExitCriteria
+      tags: [exit-criteria]
+      summary: Update (toggle) an exit criterion
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: stageId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: criteriaId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StageExitCriteriaUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StageExitCriteria"
+    delete:
+      operationId: deleteStageExitCriteria
+      tags: [exit-criteria]
+      summary: Delete an exit criterion
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: stageId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: criteriaId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /templates/{id}/stages:
+    get:
+      operationId: listTemplateStages
+      tags: [templates]
+      summary: Get stages defined for a template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Template stages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TemplateStage"
+
+  /templates/{id}/roles:
+    get:
+      operationId: listTemplateRoles
+      tags: [templates]
+      summary: Get roles defined for a template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Template roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TemplateRole"
+
 # ── Schemas ──────────────────────────────────────────────────────────────────
 components:
   schemas:
@@ -979,12 +1121,33 @@ components:
           type: string
         agentType:
           type: string
-          description: "dialog | specialist | multi_agent"
+          description: "dialog | spesialis | multi_agen"
         functionRole:
           type: string
           description: "strategis | skeptis | eksekutor | narasumber | pack_compiler"
         systemPrompt:
           type: ["string", "null"]
+        domainSpesifik:
+          type: ["string", "null"]
+        kepribadian:
+          type: ["string", "null"]
+        bahasaDefault:
+          type: string
+        levelOtonomi:
+          type: string
+          description: "draft_only | suggest | semi_auto"
+        inputDibutuhkan:
+          type: ["object", "null"]
+        outputDihasilkan:
+          type: ["object", "null"]
+        isCoreTeam:
+          type: boolean
+        hargaPerUse:
+          type: ["string", "null"]
+        ratingAkurasi:
+          type: ["string", "null"]
+        totalPenggunaan:
+          type: integer
         active:
           type: boolean
         createdAt:
@@ -1010,6 +1173,16 @@ components:
           type: string
         systemPrompt:
           type: string
+        domainSpesifik:
+          type: string
+        kepribadian:
+          type: string
+        bahasaDefault:
+          type: string
+        levelOtonomi:
+          type: string
+        isCoreTeam:
+          type: boolean
         active:
           type: boolean
 
@@ -1028,6 +1201,16 @@ components:
           type: string
         systemPrompt:
           type: string
+        domainSpesifik:
+          type: string
+        kepribadian:
+          type: string
+        bahasaDefault:
+          type: string
+        levelOtonomi:
+          type: string
+        isCoreTeam:
+          type: boolean
         active:
           type: boolean
 
@@ -1107,6 +1290,13 @@ components:
           type: integer
         objective:
           type: string
+        riskLevel:
+          type: string
+          description: "low | medium | high"
+        deadline:
+          type: string
+        kpiTargets:
+          type: object
 
     WorkroomUpdate:
       type: object
@@ -1117,6 +1307,10 @@ components:
           type: string
         objective:
           type: string
+        riskLevel:
+          type: string
+        humanTouchPoints:
+          type: integer
 
     # ── WorkroomStage ─────────────────────────────────────────────────────────
     WorkroomStage:
@@ -1144,6 +1338,21 @@ components:
           type: ["string", "null"]
         gateNote:
           type: ["string", "null"]
+        gateType:
+          type: ["string", "null"]
+          description: "skeptic | qa | approval | compliance"
+        autoRejectConditions:
+          type: ["array", "null"]
+          items:
+            type: string
+        requiredEvidence:
+          type: ["array", "null"]
+          items:
+            type: string
+        picName:
+          type: ["string", "null"]
+        responseDeadlineHours:
+          type: ["integer", "null"]
         notes:
           type: ["string", "null"]
           description: "Stage-level notes and context captured by users"
@@ -1161,6 +1370,20 @@ components:
           type: string
         gateNote:
           type: string
+        gateType:
+          type: string
+        autoRejectConditions:
+          type: array
+          items:
+            type: string
+        requiredEvidence:
+          type: array
+          items:
+            type: string
+        picName:
+          type: string
+        responseDeadlineHours:
+          type: integer
         notes:
           type: string
 
@@ -1197,6 +1420,11 @@ components:
         escalationReason:
           type: ["string", "null"]
           description: "Reason for escalation when confidenceScore < 70"
+        dependencies:
+          type: ["array", "null"]
+          items:
+            type: integer
+          description: "IDs of tasks that must complete before this one"
         createdAt:
           type: string
         updatedAt:
@@ -1227,6 +1455,10 @@ components:
           type: integer
         escalationReason:
           type: string
+        dependencies:
+          type: array
+          items:
+            type: integer
 
     WorkroomTaskUpdate:
       type: object
@@ -1249,6 +1481,10 @@ components:
           type: integer
         escalationReason:
           type: string
+        dependencies:
+          type: array
+          items:
+            type: integer
 
     # ── Stage Summary ─────────────────────────────────────────────────────────
     StageSummary:
@@ -1654,4 +1890,91 @@ components:
         personaEmoji:
           type: string
         policies:
+          type: string
+
+    # ── Stage Exit Criteria ────────────────────────────────────────────────────
+    StageExitCriteria:
+      type: object
+      required: [id, stageId, workroomId, criteriaText, isMet, createdAt]
+      properties:
+        id:
+          type: integer
+        stageId:
+          type: integer
+        workroomId:
+          type: integer
+        criteriaText:
+          type: string
+        isMet:
+          type: boolean
+        verifiedBy:
+          type: ["string", "null"]
+        verifiedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    StageExitCriteriaInput:
+      type: object
+      required: [criteriaText]
+      properties:
+        criteriaText:
+          type: string
+          minLength: 1
+
+    StageExitCriteriaUpdate:
+      type: object
+      properties:
+        criteriaText:
+          type: string
+        isMet:
+          type: boolean
+        verifiedBy:
+          type: string
+
+    # ── Template Stages ───────────────────────────────────────────────────────
+    TemplateStage:
+      type: object
+      required: [id, templateId, urutan, namaTahap, tipeTahap, polaOperan, createdAt]
+      properties:
+        id:
+          type: integer
+        templateId:
+          type: integer
+        urutan:
+          type: integer
+        namaTahap:
+          type: string
+        tipeTahap:
+          type: string
+          description: "kerja | gate"
+        polaOperan:
+          type: string
+        gateCriteria:
+          type: ["string", "null"]
+        exitCriteria:
+          type: ["string", "null"]
+        gateType:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    # ── Template Roles ────────────────────────────────────────────────────────
+    TemplateRole:
+      type: object
+      required: [id, templateId, namaPeran, fungsiPeran, urutan, createdAt]
+      properties:
+        id:
+          type: integer
+        templateId:
+          type: integer
+        namaPeran:
+          type: string
+        fungsiPeran:
+          type: string
+        agentId:
+          type: ["integer", "null"]
+        urutan:
+          type: integer
+        createdAt:
           type: string
