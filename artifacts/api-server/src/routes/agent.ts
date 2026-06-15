@@ -1,5 +1,4 @@
 import { Router, type IRouter } from "express";
-import OpenAI from "openai";
 import { eq } from "drizzle-orm";
 import {
   db,
@@ -10,11 +9,7 @@ import {
   knowledgeBaseItems,
   deliverablesTable,
 } from "@workspace/db";
-
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ?? "https://api.openai.com/v1",
-});
+import { resolveAIClient } from "../lib/ai-client.js";
 
 const router: IRouter = Router();
 
@@ -189,7 +184,7 @@ router.post("/agent/invoke", async (req, res): Promise<void> => {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
   try {
-    const stream = await openai.chat.completions.create({
+    const stream = await resolveAIClient("gpt-4o-mini").chat.completions.create({
       model: "gpt-4o-mini",
       messages: [systemMessage, ...messages],
       stream: true,
@@ -266,7 +261,7 @@ router.post("/agent/openclaw", async (req, res): Promise<void> => {
 
       let agentFullResponse = "";
 
-      const stream = await openai.chat.completions.create({
+      const stream = await resolveAIClient("gpt-4o-mini").chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemContent },
@@ -391,7 +386,7 @@ ${knowledgeSummary || "  (belum ada artikel)"}`;
   res.setHeader("Access-Control-Allow-Origin", "*");
 
   try {
-    const stream = await openai.chat.completions.create({
+    const stream = await resolveAIClient("gpt-4o-mini").chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemContent },
@@ -465,7 +460,7 @@ Kembalikan HANYA JSON valid dengan format:
 }`;
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await resolveAIClient("gpt-4o-mini").chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },

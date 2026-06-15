@@ -1,12 +1,7 @@
 import { Router, type IRouter } from "express";
-import OpenAI from "openai";
 import { db, clawConfigsTable, clawSubAgentsTable, clawQuickPromptsTable, knowledgeBaseItems } from "@workspace/db";
 import { eq, asc } from "drizzle-orm";
-
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ?? "https://api.openai.com/v1",
-});
+import { resolveAIClient, isProviderConfigured, MODEL_CATALOG } from "../lib/ai-client.js";
 
 const router: IRouter = Router();
 
@@ -121,14 +116,18 @@ router.post("/workrooms/:workroomId/claw/chat", async (req, res): Promise<void> 
   res.setHeader("Access-Control-Allow-Origin", "*");
 
   try {
-    const stream = await openai.chat.completions.create({
-      model: (cfg?.model ?? "gpt-4o-mini") as string,
+    const model = cfg?.model ?? "gpt-4o-mini";
+    const { ok, missing } = isProviderConfigured(model);
+    if (!ok) {
+      res.write(`data: ${JSON.stringify({ error: `API key ${missing} belum dikonfigurasi untuk model ${model}` })}\n\n`);
+      res.end();
+      return;
+    }
+    const stream = await resolveAIClient(model).chat.completions.create({
+      model,
       temperature: cfg?.temperature ?? 0.7,
       max_tokens: cfg?.maxTokens ?? 2000,
-      messages: [
-        { role: "system", content: systemContent },
-        ...(messages ?? []),
-      ],
+      messages: [{ role: "system", content: systemContent }, ...(messages ?? [])],
       stream: true,
     });
 

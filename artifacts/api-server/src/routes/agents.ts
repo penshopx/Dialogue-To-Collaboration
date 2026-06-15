@@ -30,12 +30,12 @@ router.post("/agents", async (req, res): Promise<void> => {
 router.get("/agents/workload", async (_req, res): Promise<void> => {
   const rows = await db
     .select({
-      functionRole: workroomTasksTable.functionRole,
+      functionRole: workroomTasksTable.assigneeRole,
       total: sql<number>`count(*)::int`,
       done: sql<number>`count(*) filter (where ${workroomTasksTable.status} = 'done')::int`,
     })
     .from(workroomTasksTable)
-    .groupBy(workroomTasksTable.functionRole);
+    .groupBy(workroomTasksTable.assigneeRole);
   res.json(rows);
 });
 

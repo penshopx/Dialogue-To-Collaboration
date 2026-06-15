@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -68,10 +68,37 @@ const DEFAULT_CONFIG: Omit<ClawConfig, "id" | "workroomId" | "updatedAt"> = {
   isActive: true,
 };
 
+const PROVIDER_COLORS: Record<string, string> = {
+  openai:   "text-green-400",
+  deepseek: "text-blue-400",
+  gemini:   "text-amber-400",
+  qwen:     "text-violet-400",
+};
+
+const PROVIDER_LABELS: Record<string, string> = {
+  openai:   "OpenAI",
+  deepseek: "DeepSeek",
+  gemini:   "Gemini",
+  qwen:     "Qwen",
+};
+
 const MODELS = [
-  { value: "gpt-4o-mini", label: "gpt-4o-mini", desc: "Cepat & hemat" },
-  { value: "gpt-4o", label: "gpt-4o", desc: "Akurat & kuat" },
-  { value: "deepseek-chat", label: "deepseek-chat", desc: "Math & analitik" },
+  // ── OpenAI ──────────────────────────────────────────────────────────────
+  { value: "gpt-4o-mini",         label: "GPT-4o mini",       provider: "openai",   desc: "Cepat & hemat" },
+  { value: "gpt-4o",              label: "GPT-4o",             provider: "openai",   desc: "Akurat & kuat" },
+  { value: "gpt-4-turbo",         label: "GPT-4 Turbo",        provider: "openai",   desc: "Konteks panjang" },
+  // ── DeepSeek ────────────────────────────────────────────────────────────
+  { value: "deepseek-chat",       label: "DeepSeek Chat",      provider: "deepseek", desc: "Analitik & coding" },
+  { value: "deepseek-reasoner",   label: "DeepSeek Reasoner",  provider: "deepseek", desc: "Penalaran mendalam" },
+  // ── Gemini ──────────────────────────────────────────────────────────────
+  { value: "gemini-2.0-flash",    label: "Gemini 2.0 Flash",   provider: "gemini",   desc: "Paling cepat" },
+  { value: "gemini-1.5-flash",    label: "Gemini 1.5 Flash",   provider: "gemini",   desc: "Cepat & murah" },
+  { value: "gemini-1.5-pro",      label: "Gemini 1.5 Pro",     provider: "gemini",   desc: "Paling canggih" },
+  // ── Qwen (Alibaba) ──────────────────────────────────────────────────────
+  { value: "qwen-turbo",          label: "Qwen Turbo",         provider: "qwen",     desc: "Cepat & efisien" },
+  { value: "qwen-plus",           label: "Qwen Plus",          provider: "qwen",     desc: "Seimbang" },
+  { value: "qwen-max",            label: "Qwen Max",           provider: "qwen",     desc: "Paling kuat" },
+  { value: "qwen3-235b-a22b",     label: "Qwen3 235B",         provider: "qwen",     desc: "Open-source flagship" },
 ];
 
 interface Props { workroomId: number }
@@ -313,20 +340,44 @@ export function ClawConfigPanel({ workroomId }: Props) {
                 <Label className="text-xs font-medium">Model AI</Label>
                 <Select value={model} onValueChange={setModel}>
                   <SelectTrigger className="h-9">
-                    <SelectValue />
+                    <SelectValue>
+                      {(() => {
+                        const m = MODELS.find(m => m.value === model);
+                        return m ? (
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${PROVIDER_COLORS[m.provider]} bg-current/10`} style={{ background: "rgba(255,255,255,0.06)" }}>
+                              {PROVIDER_LABELS[m.provider]}
+                            </span>
+                            <span className="text-xs">{m.label}</span>
+                          </div>
+                        ) : model;
+                      })()}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {MODELS.map(m => (
-                      <SelectItem key={m.value} value={m.value}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs">{m.label}</span>
-                          <span className="text-xs text-muted-foreground">· {m.desc}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {(["openai", "deepseek", "gemini", "qwen"] as const).map(provider => {
+                      const group = MODELS.filter(m => m.provider === provider);
+                      return (
+                        <SelectGroup key={provider}>
+                          <SelectLabel className={`text-[10px] font-bold uppercase tracking-widest ${PROVIDER_COLORS[provider]}`}>
+                            {PROVIDER_LABELS[provider]}
+                          </SelectLabel>
+                          {group.map(m => (
+                            <SelectItem key={m.value} value={m.value}>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium">{m.label}</span>
+                                <span className="text-[10px] text-muted-foreground">· {m.desc}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
-                <p className="text-[10px] text-muted-foreground">gpt-4o-mini: cepat & hemat · gpt-4o: akurat & kuat · deepseek-chat: math & analitik</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Pastikan API key provider yang dipilih sudah dikonfigurasi di Secrets.
+                </p>
               </div>
 
               <div className="space-y-1.5">
