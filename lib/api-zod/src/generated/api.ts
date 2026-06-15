@@ -960,6 +960,16 @@ export const UpdateWorkroomBrainResponse = zod.object({
 
 
 /**
+ * Streams an AI-generated marketing brief (positioning, audience, USP, key messages, channels, KPIs) as Server-Sent Events. Each event is `data: {"content":"..."}` and the final event is `data: {"done":true}`.
+
+ * @summary Generate an AI marketing brief for a workroom (SSE streaming)
+ */
+export const GenerateMarketingBriefParams = zod.object({
+  "workroomId": zod.coerce.number()
+})
+
+
+/**
  * Streams an AI-generated executive summary (progress, decisions, next steps) as Server-Sent Events. Each event is `data: {"content":"..."}` and the final event is `data: {"done":true}`.
 
  * @summary Generate an AI executive summary for a workroom (SSE streaming)

@@ -15,6 +15,7 @@ import Insights from "@/pages/insights";
 import WorkroomReport from "@/pages/workroom-report";
 import { ChatConsole } from "@/pages/chat-console";
 import CollaborationWizard from "@/pages/collaboration-wizard";
+import BriefPage from "@/pages/brief";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ function Router() {
         <Route path="/workrooms/:id" component={WorkroomDetail} />
         <Route path="/workrooms" component={WorkroomsList} />
         <Route path="/agents" component={AgentsList} />
+        <Route path="/brief" component={BriefPage} />
         <Route path="/chat-console" component={() => <ChatConsole />} />
         <Route path="/collaboration-wizard" component={CollaborationWizard} />
         <Route component={NotFound} />

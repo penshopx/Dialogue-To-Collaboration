@@ -829,6 +829,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/WorkroomBrain"
 
+  # ── Workroom Marketing Brief ──────────────────────────────────────────────────
+  /workrooms/{workroomId}/brief:
+    post:
+      operationId: generateMarketingBrief
+      tags: [workrooms]
+      summary: Generate an AI marketing brief for a workroom (SSE streaming)
+      description: >
+        Streams an AI-generated marketing brief (positioning, audience, USP,
+        key messages, channels, KPIs) as Server-Sent Events.
+        Each event is `data: {"content":"..."}` and the final event is `data: {"done":true}`.
+      parameters:
+        - name: workroomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: SSE stream of brief chunks
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "404":
+          description: Workroom not found
+
   # ── Workroom AI Summary ───────────────────────────────────────────────────────
   /workrooms/{workroomId}/summarize:
     post:

@@ -292,6 +292,139 @@ router.post("/agent/openclaw", async (req, res): Promise<void> => {
   }
 });
 
+// ── Workroom Marketing Brief (SSE) ───────────────────────────────────────────
+router.post("/workrooms/:workroomId/brief", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  if (isNaN(workroomId)) { res.status(400).json({ error: "Invalid workroomId" }); return; }
+
+  const [workroom] = await db.select().from(workroomsTable).where(eq(workroomsTable.id, workroomId));
+  if (!workroom) { res.status(404).json({ error: "Workroom not found" }); return; }
+
+  const [stages, tasks, brain, knowledgeItems, deliverables] = await Promise.all([
+    db.select().from(workroomStagesTable).where(eq(workroomStagesTable.workroomId, workroomId)),
+    db.select().from(workroomTasksTable).where(eq(workroomTasksTable.workroomId, workroomId)),
+    db.select().from(workroomBrainTable).where(eq(workroomBrainTable.workroomId, workroomId)),
+    db.select().from(knowledgeBaseItems).where(eq(knowledgeBaseItems.workroomId, workroomId)),
+    db.select().from(deliverablesTable).where(eq(deliverablesTable.workroomId, workroomId)),
+  ]);
+
+  const brainData = brain[0];
+  const additionalContext = (req.body as Record<string, string>).additionalContext ?? "";
+
+  const contextBlock = [
+    `# Proyek: ${workroom.name}`,
+    `Status: ${workroom.status}`,
+    `Objektif: ${workroom.objective ?? "(tidak ada)"}`,
+    ``,
+    `## Otak Proyek`,
+    `- Konteks: ${brainData?.context ?? "—"}`,
+    `- Tujuan: ${brainData?.goals ?? "—"}`,
+    `- Batasan: ${brainData?.constraints ?? "—"}`,
+    `- Stakeholders: ${brainData?.stakeholders ?? "—"}`,
+    `- Keputusan kunci: ${brainData?.decisions ?? "—"}`,
+    ``,
+    `## Pipeline (${stages.length} stages)`,
+    stages.length
+      ? stages.map(s => `  - ${s.name} [${s.status}]${s.notes ? ` — ${s.notes.slice(0, 100)}` : ""}`).join("\n")
+      : "  (belum ada stage)",
+    ``,
+    `## Tasks (${tasks.length} total — ${tasks.filter(t => t.status === "done").length} selesai)`,
+    tasks.length
+      ? tasks.slice(0, 15).map(t => `  - [${t.status}] ${t.title}${t.output ? ` → ${t.output.slice(0, 80)}` : ""}`).join("\n")
+      : "  (belum ada task)",
+    ``,
+    `## Deliverables Aktif (${deliverables.length})`,
+    deliverables.length
+      ? deliverables.map(d => `  - [${d.status}] ${d.title} (${d.format})`).join("\n")
+      : "  (belum ada)",
+    ``,
+    `## Knowledge Base (${knowledgeItems.length} artikel)`,
+    knowledgeItems.length
+      ? knowledgeItems.slice(0, 6).map(k => `  - ${k.title}: ${k.content.slice(0, 200)}…`).join("\n")
+      : "  (belum ada)",
+    additionalContext ? `\n## Konteks Tambahan dari User\n${additionalContext}` : "",
+  ].filter(l => l !== undefined).join("\n");
+
+  const systemContent = `Kamu adalah Marketing Strategist senior yang ahli membuat marketing brief yang komprehensif, tajam, dan siap dieksekusi. Gunakan data proyek yang diberikan untuk menghasilkan brief yang relevan dan kontekstual. Tulis dalam Bahasa Indonesia profesional. Jika data minim, berikan rekomendasi terbaik berdasarkan konteks yang tersedia — jangan mengatakan "data tidak ada" berulang kali, tapi berikan insight strategis.`;
+
+  const userPrompt = `${contextBlock}
+
+---
+
+Buat MARKETING BRIEF lengkap untuk proyek di atas. Gunakan struktur berikut secara tepat:
+
+# 📣 MARKETING BRIEF — ${workroom.name}
+
+## 1. Ringkasan Eksekutif
+[2-3 paragraf: apa proyeknya, untuk siapa, dan mengapa ini penting secara strategis]
+
+## 2. Positioning Statement
+[Gunakan formula: Untuk [target audiens], [nama produk/proyek] adalah satu-satunya [kategori] yang [manfaat unik utama], karena [bukti/alasan utama]]
+
+## 3. Target Audiens
+### Persona Primer
+[Nama persona, profil, pain points, goals, satu quote karakteristik]
+### Persona Sekunder
+[Segmen pendukung jika relevan]
+
+## 4. Unique Selling Proposition (USP)
+[Satu kalimat kuat yang menjadi inti pembeda — tajam dan mudah diingat]
+
+### Proof Points
+[3-5 bukti konkret yang mendukung USP]
+
+## 5. Pesan Kunci (Key Messages)
+[3-5 pesan yang konsisten di semua touchpoint komunikasi]
+
+## 6. Channel & Strategi Distribusi
+### Channel Utama
+[Platform/channel prioritas beserta rationale]
+### Channel Pendukung
+[Channel tambahan]
+### Rekomendasi Format Konten
+[Format konten yang direkomendasikan per channel]
+
+## 7. KPI & Metrik Keberhasilan
+[Daftar: Metrik — Target — Cara Pengukuran]
+
+## 8. Timeline & Fase Kampanye
+[3-4 fase dengan estimasi durasi dan milestone kunci]
+
+---
+*Generated dari data workroom "${workroom.name}"*`;
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
+  try {
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemContent },
+        { role: "user", content: userPrompt },
+      ],
+      stream: true,
+      max_tokens: 2500,
+    });
+
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content ?? "";
+      if (content) {
+        res.write(`data: ${JSON.stringify({ content })}\n\n`);
+      }
+    }
+
+    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    res.end();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+    res.end();
+  }
+});
+
 // ── Workroom AI Summary (SSE) ─────────────────────────────────────────────────
 router.post("/workrooms/:workroomId/summarize", async (req, res): Promise<void> => {
   const workroomId = parseInt(req.params.workroomId);

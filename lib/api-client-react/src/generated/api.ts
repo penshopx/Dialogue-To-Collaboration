@@ -3119,6 +3119,78 @@ export const useUpdateWorkroomBrain = <TError = ErrorType<unknown>,
       return useMutation(getUpdateWorkroomBrainMutationOptions(options));
     }
 
+export const getGenerateMarketingBriefUrl = (workroomId: number,) => {
+
+
+
+
+  return `/api/workrooms/${workroomId}/brief`
+}
+
+/**
+ * Streams an AI-generated marketing brief (positioning, audience, USP, key messages, channels, KPIs) as Server-Sent Events. Each event is `data: {"content":"..."}` and the final event is `data: {"done":true}`.
+
+ * @summary Generate an AI marketing brief for a workroom (SSE streaming)
+ */
+export const generateMarketingBrief = async (workroomId: number, options?: RequestInit): Promise<string> => {
+
+  return customFetch<string>(getGenerateMarketingBriefUrl(workroomId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getGenerateMarketingBriefMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateMarketingBrief>>, TError,{workroomId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateMarketingBrief>>, TError,{workroomId: number}, TContext> => {
+
+const mutationKey = ['generateMarketingBrief'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateMarketingBrief>>, {workroomId: number}> = (props) => {
+          const {workroomId} = props ?? {};
+
+          return  generateMarketingBrief(workroomId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateMarketingBriefMutationResult = NonNullable<Awaited<ReturnType<typeof generateMarketingBrief>>>
+
+    export type GenerateMarketingBriefMutationError = ErrorType<void>
+
+    /**
+ * @summary Generate an AI marketing brief for a workroom (SSE streaming)
+ */
+export const useGenerateMarketingBrief = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateMarketingBrief>>, TError,{workroomId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateMarketingBrief>>,
+        TError,
+        {workroomId: number},
+        TContext
+      > => {
+      return useMutation(getGenerateMarketingBriefMutationOptions(options));
+    }
+
 export const getSummarizeWorkroomUrl = (workroomId: number,) => {
 
 
