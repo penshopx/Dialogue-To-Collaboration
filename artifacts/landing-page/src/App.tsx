@@ -945,14 +945,10 @@ function PricingSection() {
                 )}
               </div>
 
-              <div className="rounded-xl p-3 mb-4 space-y-1.5" style={{ background: "var(--bg-input)", border: "1px dashed var(--bd-mid)" }}>
+              <div className="rounded-xl p-3 mb-4" style={{ background: "var(--bg-input)", border: "1px dashed var(--bd-mid)" }}>
                 <div className="flex justify-between text-xs">
                   <span style={{ color: "var(--tx-faint)" }}>Biaya Setup</span>
                   <span className="font-semibold" style={{ color: "oklch(0.6 0.18 160)" }}>{t.setup}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span style={{ color: "var(--tx-faint)" }}>Biaya Lisensi</span>
-                  <span className="font-semibold" style={{ color: "oklch(0.6 0.18 160)" }}>{t.license}</span>
                 </div>
               </div>
 
