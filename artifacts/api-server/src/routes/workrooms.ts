@@ -16,6 +16,8 @@ import {
   stageExitCriteriaTable,
   collaborationRolesTable,
   decisionLogsTable,
+  templateStagesTable,
+  templateRolesTable,
 } from "@workspace/db";
 import {
   GetWorkroomParams,
@@ -125,6 +127,9 @@ router.post("/workrooms", async (req, res): Promise<void> => {
       name: parsed.data.name,
       templateId: parsed.data.templateId,
       objective: parsed.data.objective,
+      riskLevel: parsed.data.riskLevel ?? "medium",
+      deadline: parsed.data.deadline ? new Date(parsed.data.deadline) : undefined,
+      kpiTargets: parsed.data.kpiTargets,
       status: "active",
       currentStageName: "Intake",
       progress: 0,
@@ -139,6 +144,57 @@ router.post("/workrooms", async (req, res): Promise<void> => {
   }));
 
   await db.insert(workroomStagesTable).values(stagesData);
+
+  // Fetch inserted stages for seeding
+  const insertedStages = await db
+    .select()
+    .from(workroomStagesTable)
+    .where(eq(workroomStagesTable.workroomId, workroom.id))
+    .orderBy(workroomStagesTable.order);
+
+  // Seed exit criteria from template stages
+  const templateStages = await db
+    .select()
+    .from(templateStagesTable)
+    .where(eq(templateStagesTable.templateId, parsed.data.templateId))
+    .orderBy(templateStagesTable.urutan);
+
+  for (const tStage of templateStages) {
+    if (tStage.exitCriteria?.trim()) {
+      const wsStage = insertedStages.find((s) => s.order === tStage.urutan);
+      if (wsStage) {
+        const criteriaLines = tStage.exitCriteria.split("\n").map((c) => c.trim()).filter(Boolean);
+        if (criteriaLines.length > 0) {
+          await db.insert(stageExitCriteriaTable).values(
+            criteriaLines.map((criteriaText) => ({
+              workroomId: workroom.id,
+              stageId: wsStage.id,
+              criteriaText,
+            }))
+          );
+        }
+      }
+    }
+  }
+
+  // Seed collaboration roles from template roles
+  const templateRoles = await db
+    .select()
+    .from(templateRolesTable)
+    .where(eq(templateRolesTable.templateId, parsed.data.templateId))
+    .orderBy(templateRolesTable.urutan);
+
+  if (templateRoles.length > 0) {
+    await db.insert(collaborationRolesTable).values(
+      templateRoles.map((r) => ({
+        workroomId: workroom.id,
+        namaPeran: r.namaPeran,
+        fungsiPeran: r.fungsiPeran,
+        agentId: r.agentId ?? undefined,
+        urutan: r.urutan,
+      }))
+    );
+  }
 
   // Add activity log
   await db.insert(activityLogsTable).values({
@@ -1142,6 +1198,30 @@ router.get("/dashboard/early-warnings", async (_req, res): Promise<void> => {
   });
 
   res.json(warnings);
+});
+
+// ── Dashboard: Recent Decisions ───────────────────────────────────────────────
+router.get("/dashboard/recent-decisions", async (req, res): Promise<void> => {
+  const limit = Math.min(parseInt(String(req.query.limit ?? "8")), 50);
+
+  const rows = await db
+    .select({
+      id: decisionLogsTable.id,
+      workroomId: decisionLogsTable.workroomId,
+      workroomName: workroomsTable.name,
+      aktor: decisionLogsTable.aktor,
+      tipeAksi: decisionLogsTable.tipeAksi,
+      ringkasan: decisionLogsTable.ringkasan,
+      detail: decisionLogsTable.detail,
+      stageId: decisionLogsTable.stageId,
+      createdAt: decisionLogsTable.createdAt,
+    })
+    .from(decisionLogsTable)
+    .leftJoin(workroomsTable, eq(decisionLogsTable.workroomId, workroomsTable.id))
+    .orderBy(desc(decisionLogsTable.createdAt))
+    .limit(limit);
+
+  res.json(rows);
 });
 
 export default router;

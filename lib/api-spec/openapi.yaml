@@ -1196,6 +1196,27 @@ paths:
                 $ref: "#/components/schemas/CompiledPack"
 
   # ── Dashboard Early Warnings ──────────────────────────────────────────────
+  /dashboard/recent-decisions:
+    get:
+      operationId: getRecentDecisions
+      tags: [dashboard]
+      summary: Get recent gate decisions across all workrooms
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 8
+      responses:
+        "200":
+          description: Recent decisions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RecentDecisionItem"
+
   /dashboard/early-warnings:
     get:
       operationId: getEarlyWarnings
@@ -2259,6 +2280,30 @@ components:
         packId:
           type: integer
         message:
+          type: string
+
+    # ── Recent Decision Item ───────────────────────────────────────────────────
+    RecentDecisionItem:
+      type: object
+      required: [id, workroomId, workroomName, aktor, tipeAksi, ringkasan, createdAt]
+      properties:
+        id:
+          type: integer
+        workroomId:
+          type: integer
+        workroomName:
+          type: string
+        aktor:
+          type: string
+        tipeAksi:
+          type: string
+        ringkasan:
+          type: string
+        detail:
+          type: ["string", "null"]
+        stageId:
+          type: ["integer", "null"]
+        createdAt:
           type: string
 
     # ── Early Warning ─────────────────────────────────────────────────────────

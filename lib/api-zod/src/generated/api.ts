@@ -1254,6 +1254,29 @@ export const CompileFinalPackResponse = zod.object({
 
 
 /**
+ * @summary Get recent gate decisions across all workrooms
+ */
+export const getRecentDecisionsQueryLimitDefault = 8;
+
+export const GetRecentDecisionsQueryParams = zod.object({
+  "limit": zod.coerce.number().default(getRecentDecisionsQueryLimitDefault)
+})
+
+export const GetRecentDecisionsResponseItem = zod.object({
+  "id": zod.number(),
+  "workroomId": zod.number(),
+  "workroomName": zod.string(),
+  "aktor": zod.string(),
+  "tipeAksi": zod.string(),
+  "ringkasan": zod.string(),
+  "detail": zod.string().nullish(),
+  "stageId": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+export const GetRecentDecisionsResponse = zod.array(GetRecentDecisionsResponseItem)
+
+
+/**
  * @summary Get early warnings — gates stuck or overdue workrooms
  */
 export const GetEarlyWarningsResponseItem = zod.object({

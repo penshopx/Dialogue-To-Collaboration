@@ -36,11 +36,13 @@ import type {
   DeliverableInput,
   DeliverableUpdate,
   EarlyWarning,
+  GetRecentDecisionsParams,
   HealthStatus,
   InsightsSummary,
   KnowledgeItem,
   KnowledgeItemInput,
   KnowledgeItemUpdate,
+  RecentDecisionItem,
   StageCompletionResult,
   StageExitCriteria,
   StageExitCriteriaInput,
@@ -4311,6 +4313,90 @@ export const useCompileFinalPack = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getCompileFinalPackMutationOptions(options));
     }
+
+export const getGetRecentDecisionsUrl = (params?: GetRecentDecisionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/dashboard/recent-decisions?${stringifiedParams}` : `/api/dashboard/recent-decisions`
+}
+
+/**
+ * @summary Get recent gate decisions across all workrooms
+ */
+export const getRecentDecisions = async (params?: GetRecentDecisionsParams, options?: RequestInit): Promise<RecentDecisionItem[]> => {
+
+  return customFetch<RecentDecisionItem[]>(getGetRecentDecisionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRecentDecisionsQueryKey = (params?: GetRecentDecisionsParams,) => {
+    return [
+    `/api/dashboard/recent-decisions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetRecentDecisionsQueryOptions = <TData = Awaited<ReturnType<typeof getRecentDecisions>>, TError = ErrorType<unknown>>(params?: GetRecentDecisionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecentDecisions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRecentDecisionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecentDecisions>>> = ({ signal }) => getRecentDecisions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecentDecisions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRecentDecisionsQueryResult = NonNullable<Awaited<ReturnType<typeof getRecentDecisions>>>
+export type GetRecentDecisionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get recent gate decisions across all workrooms
+ */
+
+export function useGetRecentDecisions<TData = Awaited<ReturnType<typeof getRecentDecisions>>, TError = ErrorType<unknown>>(
+ params?: GetRecentDecisionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecentDecisions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRecentDecisionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetEarlyWarningsUrl = () => {
 

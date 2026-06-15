@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useUpdateWorkroomStage, getListWorkroomStagesQueryKey, getGetWorkroomQueryKey, getListWorkroomActivityQueryKey } from "@workspace/api-client-react";
+import { useUpdateWorkroomStage, useAddDecisionLog, getListWorkroomStagesQueryKey, getGetWorkroomQueryKey, getListWorkroomActivityQueryKey, getListDecisionLogsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, XCircle, RefreshCw, Sparkles, Loader2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,7 @@ interface GateRubricPanelProps {
 export function GateRubricPanel({ stage, workroomId, workroomName, objective }: GateRubricPanelProps) {
   const qc = useQueryClient();
   const updateStage = useUpdateWorkroomStage();
+  const addDecisionLog = useAddDecisionLog();
   const { toast } = useToast();
   const abortRef = useRef<AbortController | null>(null);
 
@@ -88,6 +89,7 @@ export function GateRubricPanel({ stage, workroomId, workroomName, objective }: 
     qc.invalidateQueries({ queryKey: getListWorkroomStagesQueryKey(workroomId) });
     qc.invalidateQueries({ queryKey: getGetWorkroomQueryKey(workroomId) });
     qc.invalidateQueries({ queryKey: getListWorkroomActivityQueryKey(workroomId) });
+    qc.invalidateQueries({ queryKey: getListDecisionLogsQueryKey(workroomId) });
   };
 
   const decide = async (action: "approved" | "rejected", label: string) => {
@@ -98,7 +100,23 @@ export function GateRubricPanel({ stage, workroomId, workroomName, objective }: 
 
     await updateStage.mutateAsync(
       { workroomId, stageId: stage.id, data: { gateDecision: action, gateNote: rubricNote } as Parameters<typeof updateStage.mutateAsync>[0]["data"] },
-      { onSuccess: () => { toast({ title: `◆ Gate ${label} ✓` }); invalidate(); } }
+      {
+        onSuccess: async () => {
+          toast({ title: `◆ Gate ${label} ✓` });
+          invalidate();
+          await addDecisionLog.mutateAsync({
+            workroomId,
+            data: {
+              aktor: "Gate Evaluator",
+              tipeAksi: "keputusan_gate",
+              ringkasan: `Gate "${stage.name}" ${label} — Skor Rubrik: ${allScored ? `${totalScore}/${maxScore}` : "tanpa skor"}`,
+              detail: { text: rubricNote } as Record<string, unknown>,
+              stageId: stage.id,
+            },
+          });
+          invalidate();
+        },
+      }
     );
   };
 

@@ -1,4 +1,4 @@
-import { useGetWorkroom, useListWorkroomStages, useListWorkroomTasks, useListWorkroomActivity } from "@workspace/api-client-react";
+import { useGetWorkroom, useListWorkroomStages, useListWorkroomTasks, useListWorkroomActivity, useListDecisionLogs, useListStageExitCriteria } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import {
   ArrowLeft, CheckCircle2, Circle, Clock, AlertTriangle,
@@ -38,6 +38,9 @@ export default function WorkroomReport() {
   const { data: stages } = useListWorkroomStages(workroomId);
   const { data: tasks } = useListWorkroomTasks(workroomId);
   const { data: activity } = useListWorkroomActivity(workroomId);
+  const { data: decisionLogs } = useListDecisionLogs(workroomId);
+  const firstStageId = stages?.[0]?.id;
+  const { data: exitCriteriaStage1 } = useListStageExitCriteria(workroomId, firstStageId ?? 0);
 
   if (isLoading) {
     return (
@@ -254,6 +257,45 @@ export default function WorkroomReport() {
                       <span className={pct === 100 ? "text-green-400 font-medium" : ""}>{pct}%</span>
                     </div>
                     <Progress value={pct} className="h-1" />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Decision Logs */}
+        {decisionLogs && decisionLogs.length > 0 && (
+          <div>
+            <h2 className="text-lg font-semibold mb-4">Log Keputusan</h2>
+            <div className="space-y-3">
+              {decisionLogs.map(log => {
+                const isGateApproval = log.tipeAksi === "keputusan_gate" && log.ringkasan?.toLowerCase().includes("setuju");
+                const isGateRejection = log.tipeAksi === "keputusan_gate" && (log.ringkasan?.toLowerCase().includes("tolak") || log.ringkasan?.toLowerCase().includes("revisi"));
+                return (
+                  <div key={log.id} className={cn(
+                    "rounded-lg border p-3 space-y-1",
+                    isGateApproval ? "border-green-500/20 bg-green-500/5" :
+                    isGateRejection ? "border-red-500/20 bg-red-500/5" :
+                    "border-border bg-card/30"
+                  )}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        {isGateApproval && <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />}
+                        {isGateRejection && <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />}
+                        {!isGateApproval && !isGateRejection && <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                        <span className="text-sm font-medium">{log.ringkasan}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] py-0 h-4 shrink-0">{log.tipeAksi}</Badge>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {log.aktor} · {new Date(log.createdAt).toLocaleString("id-ID")}
+                    </p>
+                    {log.detail && (
+                      <p className="text-xs text-muted-foreground/70 mt-1 whitespace-pre-line line-clamp-3">
+                        {(log.detail as { text?: string }).text ?? JSON.stringify(log.detail)}
+                      </p>
+                    )}
                   </div>
                 );
               })}

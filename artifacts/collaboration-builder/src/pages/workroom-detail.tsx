@@ -4,6 +4,7 @@ import {
   useListWorkroomTasks,
   useListWorkroomActivity,
   useUpdateWorkroomStage,
+  useCompleteStage,
   useUpdateTask,
   useCreateWorkroomTask,
   useListCollaborationRoles,
@@ -262,6 +263,7 @@ export default function WorkroomDetail() {
   const { data: decisionLogs } = useListDecisionLogs(workroomId);
   const updateTask = useUpdateTask();
   const advanceStage = useUpdateWorkroomStage();
+  const completeStageHook = useCompleteStage();
   const addRole = useAddCollaborationRole();
   const removeRole = useRemoveCollaborationRole();
   const addDecisionLog = useAddDecisionLog();
@@ -283,15 +285,16 @@ export default function WorkroomDetail() {
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
 
   async function completeStage(stageId: number) {
-    await advanceStage.mutateAsync(
-      { workroomId, stageId, data: { status: "completed" } as Parameters<typeof advanceStage.mutateAsync>[0]["data"] },
+    await completeStageHook.mutateAsync(
+      { workroomId, stageId },
       {
         onSuccess: () => {
-          toast({ title: "Stage completed", description: "Pipeline advanced to next stage." });
+          toast({ title: "✓ Stage selesai", description: "Pipeline dilanjutkan ke stage berikutnya." });
           setSelectedStageId(null);
           qc.invalidateQueries({ queryKey: getListWorkroomStagesQueryKey(workroomId) });
           qc.invalidateQueries({ queryKey: getGetWorkroomQueryKey(workroomId) });
           qc.invalidateQueries({ queryKey: getListWorkroomActivityQueryKey(workroomId) });
+          qc.invalidateQueries({ queryKey: getListDecisionLogsQueryKey(workroomId) });
         },
       }
     );
@@ -443,10 +446,10 @@ export default function WorkroomDetail() {
                   <Button
                     size="sm"
                     className="gap-1.5 bg-green-600 hover:bg-green-700 text-white"
-                    disabled={advanceStage.isPending}
+                    disabled={completeStageHook.isPending}
                     onClick={() => completeStage(displayStage.id)}
                   >
-                    {advanceStage.isPending ? (
+                    {completeStageHook.isPending ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
                       <ArrowRight className="w-3.5 h-3.5" />

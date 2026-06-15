@@ -3,11 +3,13 @@ import {
   useGetRecentWorkrooms,
   useListWorkrooms,
   useGetEarlyWarnings,
+  useGetRecentDecisions,
 } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import {
   Plus, Activity, CheckCircle, Clock, BookOpen, Bot,
   AlertTriangle, ArrowRight, Flame, Zap, ShieldAlert, Eye,
+  ScrollText, CheckCircle2, XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +36,7 @@ export default function Dashboard() {
   const { data: recent, isLoading: isRecentLoading } = useGetRecentWorkrooms();
   const { data: allWorkrooms } = useListWorkrooms();
   const { data: earlyWarnings } = useGetEarlyWarnings();
+  const { data: recentDecisions } = useGetRecentDecisions({ limit: 6 });
 
   const pendingGates = allWorkrooms?.filter(
     (w) => w.status === "active" && w.currentStageName && GATE_STAGE_NAMES.has(w.currentStageName)
@@ -197,6 +200,56 @@ export default function Dashboard() {
                         <p className="text-xs text-muted-foreground mt-0.5">{warning.message}</p>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Recent Decisions ───────────────────────────────────────────────── */}
+      {recentDecisions && recentDecisions.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ScrollText className="w-4 h-4 text-violet-400" />
+                <CardTitle className="text-base">Keputusan Terbaru</CardTitle>
+              </div>
+              <Badge variant="outline" className="text-xs">{recentDecisions.length} entri</Badge>
+            </div>
+            <CardDescription>Log keputusan gate terkini dari semua workroom aktif</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {recentDecisions.map((d) => {
+                const isApproved = d.tipeAksi === "keputusan_gate" && d.ringkasan?.toLowerCase().includes("setuju");
+                const isRejected = d.tipeAksi === "keputusan_gate" && (d.ringkasan?.toLowerCase().includes("tolak") || d.ringkasan?.toLowerCase().includes("revisi"));
+                return (
+                  <Link key={d.id} href={`/workrooms/${d.workroomId}`}>
+                    <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-card/40 hover:bg-card/80 transition-colors cursor-pointer">
+                      <div className="mt-0.5 shrink-0">
+                        {isApproved ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+                        ) : isRejected ? (
+                          <XCircle className="w-3.5 h-3.5 text-red-400" />
+                        ) : (
+                          <ScrollText className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-medium truncate">{d.workroomName}</span>
+                          <Badge variant="outline" className="text-[10px] py-0 h-4 shrink-0">{d.tipeAksi}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{d.ringkasan}</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                          {d.aktor} · {new Date(d.createdAt).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0 mt-1" />
                     </div>
                   </Link>
                 );

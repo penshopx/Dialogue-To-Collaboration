@@ -4,3 +4,4 @@
 - [Orval codegen duplicate types fix](orval-codegen-fix.md) — remove schemas:{path,type} from Zod output in orval.config.ts to prevent TS2308; api-zod/src/index.ts must only export from ./generated/api.
 - [Activity log schema fields](activity-log-schema.md) — activityLogsTable columns: workroomId, eventType, description, actor (no stageId/action/detail); workroomStagesTable has no updatedAt.
 - [Routes before export default](routes-export-order.md) — Express routes added AFTER `export default router` are silently ignored; always insert new routes before that line.
+- [DecisionLog detail is an object](decision-log-detail-type.md) — detail field is `Record<string,unknown>` not string; store as `{text: str}`, read back via `(log.detail as {text?:string}).text`.

@@ -651,6 +651,20 @@ export interface CompiledPack {
   message?: string;
 }
 
+export interface RecentDecisionItem {
+  id: number;
+  workroomId: number;
+  workroomName: string;
+  aktor: string;
+  tipeAksi: string;
+  ringkasan: string;
+  /** @nullable */
+  detail?: string | null;
+  /** @nullable */
+  stageId?: number | null;
+  createdAt: string;
+}
+
 export interface EarlyWarning {
   workroomId: number;
   workroomName: string;
@@ -670,5 +684,9 @@ export interface EarlyWarning {
 export type CompleteStageBody = {
   note?: string;
   aktor?: string;
+};
+
+export type GetRecentDecisionsParams = {
+limit?: number;
 };
 

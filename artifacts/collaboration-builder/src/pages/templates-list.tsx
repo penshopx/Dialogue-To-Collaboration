@@ -1,6 +1,6 @@
 import { useListTemplates } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { ArrowRight, Plus, Building2, BookOpen, GraduationCap, BadgeCheck, TrendingUp, HardHat } from "lucide-react";
+import { ArrowRight, Plus, Building2, BookOpen, GraduationCap, BadgeCheck, TrendingUp, HardHat, Layers, Users, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,12 @@ const MODE_LABELS: Record<string, string> = {
   profesional: "Professional",
   organisasi: "Organization",
   komunitas: "Community",
+};
+
+const MODE_COMPLEXITY: Record<string, { label: string; color: string; bg: string }> = {
+  profesional: { label: "Kompleksitas Tinggi", color: "text-red-400", bg: "bg-red-400/10" },
+  organisasi: { label: "Kompleksitas Sedang", color: "text-amber-400", bg: "bg-amber-400/10" },
+  komunitas: { label: "Kompleksitas Rendah", color: "text-green-400", bg: "bg-green-400/10" },
 };
 
 export default function TemplatesList() {
@@ -86,10 +92,29 @@ export default function TemplatesList() {
                           {t.description}
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="pb-2">
+                      <CardContent className="pb-2 space-y-3">
                         <div className="flex items-start gap-1.5">
                           <span className="text-xs text-muted-foreground font-medium shrink-0">Output:</span>
                           <span className="text-xs text-muted-foreground line-clamp-2">{t.outputFinal}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(() => {
+                            const cx = MODE_COMPLEXITY[t.mode];
+                            return cx ? (
+                              <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded ${cx.bg} ${cx.color} font-medium`}>
+                                <Sparkles className="w-2.5 h-2.5" />
+                                {cx.label}
+                              </span>
+                            ) : null;
+                          })()}
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+                            <Layers className="w-2.5 h-2.5" />
+                            8 Stages
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+                            <Users className="w-2.5 h-2.5" />
+                            3 AI Agents
+                          </span>
                         </div>
                       </CardContent>
                       <CardFooter className="flex justify-between items-center pt-2">
