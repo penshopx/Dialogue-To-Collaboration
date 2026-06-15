@@ -46,6 +46,8 @@ import { RangkumanTab } from "@/components/rangkuman-tab";
 import { MetricsTab } from "@/components/metrics-tab";
 import { StageTimelineTab } from "@/components/stage-timeline-tab";
 import { ClawConfigPanel } from "@/components/claw-config-panel";
+import { ClawChatTab } from "@/components/claw-chat-tab";
+import { AiTaskSuggester } from "@/components/ai-task-suggester";
 import { StageSummaryModal } from "@/components/stage-summary-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -439,6 +441,12 @@ export default function WorkroomDetail() {
                     <Plus className="w-3.5 h-3.5" />
                     Add Task
                   </Button>
+                  <AiTaskSuggester
+                    workroomId={workroomId}
+                    stageId={displayStage.id}
+                    stageName={displayStage.name}
+                    onAdded={() => qc.invalidateQueries({ queryKey: getListWorkroomTasksQueryKey(workroomId) })}
+                  />
                   {(displayStage.name.toLowerCase().includes("pack") || displayStage.name.toLowerCase().includes("release") || displayStage.name.toLowerCase().includes("rilis")) && (
                     <Button
                       size="sm"
@@ -522,6 +530,9 @@ export default function WorkroomDetail() {
               </TabsTrigger>
               <TabsTrigger value="claw-setup" className="gap-1.5">
                 <span>🦾</span> Claw
+              </TabsTrigger>
+              <TabsTrigger value="claw-chat" className="gap-1.5">
+                <span>💬</span> Claw Chat
               </TabsTrigger>
               <TabsTrigger value="multiclaw" className="gap-1.5">
                 <span>⚡</span> Multiclaw
@@ -741,6 +752,10 @@ export default function WorkroomDetail() {
 
             <TabsContent value="claw-setup" className="mt-4">
               <ClawConfigPanel workroomId={workroomId} />
+            </TabsContent>
+
+            <TabsContent value="claw-chat" className="mt-4">
+              <ClawChatTab workroomId={workroomId} />
             </TabsContent>
 
             <TabsContent value="multiclaw" className="mt-4">

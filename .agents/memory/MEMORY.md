@@ -9,3 +9,4 @@
 - [API server restart required for new routes](api-server-restart.md) — new route files registered in routes/index.ts return 404 until the API server workflow is restarted; always restart after adding route files.
 - [Workroom report page already exists](report-page-status.md) — workroom-report.tsx (334 lines) was already implemented with stage breakdown, KPI, decision logs, agent contribution, and activity log; do not recreate.
 - [Claw config direct-fetch pattern](claw-config-pattern.md) — internal config endpoints (claw, notifications) skip OpenAPI codegen; use useQuery+direct fetch in components instead of generated hooks.
+- [AI JSON structured output](ai-json-output.md) — for non-streaming AI endpoints that return structured data, use response_format: { type: "json_object" } with gpt-4o-mini; parse with JSON.parse and always provide a default fallback.

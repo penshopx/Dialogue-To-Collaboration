@@ -1,6 +1,12 @@
 import { Router, type IRouter } from "express";
+import OpenAI from "openai";
 import { db, clawConfigsTable, clawSubAgentsTable, clawQuickPromptsTable, knowledgeBaseItems } from "@workspace/db";
 import { eq, asc } from "drizzle-orm";
+
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ?? "https://api.openai.com/v1",
+});
 
 const router: IRouter = Router();
 
@@ -88,6 +94,55 @@ router.post("/workrooms/:workroomId/claw/quick-prompts", async (req, res): Promi
 router.delete("/workrooms/:workroomId/claw/quick-prompts/:promptId", async (req, res): Promise<void> => {
   await db.delete(clawQuickPromptsTable).where(eq(clawQuickPromptsTable.id, parseInt(req.params.promptId)));
   res.json({ ok: true });
+});
+
+router.post("/workrooms/:workroomId/claw/chat", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  const { messages } = req.body as { messages: { role: "user" | "assistant"; content: string }[] };
+
+  const [configs, kbItems] = await Promise.all([
+    db.select().from(clawConfigsTable).where(eq(clawConfigsTable.workroomId, workroomId)).limit(1),
+    db.select({ title: knowledgeBaseItems.title, content: knowledgeBaseItems.content })
+      .from(knowledgeBaseItems).where(eq(knowledgeBaseItems.workroomId, workroomId)),
+  ]);
+
+  const cfg = configs[0];
+  const topK = cfg?.ragTopK ?? 5;
+  const kbContext = kbItems.slice(0, topK)
+    .map(k => `**${k.title}**\n${k.content.slice(0, 500)}`)
+    .join("\n\n");
+
+  const basePrompt = cfg?.systemPrompt?.trim() || "Kamu adalah asisten AI yang membantu di workroom ini. Jawab dengan jelas dan helpfull.";
+  const systemContent = basePrompt + (kbContext ? `\n\n## Knowledge Base\n${kbContext}` : "");
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
+  try {
+    const stream = await openai.chat.completions.create({
+      model: (cfg?.model ?? "gpt-4o-mini") as string,
+      temperature: cfg?.temperature ?? 0.7,
+      max_tokens: cfg?.maxTokens ?? 2000,
+      messages: [
+        { role: "system", content: systemContent },
+        ...(messages ?? []),
+      ],
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content ?? "";
+      if (content) res.write(`data: ${JSON.stringify({ content })}\n\n`);
+    }
+    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    res.end();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+    res.end();
+  }
 });
 
 export default router;

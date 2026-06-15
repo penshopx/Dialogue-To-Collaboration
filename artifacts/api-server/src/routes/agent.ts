@@ -417,5 +417,70 @@ ${knowledgeSummary || "  (belum ada artikel)"}`;
   }
 });
 
+// ── AI Task Suggester ─────────────────────────────────────────────────────────
+router.post("/workrooms/:workroomId/stages/:stageId/suggest-tasks", async (req, res): Promise<void> => {
+  const workroomId = parseInt(req.params.workroomId);
+  const stageId = parseInt(req.params.stageId);
+
+  const [workrooms, stages] = await Promise.all([
+    db.select({ name: workroomsTable.name, objective: workroomsTable.objective })
+      .from(workroomsTable).where(eq(workroomsTable.id, workroomId)).limit(1),
+    db.select({ name: workroomStagesTable.name, operandPattern: workroomStagesTable.operandPattern })
+      .from(workroomStagesTable).where(eq(workroomStagesTable.id, stageId)).limit(1),
+  ]);
+
+  const workroom = workrooms[0];
+  const stage = stages[0];
+
+  const prompt = `Kamu adalah AI assistant yang membantu manajer proyek membuat task list yang spesifik dan actionable.
+
+PROJECT:
+- Workroom: ${workroom?.name ?? "Project"}
+- Objective: ${workroom?.objective ?? "Tidak tersedia"}
+
+STAGE SAAT INI:
+- Nama Stage: ${stage?.name ?? "Unknown"}
+- Mode Eksekusi: ${stage?.operandPattern ?? "sequential"}
+
+Buatkan TEPAT 4 task yang spesifik, terukur, dan relevan untuk stage ini.
+Setiap task harus konkret — bukan abstrak — dan langsung bisa dikerjakan.
+
+Role yang tersedia:
+- strategis: framing, analisis, perencanaan strategis
+- skeptis: validasi, risk assessment, critical review
+- eksekutor: implementasi, SOP, operasional konkret
+- narasumber: riset, knowledge, domain expertise
+- pack_compiler: dokumentasi, kompilasi, output final
+
+Kembalikan HANYA JSON valid dengan format:
+{
+  "tasks": [
+    {
+      "title": "string (max 60 karakter, jelas dan spesifik)",
+      "description": "string (1-2 kalimat, jelaskan deliverable-nya)",
+      "priority": "high|medium|low",
+      "functionRole": "strategis|skeptis|eksekutor|narasumber|pack_compiler"
+    }
+  ]
+}`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+      max_tokens: 1000,
+      temperature: 0.8,
+    });
+
+    const raw = response.choices[0].message.content ?? "{}";
+    const parsed = JSON.parse(raw) as { tasks?: unknown[] };
+    res.json({ tasks: parsed.tasks ?? [] });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    res.status(500).json({ error: message });
+  }
+});
+
 export { AGENT_PERSONAS };
 export default router;
