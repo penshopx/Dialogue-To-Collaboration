@@ -1505,6 +1505,15 @@ components:
           type: string
         humanTouchPoints:
           type: integer
+        deadline:
+          type: string
+          nullable: true
+          description: ISO date string for workroom deadline (YYYY-MM-DD)
+        kpiTargets:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: KPI targets stored as JSON
 
     # ── WorkroomStage ─────────────────────────────────────────────────────────
     WorkroomStage:

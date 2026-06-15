@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, desc, sql, and } from "drizzle-orm";
+import { resolveAIClient, isProviderConfigured } from "../lib/ai-client.js";
 import {
   db,
   workroomsTable,
@@ -267,9 +268,13 @@ router.patch("/workrooms/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  const { deadline, ...rest } = parsed.data;
   const [workroom] = await db
     .update(workroomsTable)
-    .set(parsed.data)
+    .set({
+      ...rest,
+      ...(deadline !== undefined ? { deadline: deadline ? new Date(deadline) : null } : {}),
+    })
     .where(eq(workroomsTable.id, params.data.id))
     .returning();
 
@@ -1269,4 +1274,123 @@ router.delete("/workrooms/:workroomId/stages/:stageId/exit-criteria/:criteriaId"
   if (isNaN(criteriaId)) { res.status(400).json({ error: "Invalid ID" }); return; }
   await db.delete(stageExitCriteriaTable).where(eq(stageExitCriteriaTable.id, criteriaId));
   res.sendStatus(204);
+});
+
+/* ── Clone Workroom ─────────────────────────────────────────────────────── */
+router.post("/workrooms/:id/clone", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [original] = await db.select().from(workroomsTable).where(eq(workroomsTable.id, id));
+  if (!original) { res.status(404).json({ error: "Workroom not found" }); return; }
+
+  const [cloned] = await db.insert(workroomsTable).values({
+    name: `${original.name} (Kopi)`,
+    templateId: original.templateId,
+    objective: original.objective ?? undefined,
+    riskLevel: original.riskLevel,
+    deadline: original.deadline ?? undefined,
+    kpiTargets: original.kpiTargets ?? undefined,
+    status: "active",
+    currentStageName: "Intake",
+    progress: 0,
+  }).returning();
+
+  const stagesData = DEFAULT_STAGES.map((s) => ({
+    ...s,
+    workroomId: cloned.id,
+    status: s.order === 1 ? "active" : "pending",
+  }));
+  await db.insert(workroomStagesTable).values(stagesData);
+
+  await db.insert(activityLogsTable).values({
+    workroomId: cloned.id,
+    actor: "System",
+    eventType: "workroom_created",
+    description: `Workroom dikloning dari "${original.name}"`,
+  });
+
+  const [template] = await db
+    .select({ name: workflowTemplatesTable.name, sector: workflowTemplatesTable.sector })
+    .from(workflowTemplatesTable)
+    .where(eq(workflowTemplatesTable.id, cloned.templateId));
+
+  res.status(201).json({ ...cloned, templateName: template?.name ?? "Unknown", sector: template?.sector ?? "General" });
+});
+
+/* ── AI Standup Generator ───────────────────────────────────────────────── */
+router.post("/workrooms/:id/standup", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [workroom] = await db.select().from(workroomsTable).where(eq(workroomsTable.id, id));
+  if (!workroom) { res.status(404).json({ error: "Workroom not found" }); return; }
+
+  const model = ((req.body as Record<string, unknown>).model as string | undefined) ?? "gpt-4o-mini";
+  const { ok, missing } = isProviderConfigured(model);
+  if (!ok) {
+    res.status(503).json({ error: `Provider belum dikonfigurasi. Env var yang dibutuhkan: ${missing}` });
+    return;
+  }
+
+  const stages = await db.select().from(workroomStagesTable).where(eq(workroomStagesTable.workroomId, id));
+  const allTasks = await db.select().from(workroomTasksTable).where(eq(workroomTasksTable.workroomId, id));
+  const recentActivity = await db
+    .select().from(activityLogsTable)
+    .where(eq(activityLogsTable.workroomId, id))
+    .orderBy(desc(activityLogsTable.createdAt))
+    .limit(5);
+
+  const activeStage = stages.find((s) => s.status === "active") ?? stages.find((s) => s.status === "awaiting_gate");
+  const doneTasks = allTasks.filter((t) => t.status === "done");
+  const doingTasks = allTasks.filter((t) => t.status === "doing");
+  const blockedTasks = allTasks.filter((t) => t.status === "blocked");
+  const todoTasks = allTasks.filter((t) => t.status === "todo");
+
+  const taskList = (arr: typeof doneTasks, max = 4) =>
+    arr.length === 0 ? "tidak ada" : arr.slice(0, max).map((t) => `"${t.title}"`).join(", ") + (arr.length > max ? ` (+${arr.length - max} lainnya)` : "");
+
+  const prompt = `Buat laporan standup harian singkat untuk workroom berikut, dalam Bahasa Indonesia.
+
+**Workroom:** ${workroom.name}
+**Objektif:** ${workroom.objective ?? "Tidak disebutkan"}
+**Stage aktif:** ${activeStage?.name ?? "Belum mulai"} (${activeStage?.status ?? "-"})
+**Progress keseluruhan:** ${workroom.progress}%
+
+**Statistik task:**
+- Selesai (done): ${doneTasks.length} → ${taskList(doneTasks)}
+- Sedang berjalan (doing): ${doingTasks.length} → ${taskList(doingTasks)}
+- Blocked: ${blockedTasks.length} → ${taskList(blockedTasks)}
+- Belum mulai (todo): ${todoTasks.length}
+
+**Aktivitas terakhir:**
+${recentActivity.map((a) => `- ${a.actor ?? "System"}: ${a.description ?? ""}`).join("\n") || "- (tidak ada)"}
+
+Tulis laporan standup dalam format markdown dengan bagian:
+## ✅ Yang Sudah Selesai
+## 🔄 Sedang Dikerjakan
+## 🚧 Hambatan & Blocker
+## ⏭️ Langkah Selanjutnya
+## 📌 Catatan Penting
+
+Singkat, padat, dan actionable. Maksimal 300 kata.`;
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const client = resolveAIClient(model);
+  const stream = await client.chat.completions.create({
+    model,
+    messages: [{ role: "user", content: prompt }],
+    stream: true,
+    max_tokens: 700,
+  });
+
+  for await (const chunk of stream) {
+    const content = chunk.choices[0]?.delta?.content ?? "";
+    if (content) res.write(`data: ${JSON.stringify({ content })}\n\n`);
+  }
+  res.write("data: [DONE]\n\n");
+  res.end();
 });

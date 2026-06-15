@@ -26,9 +26,13 @@ import {
   Shield, Wrench, Brain, Star, CheckSquare, ArrowRight,
   StickyNote, Save, ExternalLink, Kanban,
   Users, Trash2, Package, ScrollText, User, ClipboardList, BarChart3,
+  Pencil, Megaphone, Download, Target,
 } from "lucide-react";
 import { AgentChat } from "@/components/agent-chat";
 import { KanbanBoard } from "@/components/kanban-board";
+import { EditWorkroomModal } from "@/components/edit-workroom-modal";
+import { KpiTrackerTab } from "@/components/kpi-tracker-tab";
+import { StandupModal } from "@/components/standup-modal";
 import { KnowledgeBaseTab } from "@/components/knowledge-base-tab";
 import { ProjectBrainTab } from "@/components/project-brain-tab";
 import { DeliverablesTab } from "@/components/deliverables-tab";
@@ -287,10 +291,51 @@ export default function WorkroomDetail() {
   const [showCriteriaForm, setShowCriteriaForm] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [summaryStageId, setSummaryStageId] = useState<number | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [standupOpen, setStandupOpen] = useState(false);
 
   const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
+
+  function exportMarkdown() {
+    if (!workroom) return;
+    const lines: string[] = [];
+    lines.push(`# ${workroom.name}`);
+    lines.push(`**Status:** ${workroom.status}  **Progress:** ${workroom.progress}%`);
+    if (workroom.objective) lines.push(`\n**Objektif:** ${workroom.objective}`);
+    if ((workroom as unknown as { deadline?: string }).deadline) {
+      lines.push(`**Deadline:** ${new Date((workroom as unknown as { deadline: string }).deadline).toLocaleDateString("id-ID")}`);
+    }
+    lines.push("\n---\n## Stages Pipeline");
+    for (const s of stages ?? []) {
+      lines.push(`\n### Stage ${s.order}: ${s.name} (${s.status})`);
+      if (s.notes) lines.push(`\n${s.notes}`);
+      const stageTasks2 = tasks?.filter((t) => t.stageId === s.id) ?? [];
+      if (stageTasks2.length > 0) {
+        lines.push("\n**Tasks:**");
+        for (const t of stageTasks2) {
+          const check = t.status === "done" ? "[x]" : "[ ]";
+          lines.push(`- ${check} ${t.title} (${t.priority}${t.assigneeRole ? `, ${t.assigneeRole}` : ""})`);
+        }
+      }
+    }
+    if (decisionLogs && decisionLogs.length > 0) {
+      lines.push("\n---\n## Log Keputusan");
+      for (const log of decisionLogs) {
+        lines.push(`\n**${log.aktor}** — ${log.tipeAksi}`);
+        lines.push(`> ${log.ringkasan}`);
+        lines.push(`*${new Date(log.createdAt).toLocaleString("id-ID")}*`);
+      }
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${workroom.name.replace(/\s+/g, "-").toLowerCase()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function completeStage(stageId: number) {
     await completeStageHook.mutateAsync(
@@ -377,6 +422,18 @@ export default function WorkroomDetail() {
             <p className="text-muted-foreground text-sm mt-0.5 line-clamp-1">{workroom.objective}</p>
           )}
         </div>
+        <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setStandupOpen(true)}>
+          <Megaphone className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Standup</span>
+        </Button>
+        <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={exportMarkdown}>
+          <Download className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Export</span>
+        </Button>
+        <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setEditOpen(true)}>
+          <Pencil className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Edit</span>
+        </Button>
         <Link href={`/workrooms/${workroomId}/report`}>
           <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
             <FileText className="w-3.5 h-3.5" />
@@ -580,6 +637,9 @@ export default function WorkroomDetail() {
               </TabsTrigger>
               <TabsTrigger value="timeline" className="gap-1.5">
                 <span>🗺️</span> Timeline
+              </TabsTrigger>
+              <TabsTrigger value="kpi" className="gap-1.5">
+                <Target className="w-3.5 h-3.5" /> KPI
               </TabsTrigger>
             </TabsList>
 
@@ -1160,6 +1220,14 @@ export default function WorkroomDetail() {
             <TabsContent value="timeline" className="mt-4">
               <StageTimelineTab stages={stages ?? []} currentStageId={displayStageId ?? undefined} />
             </TabsContent>
+
+            <TabsContent value="kpi" className="mt-4">
+              {workroom ? (
+                <KpiTrackerTab workroom={workroom as Parameters<typeof KpiTrackerTab>[0]["workroom"]} />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground text-sm">Memuat data workroom…</div>
+              )}
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -1179,6 +1247,28 @@ export default function WorkroomDetail() {
         workroomId={workroomId}
         stageId={summaryStageId}
         stageName={stages?.find(s => s.id === summaryStageId)?.name}
+      />
+
+      {workroom && (
+        <EditWorkroomModal
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          workroom={{
+            id: workroom.id,
+            name: workroom.name,
+            objective: workroom.objective,
+            riskLevel: (workroom as unknown as { riskLevel?: string }).riskLevel,
+            deadline: (workroom as unknown as { deadline?: string }).deadline,
+            status: workroom.status,
+          }}
+        />
+      )}
+
+      <StandupModal
+        open={standupOpen}
+        onClose={() => setStandupOpen(false)}
+        workroomId={workroomId}
+        workroomName={workroom?.name ?? ""}
       />
     </div>
   );

@@ -1,12 +1,2 @@
-- [Orval mutation body shape](orval-mutation-shape.md) — generated mutations wrap request body as `{ data: InputType }`, not the raw type directly.
-- [Orval query hook enabled pattern](orval-enabled-pattern.md) — Orval hooks using `UseQueryOptions` directly require `queryKey`; omit `enabled` from options, call unconditionally and guard in effects.
-- [Import order in Express routers](express-import-order.md) — Never append `import` statements after `export default router`; always move imports to top of file or TS/runtime will error.
-- [Orval codegen duplicate types fix](orval-codegen-fix.md) — remove schemas:{path,type} from Zod output in orval.config.ts to prevent TS2308; api-zod/src/index.ts must only export from ./generated/api.
-- [Activity log schema fields](activity-log-schema.md) — activityLogsTable columns: workroomId, eventType, description, actor (no stageId/action/detail); workroomStagesTable has no updatedAt.
-- [Routes before export default](routes-export-order.md) — Express routes added AFTER `export default router` are silently ignored; always insert new routes before that line.
-- [DecisionLog detail is an object](decision-log-detail-type.md) — detail field is `Record<string,unknown>` not string; store as `{text: str}`, read back via `(log.detail as {text?:string}).text`.
-- [Template real counts pattern](template-real-counts.md) — hooks inside .map() are forbidden in React; use a per-card sub-component (TemplateCardStats) calling useListTemplateStages/useListTemplateRoles per templateId.
-- [API server restart required for new routes](api-server-restart.md) — new route files registered in routes/index.ts return 404 until the API server workflow is restarted; always restart after adding route files.
-- [Workroom report page already exists](report-page-status.md) — workroom-report.tsx (334 lines) was already implemented with stage breakdown, KPI, decision logs, agent contribution, and activity log; do not recreate.
-- [Claw config direct-fetch pattern](claw-config-pattern.md) — internal config endpoints (claw, notifications) skip OpenAPI codegen; use useQuery+direct fetch in components instead of generated hooks.
-- [AI JSON structured output](ai-json-output.md) — for non-streaming AI endpoints that return structured data, use response_format: { type: "json_object" } with gpt-4o-mini; parse with JSON.parse and always provide a default fallback.
+- [WorkroomUpdate deadline/kpiTargets](workroom-update-fields.md) — UpdateWorkroomBody gained deadline+kpiTargets; must convert deadline string→Date before DB .set(); kpiTargets uses JSON blob.
+- [ActivityLog field names](activity-log-schema.md) — activityLogsTable uses description+eventType (NOT action+category); isProviderConfigured returns { ok, missing: string } (string, not array).

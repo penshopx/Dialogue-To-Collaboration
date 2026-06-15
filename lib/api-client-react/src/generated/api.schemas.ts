@@ -239,12 +239,21 @@ export interface WorkroomInput {
   kpiTargets?: WorkroomInputKpiTargets;
 }
 
+/**
+ * KPI targets stored as JSON
+ */
+export type WorkroomUpdateKpiTargets = { [key: string]: unknown } | null;
+
 export interface WorkroomUpdate {
   name?: string;
   status?: string;
   objective?: string;
   riskLevel?: string;
   humanTouchPoints?: number;
+  /** ISO date string for workroom deadline (YYYY-MM-DD) */
+  deadline?: string | null;
+  /** KPI targets stored as JSON */
+  kpiTargets?: WorkroomUpdateKpiTargets;
 }
 
 export interface WorkroomStageUpdate {

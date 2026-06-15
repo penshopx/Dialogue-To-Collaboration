@@ -1,6 +1,6 @@
-import { useListWorkrooms } from "@workspace/api-client-react";
-import { Link } from "wouter";
-import { Plus, Clock, ChevronRight, Search, AlertTriangle, CalendarClock } from "lucide-react";
+import { useListWorkrooms, getListWorkroomsQueryKey } from "@workspace/api-client-react";
+import { Link, useLocation } from "wouter";
+import { Plus, Clock, ChevronRight, Search, AlertTriangle, CalendarClock, Copy, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 const STATUS_COLORS: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   active: "secondary",
@@ -44,6 +46,32 @@ export default function WorkroomsList() {
   const { data: workrooms, isLoading } = useListWorkrooms();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [cloningId, setCloningId] = useState<number | null>(null);
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+
+  async function cloneWorkroom(e: React.MouseEvent, id: number, name: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (cloningId) return;
+    setCloningId(id);
+    try {
+      const res = await fetch(`/api/workrooms/${id}/clone`, { method: "POST" });
+      if (!res.ok) throw new Error("Clone gagal");
+      const cloned = await res.json() as { id: number };
+      await qc.invalidateQueries({ queryKey: getListWorkroomsQueryKey() });
+      toast({
+        title: "Workroom berhasil dikloning",
+        description: `"${name} (Kopi)" telah dibuat.`,
+      });
+      navigate(`/workrooms/${cloned.id}`);
+    } catch {
+      toast({ title: "Gagal kloning", variant: "destructive" });
+    } finally {
+      setCloningId(null);
+    }
+  }
 
   const gateCount = workrooms?.filter(
     (w) => w.status === "active" && w.currentStageName && GATE_STAGE_NAMES.has(w.currentStageName)
@@ -212,6 +240,19 @@ export default function WorkroomsList() {
                         </div>
                         <Progress value={room.progress} className="h-1.5" />
                       </div>
+
+                      <button
+                        onClick={(e) => cloneWorkroom(e, room.id, room.name)}
+                        className="p-2 rounded-md border border-border hover:border-primary/40 hover:text-primary text-muted-foreground transition-colors flex-shrink-0 hidden sm:flex items-center gap-1.5 text-xs"
+                        title="Klon workroom ini"
+                      >
+                        {cloningId === room.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                        <span>Klon</span>
+                      </button>
 
                       <ChevronRight className={cn(
                         "w-4 h-4 transition-colors flex-shrink-0",

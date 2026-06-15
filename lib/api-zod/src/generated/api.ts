@@ -362,7 +362,9 @@ export const UpdateWorkroomBody = zod.object({
   "status": zod.string().optional(),
   "objective": zod.string().optional(),
   "riskLevel": zod.string().optional(),
-  "humanTouchPoints": zod.number().optional()
+  "humanTouchPoints": zod.number().optional(),
+  "deadline": zod.string().nullish().describe('ISO date string for workroom deadline (YYYY-MM-DD)'),
+  "kpiTargets": zod.record(zod.string(), zod.unknown()).nullish().describe('KPI targets stored as JSON')
 })
 
 export const UpdateWorkroomResponse = zod.object({
