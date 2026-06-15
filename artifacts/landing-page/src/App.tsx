@@ -854,9 +854,9 @@ function TestimonialsSection() {
 const TIERS = [
   {
     name: "Starter",
-    monthly: "Rp 49.000", annual: "Rp 39.000", annualSave: "hemat Rp 120rb/tahun",
-    period: "per bulan", setup: "Rp 0 (self-onboard)",
-    desc: "Untuk individu atau freelancer yang baru mulai.", cta: "Mulai Sekarang",
+    monthly: "Rp 145.000", annual: "Rp 116.000", annualSave: "hemat Rp 348rb/tahun",
+    period: "per bulan", setup: "Rp 0 (self-onboard)", trial: "14 hari gratis",
+    desc: "Untuk individu atau freelancer yang baru mulai.", cta: "Coba 14 Hari Gratis",
     features: ["3 workroom aktif", "2 template sektor", "Pipeline 8 stage standar", "10 AI tasks / bulan", "Export Markdown", "Dashboard dasar"],
     no: ["AI Standup Generator", "KPI Tracker lanjutan", "Clone Workroom", "Support prioritas"],
   },
@@ -942,6 +942,9 @@ function PricingSection() {
                   </span>
                 </div>
                 <p className="text-xs mb-1" style={{ color: "var(--tx-ghost)" }}>{t.period}</p>
+                {"trial" in t && t.trial && !annual && (
+                  <p className="text-xs font-semibold" style={{ color: "oklch(0.68 0.18 55)" }}>🎁 {t.trial} — tidak perlu kartu kredit</p>
+                )}
                 {"annualSave" in t && annual && t.annualSave && (
                   <p className="text-xs font-semibold" style={{ color: "oklch(0.6 0.18 160)" }}>✓ {t.annualSave}</p>
                 )}
