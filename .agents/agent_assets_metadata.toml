@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "GmCMBTSTAPwoK8MUqVi3p"
@@ -24,3 +23,9 @@ id = "Y-NLv2bMECQSz6USNW7qs"
 uri = "file://artifacts/landing-page/public/illustrations/dashboard-analytics.png"
 type = "image"
 title = "dashboard analytics illustration"
+
+[[outputs]]
+id = "qR-ykMjpXwdE17cxmvvPw"
+uri = "file://artifacts/collabbuilder-video/public/audio/bg_music.mp3"
+type = "audio"
+title = "CollabBuilder background music"

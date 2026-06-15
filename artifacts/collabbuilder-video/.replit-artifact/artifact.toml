@@ -1,0 +1,31 @@
+kind = "video"
+previewPath = "/collabbuilder-video/"
+title = "CollabBuilder Marketing Video"
+version = "1.0.0"
+id = "artifacts/collabbuilder-video"
+router = "path"
+
+[[integratedSkills]]
+name = "video-js"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/collabbuilder-video/" ]
+localPort = 22481
+
+[services.development]
+run = "pnpm --filter @workspace/collabbuilder-video run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/collabbuilder-video", "run", "build" ]
+publicDir = "artifacts/collabbuilder-video/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22481"
+BASE_PATH = "/collabbuilder-video/"
