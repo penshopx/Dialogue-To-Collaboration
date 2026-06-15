@@ -853,28 +853,30 @@ function TestimonialsSection() {
 // ─────────────────────────────────────────────────────────────────────────────
 const TIERS = [
   {
-    name: "Starter", monthly: "Gratis", annual: "Gratis", period: "selamanya",
-    setup: "Rp 0", license: "Rp 0",
-    desc: "Untuk individu atau tim kecil yang baru mulai.", cta: "Mulai Gratis Sekarang",
+    name: "Starter",
+    monthly: "Rp 49.000", annual: "Rp 39.000", annualSave: "hemat Rp 120rb/tahun",
+    period: "per bulan", setup: "Rp 0 (self-onboard)",
+    desc: "Untuk individu atau freelancer yang baru mulai.", cta: "Mulai Sekarang",
     features: ["3 workroom aktif", "2 template sektor", "Pipeline 8 stage standar", "10 AI tasks / bulan", "Export Markdown", "Dashboard dasar"],
     no: ["AI Standup Generator", "KPI Tracker lanjutan", "Clone Workroom", "Support prioritas"],
   },
   {
     name: "Professional", badge: "Paling Populer",
     monthly: "Rp 599.000", annual: "Rp 479.000", annualSave: "hemat Rp 1.44jt/tahun",
-    period: "per bulan", setup: "Rp 0", license: "Rp 0",
-    desc: "Untuk konsultan & profesional yang butuh hasil nyata.", cta: "Coba 14 Hari Gratis", popular: true,
+    period: "per bulan", setup: "Rp 149.000 (one-time)",
+    desc: "Untuk konsultan & profesional yang butuh hasil nyata.", cta: "Mulai + Setup", popular: true,
     features: ["Workroom tidak terbatas", "18+ template semua sektor", "AI Standup Generator", "KPI Tracker real-time", "Clone & Branch Workroom", "AI Gate Analysis (GPT-4o)", "Audit trail lengkap", "Export PDF & Markdown", "Email support <24 jam"],
   },
   {
-    name: "Team", monthly: "Rp 1.499.000", annual: "Rp 1.199.000", annualSave: "hemat Rp 3.6jt/tahun",
-    period: "per bulan / 5 users", setup: "Rp 0", license: "Rp 0 / user",
-    desc: "Untuk tim yang bekerja bersama dalam banyak proyek.", cta: "Coba 14 Hari Gratis",
+    name: "Team",
+    monthly: "Rp 1.499.000", annual: "Rp 1.199.000", annualSave: "hemat Rp 3.6jt/tahun",
+    period: "per bulan / 5 users", setup: "Rp 299.000 (one-time)",
+    desc: "Untuk tim yang bekerja bersama dalam banyak proyek.", cta: "Mulai + Setup",
     features: ["Semua fitur Professional", "5 user seats (+ Rp 200K/user tambahan)", "Shared workroom & task view", "Team decision log", "Collaboration roles per user", "Slack / webhook notifikasi", "Custom template builder", "Priority support <4 jam"],
   },
   {
     name: "Enterprise", monthly: "Custom", annual: "Custom", period: "hubungi sales",
-    setup: "Termasuk onboarding", license: "Unlimited users",
+    setup: "Termasuk (onboarding + training)",
     desc: "Untuk korporasi & firma konsultan besar.", cta: "Request Demo",
     features: ["Semua fitur Team", "User tidak terbatas", "White-label & custom domain", "On-premise deployment", "API access penuh", "Custom AI model integration", "SLA 99.9% uptime", "Dedicated account manager", "Onboarding & training (termasuk)"],
   },
@@ -892,14 +894,14 @@ function PricingSection() {
             💰 Harga Transparan
           </span>
           <h2 className="text-4xl font-black mt-3 mb-4" style={{ color: "var(--tx)" }}>
-            Tidak Ada Biaya Tersembunyi.<br />
-            <span className="text-gradient">Subscription. Itu Saja.</span>
+            Harga Jelas, Tidak Ada<br />
+            <span className="text-gradient">Biaya Tersembunyi.</span>
           </h2>
           <p className="mb-2 max-w-lg mx-auto text-sm" style={{ color: "var(--tx-muted)" }}>
-            <strong style={{ color: "var(--tx)" }}>Nol biaya setup. Nol biaya lisensi. Nol biaya onboarding.</strong>
+            Biaya setup <strong style={{ color: "var(--tx)" }}>one-time</strong> — dibayar sekali, tidak berulang. Setelah itu hanya subscription bulanan atau tahunan.
           </p>
           <p className="mb-8 max-w-md mx-auto text-xs" style={{ color: "var(--tx-faint)" }}>
-            Sebagai perbandingan: hiring satu koordinator proyek full-time ≈ Rp 6–10jt/bulan. Professional plan ≈ Rp 599K.
+            Sebagai perbandingan: hiring satu koordinator proyek full-time ≈ Rp 6–10jt/bulan. Professional plan ≈ Rp 599K/bulan + setup Rp 149K sekali.
           </p>
 
           <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border"
@@ -979,7 +981,7 @@ function PricingSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {[
-            { q: "Ada biaya setup?", a: "Tidak ada. Semua paket = Rp 0 biaya setup. Enterprise sudah termasuk onboarding & training." },
+            { q: "Biaya setup itu untuk apa?", a: "Setup fee dibayar sekali (one-time) saat pertama kali aktivasi — mencakup konfigurasi awal, template customization, dan panduan onboarding. Starter: self-onboard (Rp 0). Professional: Rp 149K. Team: Rp 299K. Enterprise: sudah termasuk." },
             { q: "Ada biaya per-seat / lisensi?", a: "Tidak ada di Professional. Team: 5 seats termasuk, tambah seat Rp 200K/user/bulan. Enterprise: unlimited." },
             { q: "Kalau cancel, datanya hilang?", a: "Tidak. Data disimpan 90 hari setelah cancel. Anda bisa export kapan saja sebelum menutup akun." },
           ].map(item => (
