@@ -1,4 +1,4 @@
-import { useListTemplates } from "@workspace/api-client-react";
+import { useListTemplates, useListTemplateStages, useListTemplateRoles } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { ArrowRight, Plus, Building2, BookOpen, GraduationCap, BadgeCheck, TrendingUp, HardHat, Layers, Users, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,25 @@ const MODE_COMPLEXITY: Record<string, { label: string; color: string; bg: string
   organisasi: { label: "Kompleksitas Sedang", color: "text-amber-400", bg: "bg-amber-400/10" },
   komunitas: { label: "Kompleksitas Rendah", color: "text-green-400", bg: "bg-green-400/10" },
 };
+
+function TemplateCardStats({ templateId }: { templateId: number }) {
+  const { data: stages } = useListTemplateStages(templateId);
+  const { data: roles } = useListTemplateRoles(templateId);
+  const stageCount = stages?.length ?? null;
+  const roleCount = roles?.length ?? null;
+  return (
+    <>
+      <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+        <Layers className="w-2.5 h-2.5" />
+        {stageCount !== null ? `${stageCount} Stage${stageCount !== 1 ? "s" : ""}` : "…"}
+      </span>
+      <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+        <Users className="w-2.5 h-2.5" />
+        {roleCount !== null ? `${roleCount} AI Role${roleCount !== 1 ? "s" : ""}` : "…"}
+      </span>
+    </>
+  );
+}
 
 export default function TemplatesList() {
   const { data: templates, isLoading } = useListTemplates();
@@ -107,14 +126,7 @@ export default function TemplatesList() {
                               </span>
                             ) : null;
                           })()}
-                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
-                            <Layers className="w-2.5 h-2.5" />
-                            8 Stages
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
-                            <Users className="w-2.5 h-2.5" />
-                            3 AI Agents
-                          </span>
+                          <TemplateCardStats templateId={t.id} />
                         </div>
                       </CardContent>
                       <CardFooter className="flex justify-between items-center pt-2">

@@ -10,6 +10,7 @@ import deliverablesRouter from "./deliverables";
 import brainRouter from "./brain";
 import configRouter from "./config";
 import summarizeRouter from "./summarize";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(deliverablesRouter);
 router.use(brainRouter);
 router.use(configRouter);
 router.use(summarizeRouter);
+router.use(notificationsRouter);
 
 export default router;

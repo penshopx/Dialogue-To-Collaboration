@@ -1,0 +1,463 @@
+SBUClaw
+Aktif
+SBU Konstruksi Permen PU 6/2025 · sbuclaw-orchestrator
+
+gpt-4o
+KB · 43 chunks
+Buka Chat
+Knowledge Base
+System Prompt
+Model & RAG
+Persona & UX
+Sub-Agents
+Knowledge Base
+73 sumber · 43 chunks · Agent akan menggunakan KB ini saat menjawab
+
+
+🌐
+Perpres 46 Tahun 2025: Ini Perubahan Penting Wewenang Pelaku Pengadaan Barang/Jasa Pemerintah
+url
+● completed
+operational
+
+🌐
+Sosialisasi Peraturan Presiden Nomor 46 Tahun 2025
+url
+● completed
+operational
+
+🌐
+Cara Menambah KBLI pada NIB yang Sudah Terbit di OSS RBA Terbaru 2025 | Sesuai PP 28 Tahun 2025
+url
+● completed
+operational
+
+🌐
+TERBARU 2026! Cara Terbitkan NIB di OSS RBA Tanpa PKKPR Sesuai PP 28 Tahun 2025
+url
+● completed
+operational
+
+🌐
+WEBINAR Bina Konstruksi "Transformasi Pengadaan Jasa Konstruksi Pasca Perpres 46 Tahun 2025"
+url
+● completed
+operational
+
+🌐
+Webinar BinKon 2025 -“SBU dan SKK-K dalam Penyelenggaraan Jasa Konstruksi" #webinarbinakonstruksi
+url
+● completed
+operational
+
+🌐
+BPS Rilis Tabel Konversi Klasifikasi Baku Lapangan Usaha 2025
+url
+● completed
+operational
+
+🌐
+Ini Penyebabnya KBLI TIDAK MUNCUL, RDTR DITOLAK & KKPR MENUNGGU VERIFIKASI
+url
+● completed
+operational
+
+🌐
+TUTORIAL CARA TAMBAH KBLI DI NIB OSS 2026
+url
+● completed
+operational
+
+🌐
+BANYAK KBLI YANG BELUM MUNCUL DI OSS ? GUA KASIH TUTOR NYA ! #ossrba #perizinanusaha #legalitasusaha
+url
+● completed
+operational
+
+🌐
+CARA MERUBAH,MEMBATALKAN DAN MEMBUAT KBLI BARU DI OSS
+url
+● completed
+operational
+
+🌐
+KBLI 2025 Terbaru: Apa Saja yang Berubah! Panduan Penting yang Bisa Menyelamatkan Bisnismu!
+url
+● completed
+operational
+
+🌐
+TERBARU 2026!!! Cara Menambahkan KBLI / Jenis Usaha / Bidang Usaha ke Pembaruan OSS Pada NIB Terbit
+url
+● completed
+operational
+
+🌐
+Sosialisasi Permen PU No 6 Tahun 2025 dan KBLI 2025
+url
+● completed
+operational
+
+🌐
+KBLI 2025: Lebih Detail, Lebih Ketat!
+url
+● completed
+operational
+
+🌐
+WINDU #74 - Implementasi KBLI 2025 sesuai PP Nomor 28 2025 dan Permen Investasi/BKPM Nomor 5 2
+url
+● completed
+operational
+
+🌐
+Update SBU dan Perizinan Usaha Subsektor Jasa Konstruksi
+url
+● completed
+operational
+
+🌐
+SOSIALISASI KBLI 2025 SEKTOR ISKPBGN PENERAPANNYA DALAM PERIZINAN BERUSAHA BERBASIS RISIKO (PBBR)
+url
+● completed
+operational
+
+🌐
+Sosialisasi Penyesuaian KBLI 2020 menjadi KBLI 2025 Bagi Badan Usaha Jasa Konstruksi
+url
+● completed
+operational
+
+🌐
+KBLI 2025 – Kategori F (Konstruksi) dan M (Aktivitas Real Estat)
+url
+● completed
+operational
+
+🌐
+TERBARU 2025!!! CARA MEMBUAT NIB (NOMOR INDUK BERUSAHA) SECARA ONLINE MELALUI HP/LAPTOP GRATIS!!!
+url
+● completed
+operational
+
+🌐
+TERBARU 2026!!! CARA MEMBUAT NIB (NOMOR INDUK BERUSAHA) VIA OSS + AMDALNET SECARA ONLINE (HP/LAPTOP)
+url
+● completed
+operational
+
+🌐
+Sosialisasi Penerapan KBLI 2025 Pada Sistem OSS
+url
+● completed
+operational
+
+🌐
+Sosialisasi Penerapan KBLI 2025 Pada Sistem OSS
+url
+● completed
+operational
+
+📎
+7. Pak Panani Bu Indri Pak Joko_Konsep Standar Skema Sertifikasi_Mei 2026_V3 (Hal 1-50).pdf
+file
+● completed
+operational
+
+📎
+6. Inkindo_Best Practice Penggunaan Standar Skema Sertifikasi BUJK pada LS INKINDO-Design 2.pdf
+file
+● completed
+operational
+
+📎
+5. GAPENSI_Pointer_Praktik_Terbaik_Sertifikasi_BUJK_GAMANA_KRIDA_BHAKTI.pdf
+file
+● completed
+operational
+
+📎
+4. Pak Sigit LPJK_19052026-LPJK-OVERVIEW SKEMA STANDAR-R2.pdf
+file
+● completed
+operational
+
+📎
+3. KAN_PU 19 Mei 2026 rev2.pdf
+file
+● completed
+operational
+
+📎
+1. Ksd Kelembagaan_OVERVIEW Pengantar Workshop Skema_V3.pdf
+file
+● completed
+operational
+
+📎
+5. Bu Indri dan Pak Joko_190526_Paparan Lampiran Skema_V4.pdf
+file
+● completed
+operational
+
+📎
+4. Pak Andias_Penjelasan Penyesuaian Pencatatan SDPK dan Mekanisme Klarifikasi Dok Perjanjian Sewa-r1.pdf
+file
+● completed
+operational
+
+📎
+3. Pak Rivaldo LPJK_Lamprian 20 Data dan Dokumen Pendaftaran.pdf
+file
+● completed
+operational
+
+📎
+2. Pak Amrull Subdit Usaha_[05-20] KONVERSI KBLI 2020 KE KBLI 2025.pdf
+file
+● completed
+operational
+
+📎
+1. Pak Panani Bu Indri Pak Joko_Konsep Standar Skema Sertifikasi_Mei 2026_V3 (Hal 52-98).pdf
+file
+● completed
+operational
+
+📎
+2.3 Lampiran I.C PP Nomor 28 Tahun 2025 (I.C.1-182).pdf
+file
+● completed
+operational
+
+📎
+2.4 Lampiran I.D PP Nomor 28 Tahun 2025 (I.D.1-1056).pdf
+file
+● completed
+operational
+
+📎
+2.5 Lampiran I.E PP Nomor 28 Tahun 2025 (I.E.1-189).pdf
+file
+● completed
+operational
+
+📎
+2.6a Lampiran I.F PP Nomor 28 Tahun 2025 (I.F.1-700).pdf
+file
+● completed
+operational
+
+📎
+2.6b Lampiran I.F PP Nomor 28 Tahun 2025 (I.F.701-1400).pdf
+file
+● completed
+operational
+
+📎
+2.6c Lampiran I.F PP Nomor 28 Tahun 2025 (I.F.1401-2125).pdf
+file
+● completed
+operational
+
+📎
+2.6d Lampiran I.F PP Nomor 28 Tahun 2025 (I.F.2126-2922).pdf
+file
+● completed
+operational
+
+📎
+2.6e. Lampiran I.F PP Nomor 28 Tahun 2025 (I.F.2923-3680).pdf
+file
+● completed
+operational
+
+📎
+2.6f Lampiran I.F PP Nomor 28 Tahun 2025 (I.F.3681-4500).pdf
+file
+● completed
+operational
+
+📎
+2.6g Lampiran I.F PP Nomor 28 Tahun 2025 (I.F.4501-5248).pdf
+file
+● completed
+operational
+
+📎
+2.6h Lampiran I.F PP Nomor 28 Tahun 2025 (I.F.5249-11000).pdf
+file
+● completed
+operational
+
+📎
+2.10 Lampiran I.J sd. I.P PP Nomor 28 Tahun 2025.pdf
+file
+● completed
+operational
+
+📎
+2.7 Lampiran I.G PP Nomor 28 Tahun 2025 (I.G.1-341).pdf
+file
+● completed
+operational
+
+📎
+2.8 Lampiran I.H PP Nomor 28 Tahun 2025 (I.H.1-515).pdf
+file
+● completed
+operational
+
+📎
+2.9 Lampiran I.I PP Nomor 28 Tahun 2025 (I.I.1-411).pdf
+file
+● completed
+operational
+
+📎
+2.11 Lampiran I.Q sd. I.V PP Nomor 28 Tahun 2025.pdf
+file
+● completed
+operational
+
+📎
+PP Nomor 28 Tahun 2025 - Lampiran IV.pdf
+file
+● completed
+operational
+
+📎
+permen-pu-6-2025.pdf
+file
+● completed
+operational
+
+📎
+SK-DJBK-Nomor-114-Thn-2024_4-Des_KPTS-Tentang-Penetapan-Jabker-dan-Jenjang-Kualifikasi-atas-Jabker-di-Bidang-Jasa-Konstruksi.pdf
+file
+● completed
+operational
+
+📄
+RINGKASAN KELENGKAPAN KB
+text
+● completed
+operational
+
+📄
+Panduan Tambah Subklasifikasi dan Perubahan Data SBU
+text
+● completed
+operational
+
+📄
+Troubleshooting Portal OSS-RBA dan LPJK
+text
+● completed
+operational
+
+📄
+Panduan SBU untuk BUJK Asing
+text
+● completed
+operational
+
+📄
+Panduan Upgrade Kualifikasi (K ke M, M ke B)
+text
+● completed
+operational
+
+📄
+Studi Kasus Nyata Pengurusan SBU
+text
+● completed
+operational
+
+📄
+FAQ SBU Konstruksi
+text
+● completed
+operational
+
+📄
+Perpanjangan dan Pemeliharaan SBU
+text
+● completed
+operational
+
+📄
+Integritas, Sanksi, dan Blacklist
+text
+● completed
+operational
+
+📄
+Asesmen Kesiapan Badan Usaha (8 Dimensi)
+text
+● completed
+operational
+
+📄
+Alur OSS-RBA dan Portal LPJK
+text
+● completed
+operational
+
+📄
+Estimasi PNBP dan Biaya SBU
+text
+● completed
+operational
+
+📄
+Dokumen Persyaratan Administrasi (Kelompok A)
+text
+● completed
+operational
+
+📄
+Persyaratan SKK (Sertifikat Kompetensi Kerja)
+text
+● completed
+operational
+
+📄
+Subklasifikasi IL, IM, dan KO
+text
+● completed
+operational
+
+📄
+Subklasifikasi BG (Bangunan Sipil)
+text
+● completed
+operational
+
+📄
+Subklasifikasi BS (Bangunan Gedung)
+text
+● completed
+operational
+
+📄
+Klasifikasi Kualifikasi Usaha (K1, K2, K3, M, B)
+text
+● completed
+operational
+
+📄
+Kerangka Regulasi SBU Konstruksi Terbaru
+text
+● completed
+operational
+
+Layer:
+
+Operational (default)
+
+Teks
+
+URL / Web
+
+Upload File

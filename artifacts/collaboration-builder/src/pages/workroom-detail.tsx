@@ -44,6 +44,7 @@ import { WidgetTab } from "@/components/widget-tab";
 import { WorkroomHealth } from "@/components/workroom-health";
 import { RangkumanTab } from "@/components/rangkuman-tab";
 import { MetricsTab } from "@/components/metrics-tab";
+import { StageTimelineTab } from "@/components/stage-timeline-tab";
 import { StageSummaryModal } from "@/components/stage-summary-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -561,6 +562,9 @@ export default function WorkroomDetail() {
               </TabsTrigger>
               <TabsTrigger value="metrics" className="gap-1.5">
                 <BarChart3 className="w-3.5 h-3.5" /> Metrik
+              </TabsTrigger>
+              <TabsTrigger value="timeline" className="gap-1.5">
+                <span>🗺️</span> Timeline
               </TabsTrigger>
             </TabsList>
 
@@ -1128,6 +1132,10 @@ export default function WorkroomDetail() {
 
             <TabsContent value="metrics" className="mt-4">
               <MetricsTab workroomId={workroomId} stages={stages ?? []} />
+            </TabsContent>
+
+            <TabsContent value="timeline" className="mt-4">
+              <StageTimelineTab stages={stages ?? []} currentStageId={displayStageId ?? undefined} />
             </TabsContent>
           </Tabs>
         </div>

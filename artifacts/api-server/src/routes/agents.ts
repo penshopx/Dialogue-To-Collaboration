@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, agentsTable } from "@workspace/db";
+import { eq, sql } from "drizzle-orm";
+import { db, agentsTable, workroomTasksTable } from "@workspace/db";
 import {
   GetAgentParams,
   UpdateAgentParams,
@@ -25,6 +25,18 @@ router.post("/agents", async (req, res): Promise<void> => {
 
   const [agent] = await db.insert(agentsTable).values(parsed.data).returning();
   res.status(201).json(agent);
+});
+
+router.get("/agents/workload", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({
+      functionRole: workroomTasksTable.functionRole,
+      total: sql<number>`count(*)::int`,
+      done: sql<number>`count(*) filter (where ${workroomTasksTable.status} = 'done')::int`,
+    })
+    .from(workroomTasksTable)
+    .groupBy(workroomTasksTable.functionRole);
+  res.json(rows);
 });
 
 router.get("/agents/:id", async (req, res): Promise<void> => {

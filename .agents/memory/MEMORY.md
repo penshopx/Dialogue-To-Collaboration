@@ -5,3 +5,6 @@
 - [Activity log schema fields](activity-log-schema.md) — activityLogsTable columns: workroomId, eventType, description, actor (no stageId/action/detail); workroomStagesTable has no updatedAt.
 - [Routes before export default](routes-export-order.md) — Express routes added AFTER `export default router` are silently ignored; always insert new routes before that line.
 - [DecisionLog detail is an object](decision-log-detail-type.md) — detail field is `Record<string,unknown>` not string; store as `{text: str}`, read back via `(log.detail as {text?:string}).text`.
+- [Template real counts pattern](template-real-counts.md) — hooks inside .map() are forbidden in React; use a per-card sub-component (TemplateCardStats) calling useListTemplateStages/useListTemplateRoles per templateId.
+- [API server restart required for new routes](api-server-restart.md) — new route files registered in routes/index.ts return 404 until the API server workflow is restarted; always restart after adding route files.
+- [Workroom report page already exists](report-page-status.md) — workroom-report.tsx (334 lines) was already implemented with stage breakdown, KPI, decision logs, agent contribution, and activity log; do not recreate.
