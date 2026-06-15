@@ -1,2 +1,1 @@
-- [WorkroomUpdate deadline/kpiTargets](workroom-update-fields.md) — UpdateWorkroomBody gained deadline+kpiTargets; must convert deadline string→Date before DB .set(); kpiTargets uses JSON blob.
-- [ActivityLog field names](activity-log-schema.md) — activityLogsTable uses description+eventType (NOT action+category); isProviderConfigured returns { ok, missing: string } (string, not array).
+- [Dark/Light theme system](theme-tokens.md) — CSS custom properties on :root/[data-theme="light"], toggled via document.documentElement.setAttribute in useTheme hook, persisted in localStorage
