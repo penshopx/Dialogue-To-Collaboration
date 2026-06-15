@@ -8,3 +8,4 @@
 - [Template real counts pattern](template-real-counts.md) — hooks inside .map() are forbidden in React; use a per-card sub-component (TemplateCardStats) calling useListTemplateStages/useListTemplateRoles per templateId.
 - [API server restart required for new routes](api-server-restart.md) — new route files registered in routes/index.ts return 404 until the API server workflow is restarted; always restart after adding route files.
 - [Workroom report page already exists](report-page-status.md) — workroom-report.tsx (334 lines) was already implemented with stage breakdown, KPI, decision logs, agent contribution, and activity log; do not recreate.
+- [Claw config direct-fetch pattern](claw-config-pattern.md) — internal config endpoints (claw, notifications) skip OpenAPI codegen; use useQuery+direct fetch in components instead of generated hooks.

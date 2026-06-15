@@ -11,6 +11,7 @@ import brainRouter from "./brain";
 import configRouter from "./config";
 import summarizeRouter from "./summarize";
 import notificationsRouter from "./notifications";
+import clawConfigRouter from "./claw-config";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(brainRouter);
 router.use(configRouter);
 router.use(summarizeRouter);
 router.use(notificationsRouter);
+router.use(clawConfigRouter);
 
 export default router;

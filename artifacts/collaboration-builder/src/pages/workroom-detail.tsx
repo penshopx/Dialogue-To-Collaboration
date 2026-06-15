@@ -45,6 +45,7 @@ import { WorkroomHealth } from "@/components/workroom-health";
 import { RangkumanTab } from "@/components/rangkuman-tab";
 import { MetricsTab } from "@/components/metrics-tab";
 import { StageTimelineTab } from "@/components/stage-timeline-tab";
+import { ClawConfigPanel } from "@/components/claw-config-panel";
 import { StageSummaryModal } from "@/components/stage-summary-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -519,6 +520,9 @@ export default function WorkroomDetail() {
               <TabsTrigger value="persona" className="gap-1.5">
                 <span>🤖</span> Persona
               </TabsTrigger>
+              <TabsTrigger value="claw-setup" className="gap-1.5">
+                <span>🦾</span> Claw
+              </TabsTrigger>
               <TabsTrigger value="multiclaw" className="gap-1.5">
                 <span>⚡</span> Multiclaw
               </TabsTrigger>
@@ -733,6 +737,10 @@ export default function WorkroomDetail() {
 
             <TabsContent value="persona" className="mt-4">
               <PersonaConfigTab workroomId={workroomId} workroomName={workroom?.name} objective={workroom?.objective ?? undefined} />
+            </TabsContent>
+
+            <TabsContent value="claw-setup" className="mt-4">
+              <ClawConfigPanel workroomId={workroomId} />
             </TabsContent>
 
             <TabsContent value="multiclaw" className="mt-4">

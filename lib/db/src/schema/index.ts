@@ -7,3 +7,4 @@ export * from "./knowledge-base";
 export * from "./deliverables";
 export * from "./workroom-brain";
 export * from "./workroom-config";
+export * from "./claw-config";
