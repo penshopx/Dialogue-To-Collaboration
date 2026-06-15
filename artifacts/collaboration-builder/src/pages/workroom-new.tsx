@@ -1,7 +1,7 @@
 import { useListTemplates, useCreateWorkroom } from "@workspace/api-client-react";
 import { useLocation, useSearch } from "wouter";
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Check, HardHat, BadgeCheck, GraduationCap, BookOpen, TrendingUp, Building2, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, HardHat, BadgeCheck, GraduationCap, BookOpen, TrendingUp, Building2, Loader2, ShieldAlert, Calendar, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,9 @@ export default function WorkroomNew() {
   );
   const [name, setName] = useState("");
   const [objective, setObjective] = useState("");
+  const [riskLevel, setRiskLevel] = useState<"low" | "medium" | "high">("medium");
+  const [deadline, setDeadline] = useState("");
+  const [kpiText, setKpiText] = useState("");
 
   const selectedTemplate = templates?.find((t) => t.id === selectedTemplateId);
 
@@ -64,12 +67,16 @@ export default function WorkroomNew() {
 
   async function handleCreate() {
     if (!selectedTemplateId || !name.trim()) return;
+    const kpiLines = kpiText.split("\n").map(l => l.trim()).filter(Boolean);
     try {
       const result = await createWorkroom.mutateAsync({
         data: {
           name: name.trim(),
           templateId: selectedTemplateId,
           objective: objective.trim() || undefined,
+          riskLevel,
+          deadline: deadline || undefined,
+          kpiTargets: kpiLines.length > 0 ? { targets: kpiLines } : undefined,
         },
       });
       toast({ title: "Workroom created!", description: `"${result.name}" is ready.` });
@@ -204,6 +211,67 @@ export default function WorkroomNew() {
                 value={objective}
                 onChange={(e) => setObjective(e.target.value)}
                 rows={3}
+              />
+            </div>
+
+            {/* Risk Level */}
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5">
+                <ShieldAlert className="w-3.5 h-3.5 text-muted-foreground" />
+                Tingkat Risiko
+              </Label>
+              <div className="grid grid-cols-3 gap-2">
+                {(["low", "medium", "high"] as const).map(r => {
+                  const cfg = {
+                    low:    { label: "Rendah", color: "border-green-500/40 text-green-400 bg-green-500/10", inactive: "border-border text-muted-foreground hover:border-green-500/20" },
+                    medium: { label: "Sedang", color: "border-amber-500/40 text-amber-400 bg-amber-500/10", inactive: "border-border text-muted-foreground hover:border-amber-500/20" },
+                    high:   { label: "Tinggi",  color: "border-red-500/40 text-red-400 bg-red-500/10",     inactive: "border-border text-muted-foreground hover:border-red-500/20" },
+                  }[r];
+                  return (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRiskLevel(r)}
+                      className={cn(
+                        "px-3 py-2 rounded-lg border text-xs font-medium transition-all",
+                        riskLevel === r ? cfg.color : cfg.inactive
+                      )}
+                    >
+                      {cfg.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Deadline */}
+            <div className="space-y-1.5">
+              <Label htmlFor="deadline" className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                Target Deadline <span className="text-muted-foreground text-xs">(optional)</span>
+              </Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+
+            {/* KPI Targets */}
+            <div className="space-y-1.5">
+              <Label htmlFor="kpiTargets" className="flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5 text-muted-foreground" />
+                Target KPI <span className="text-muted-foreground text-xs">(optional — satu per baris)</span>
+              </Label>
+              <Textarea
+                id="kpiTargets"
+                placeholder={"Dokumen sertifikasi ISO 9001 tersertifikasi\nTingkat kelulusan peserta ≥ 85%\nDeadline deliver dalam 60 hari"}
+                value={kpiText}
+                onChange={(e) => setKpiText(e.target.value)}
+                rows={3}
+                className="text-sm"
               />
             </div>
           </div>

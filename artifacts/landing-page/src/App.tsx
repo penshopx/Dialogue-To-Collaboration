@@ -190,7 +190,7 @@ function Hero() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden"
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden mb-10"
           style={{ border: "1px solid var(--bd)", background: "var(--bd)" }}>
           {[
             { v: "18+", l: "Template Sektor" }, { v: "32", l: "AI Roles Dikonfigurasi" },
@@ -201,6 +201,18 @@ function Hero() {
               <p className="text-xs" style={{ color: "var(--tx-faint)" }}>{s.l}</p>
             </div>
           ))}
+        </div>
+
+        {/* Hero illustration */}
+        <div className="rounded-2xl overflow-hidden relative" style={{ border: "1px solid var(--bd)", boxShadow: "0 0 60px oklch(0.65 0.22 265/0.12)" }}>
+          <img
+            src="/landing-page/illustrations/hero-pipeline.png"
+            alt="AI pipeline workflow dengan tim Indonesia"
+            className="w-full object-cover"
+            style={{ maxHeight: "380px", objectPosition: "center" }}
+          />
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(to top, var(--bg) 0%, transparent 40%)" }} />
         </div>
       </div>
     </section>
@@ -397,6 +409,16 @@ function StorySection() {
               Notion. ChatGPT. Spreadsheet. Zoom. WhatsApp. Semuanya ada — tapi tidak ada yang <strong style={{ color: "var(--tx)" }}>menyatukan output AI dengan approval manusia, dengan dokumentasi keputusan, dengan pipeline yang bisa diaudit</strong>. Itulah yang CollabBuilder selesaikan.
             </p>
           </div>
+
+          {/* Chaos vs Order illustration */}
+          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--bd)" }}>
+            <img
+              src="/landing-page/illustrations/before-after-chaos.png"
+              alt="Perbandingan chaos tanpa sistem vs workflow terstruktur dengan CollabBuilder"
+              className="w-full object-cover"
+              style={{ maxHeight: "320px", objectPosition: "center top" }}
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -589,6 +611,16 @@ function FeaturesSection() {
           </p>
         </div>
 
+        {/* AI Agents illustration */}
+        <div className="rounded-2xl overflow-hidden mb-10 mx-auto max-w-lg"
+          style={{ border: "1px solid oklch(0.65 0.22 265/0.3)", boxShadow: "0 0 40px oklch(0.65 0.22 265/0.15)" }}>
+          <img
+            src="/landing-page/illustrations/ai-agents.png"
+            alt="Empat AI agents: Strategis, Skeptis, Eksekutor, dan DocuGen berkolaborasi dalam hub"
+            className="w-full object-cover"
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map((f, i) => (
             <div key={i} className="rounded-2xl p-6 transition-all hover:-translate-y-1 group"
@@ -645,6 +677,24 @@ function HowItWorks() {
               <p className="text-sm leading-relaxed" style={{ color: "var(--tx-dim)" }}>{s.d}</p>
             </div>
           ))}
+        </div>
+
+        {/* Dashboard analytics illustration */}
+        <div className="mt-16 rounded-2xl overflow-hidden relative"
+          style={{ border: "1px solid oklch(0.65 0.18 160/0.3)", boxShadow: "0 0 60px oklch(0.65 0.18 160/0.1)" }}>
+          <img
+            src="/landing-page/illustrations/dashboard-analytics.png"
+            alt="Dashboard CollabBuilder — pipeline stages, KPI tracker, dan gate checkpoints real-time"
+            className="w-full object-cover"
+            style={{ maxHeight: "420px", objectPosition: "center" }}
+          />
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(to right, var(--bg-alt) 0%, transparent 15%, transparent 85%, var(--bg-alt) 100%)" }} />
+          <div className="absolute bottom-0 left-0 right-0 px-8 py-6 text-center">
+            <p className="text-sm font-semibold" style={{ color: "oklch(0.72 0.18 265)" }}>
+              ↑ Dashboard real-time CollabBuilder — semua workroom terpantau dari satu layar
+            </p>
+          </div>
         </div>
       </div>
     </section>

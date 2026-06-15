@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "GmCMBTSTAPwoK8MUqVi3p"
+uri = "file://artifacts/landing-page/public/illustrations/hero-pipeline.png"
+type = "image"
+title = "hero pipeline workflow illustration"
+
+[[generated]]
+id = "eR6TWrUgidU1qxuWq1Gcj"
+uri = "file://artifacts/landing-page/public/illustrations/before-after-chaos.png"
+type = "image"
+title = "before after chaos order illustration"
+
+[[generated]]
+id = "xsF7f90Cbabp3grJs8_sX"
+uri = "file://artifacts/landing-page/public/illustrations/ai-agents.png"
+type = "image"
+title = "AI agents collaboration hub illustration"
+
+[[generated]]
+id = "Y-NLv2bMECQSz6USNW7qs"
+uri = "file://artifacts/landing-page/public/illustrations/dashboard-analytics.png"
+type = "image"
+title = "dashboard analytics illustration"

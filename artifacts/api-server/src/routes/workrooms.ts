@@ -122,6 +122,8 @@ router.post("/workrooms", async (req, res): Promise<void> => {
     return;
   }
 
+  const gateCount = DEFAULT_STAGES.filter(s => s.stageType === "gate").length;
+
   const [workroom] = await db
     .insert(workroomsTable)
     .values({
@@ -131,6 +133,7 @@ router.post("/workrooms", async (req, res): Promise<void> => {
       riskLevel: parsed.data.riskLevel ?? "medium",
       deadline: parsed.data.deadline ? new Date(parsed.data.deadline) : undefined,
       kpiTargets: parsed.data.kpiTargets,
+      humanTouchPoints: gateCount,
       status: "active",
       currentStageName: "Intake",
       progress: 0,
