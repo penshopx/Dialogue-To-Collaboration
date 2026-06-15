@@ -1139,6 +1139,225 @@ function Footer() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FLOATING CHATBOT — Klaw, asisten konsultan CollabBuilder
+// ─────────────────────────────────────────────────────────────────────────────
+type ChatMsg = { role: "user" | "assistant"; content: string };
+
+const GREETING: ChatMsg = {
+  role: "assistant",
+  content: "Hei! Saya **Klaw**, asisten konsultan CollabBuilder 👋\n\nSaya di sini untuk bantu kamu memahami platform ini dan cari tahu apakah CollabBuilder cocok untuk kebutuhanmu.\n\nKamu lagi kerja di bidang apa, atau ada tantangan spesifik yang lagi dihadapi tim kamu?",
+};
+
+function renderMarkdown(text: string) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n\n/g, "<br/><br/>")
+    .replace(/\n/g, "<br/>");
+}
+
+function TypingDots() {
+  return (
+    <div className="flex items-center gap-1 px-4 py-3 rounded-2xl rounded-bl-sm w-fit"
+      style={{ background: "var(--bg-card)", border: "1px solid var(--bd)" }}>
+      {[0, 1, 2].map(i => (
+        <span key={i} className="w-2 h-2 rounded-full animate-bounce"
+          style={{ background: "oklch(0.65 0.22 265)", animationDelay: `${i * 0.15}s` }} />
+      ))}
+    </div>
+  );
+}
+
+function FloatingChatbot() {
+  const [open, setOpen] = useState(false);
+  const [msgs, setMsgs] = useState<ChatMsg[]>([GREETING]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showBubble, setShowBubble] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Show nudge bubble after 8 seconds
+  useEffect(() => {
+    const t = setTimeout(() => setShowBubble(true), 8000);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs, loading]);
+
+  // Focus input when opened
+  useEffect(() => {
+    if (open) {
+      setShowBubble(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [open]);
+
+  const sendText = async (text: string) => {
+    if (!text.trim() || loading) return;
+
+    const userMsg: ChatMsg = { role: "user", content: text.trim() };
+    const updated = [...msgs, userMsg];
+    setMsgs(updated);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/chatbot/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: updated }),
+      });
+      const data = await res.json() as { reply: string };
+      setMsgs(prev => [...prev, { role: "assistant", content: data.reply }]);
+    } catch {
+      setMsgs(prev => [...prev, { role: "assistant", content: "Maaf, ada kendala koneksi. Coba lagi ya 🙏" }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const send = () => sendText(input);
+
+  const quickQuestions = [
+    "Cocok untuk tim ISO?",
+    "Bedanya dengan Notion?",
+    "Harga paket mana?",
+    "Cara mulainya?",
+  ];
+
+  return (
+    <>
+      {/* Nudge bubble */}
+      {showBubble && !open && (
+        <div className="fixed bottom-24 right-6 z-50 max-w-[220px] px-4 py-3 rounded-2xl rounded-br-sm text-sm cursor-pointer shadow-lg animate-fade-in"
+          style={{ background: "linear-gradient(135deg,oklch(0.58 0.22 265),oklch(0.63 0.2 300))", color: "white" }}
+          onClick={() => setOpen(true)}>
+          Ada pertanyaan tentang CollabBuilder? Tanya Klaw! 👋
+          <button className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white flex items-center justify-center text-[10px]"
+            style={{ color: "oklch(0.58 0.22 265)" }}
+            onClick={e => { e.stopPropagation(); setShowBubble(false); }}>✕</button>
+        </div>
+      )}
+
+      {/* Floating button */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+        style={{ background: "linear-gradient(135deg,oklch(0.58 0.22 265),oklch(0.63 0.2 300))", boxShadow: "0 8px 32px oklch(0.65 0.22 265/0.5)" }}
+        title="Tanya Klaw — Asisten CollabBuilder">
+        {open ? (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        ) : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+        )}
+        {/* Unread dot when closed */}
+        {!open && msgs.length === 1 && (
+          <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white animate-pulse"
+            style={{ background: "oklch(0.65 0.18 160)" }} />
+        )}
+      </button>
+
+      {/* Chat panel */}
+      {open && (
+        <div className="fixed bottom-24 right-6 z-50 w-[360px] sm:w-[400px] rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+          style={{ height: "520px", background: "var(--bg-card)", border: "1px solid oklch(0.65 0.22 265/0.4)", boxShadow: "0 20px 60px oklch(0.65 0.22 265/0.25)" }}>
+
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b shrink-0"
+            style={{ background: "linear-gradient(135deg,oklch(0.58 0.22 265/0.15),oklch(0.63 0.2 300/0.1))", borderColor: "oklch(0.65 0.22 265/0.3)" }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-white text-sm shrink-0"
+              style={{ background: "linear-gradient(135deg,oklch(0.58 0.22 265),oklch(0.63 0.2 300))" }}>K</div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm leading-none" style={{ color: "var(--tx)" }}>Klaw</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--tx-faint)" }}>Asisten Konsultan CollabBuilder</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full" style={{ background: "oklch(0.65 0.18 160)" }} />
+              <span className="text-xs" style={{ color: "oklch(0.6 0.15 160)" }}>Online</span>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3" style={{ scrollbarWidth: "none" }}>
+            {msgs.map((m, i) => (
+              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                {m.role === "assistant" && (
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0 mr-2 mt-0.5"
+                    style={{ background: "linear-gradient(135deg,oklch(0.58 0.22 265),oklch(0.63 0.2 300))" }}>K</div>
+                )}
+                <div className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                  m.role === "user" ? "rounded-br-sm" : "rounded-bl-sm"
+                }`}
+                  style={m.role === "user"
+                    ? { background: "linear-gradient(135deg,oklch(0.58 0.22 265),oklch(0.63 0.2 300))", color: "white" }
+                    : { background: "var(--bg-alt)", color: "var(--tx)", border: "1px solid var(--bd)" }}
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }} />
+              </div>
+            ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0 mr-2 mt-0.5"
+                  style={{ background: "linear-gradient(135deg,oklch(0.58 0.22 265),oklch(0.63 0.2 300))" }}>K</div>
+                <TypingDots />
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          {/* Quick questions (show only at start) */}
+          {msgs.length <= 1 && (
+            <div className="px-4 pb-2 flex flex-wrap gap-1.5 shrink-0">
+              {quickQuestions.map(q => (
+                <button key={q}
+                  onClick={() => sendText(q)}
+                  className="text-xs px-3 py-1.5 rounded-full transition-all hover:scale-105"
+                  style={{ background: "oklch(0.65 0.22 265/0.1)", color: "oklch(0.72 0.18 265)", border: "1px solid oklch(0.65 0.22 265/0.3)" }}>
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="px-3 pb-3 pt-2 border-t shrink-0" style={{ borderColor: "var(--bd)" }}>
+            <div className="flex items-center gap-2 rounded-xl px-3 py-2"
+              style={{ background: "var(--bg-alt)", border: "1px solid var(--bd)" }}>
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && !e.shiftKey && send()}
+                placeholder="Ketik pertanyaan kamu..."
+                className="flex-1 bg-transparent text-sm outline-none"
+                style={{ color: "var(--tx)" }}
+                disabled={loading}
+              />
+              <button
+                onClick={send}
+                disabled={!input.trim() || loading}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-105 disabled:opacity-40"
+                style={{ background: "linear-gradient(135deg,oklch(0.58 0.22 265),oklch(0.63 0.2 300))" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+            <p className="text-center text-[10px] mt-1.5" style={{ color: "var(--tx-ghost)" }}>
+              Powered by CollabBuilder AI · Klaw v1
+            </p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // APP ROOT
 // ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
@@ -1164,6 +1383,7 @@ export default function App() {
         <FinalCTA />
       </main>
       <Footer />
+      <FloatingChatbot />
     </div>
   );
 }
